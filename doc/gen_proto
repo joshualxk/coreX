@@ -1,0 +1,1 @@
+protoc -I=core\proto --java_out=core\src\main\java core\proto\model.proto
