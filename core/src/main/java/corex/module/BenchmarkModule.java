@@ -1,6 +1,6 @@
 package corex.module;
 
-import corex.core.FutureMo;
+import corex.core.JoHolder;
 import corex.core.annotation.Api;
 import corex.core.annotation.Module;
 import corex.core.annotation.Param;
@@ -14,5 +14,5 @@ import corex.core.rpc.BlockControl;
 public interface BenchmarkModule {
 
     @Api(value = "connect", type = ConstDefine.AUTH_TYPE_NON)
-    FutureMo connect(@Param("1") String msg);
+    JoHolder connect(@Param("1") String msg);
 }

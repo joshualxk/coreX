@@ -1,10 +1,10 @@
 package corex.core.rpc;
 
-import corex.core.Mo;
 import corex.core.annotation.Module;
-import corex.core.impl.ReadOnlyFutureMo;
-import corex.core.utils.CoreXUtil;
-import corex.proto.ModelProto;
+import corex.core.json.JsonObject;
+import corex.core.model.Auth;
+import corex.core.model.Broadcast;
+import corex.core.model.Push;
 
 import java.util.Map;
 import java.util.Objects;
@@ -30,12 +30,12 @@ public class ModuleParams {
         return apiHandlers.size();
     }
 
-    public void handleInternalBroadcast(ModelProto.Broadcast broadcast) throws Exception {
-        ModelProto.BodyHolder bodyHolder = broadcast.getPush().getBody();
-        Mo mo = new ReadOnlyFutureMo(bodyHolder);
+    public void handleInternalBroadcast(Broadcast broadcast) throws Exception {
+        Push push = broadcast.getPush();
+        JsonObject body = push.getBody();
         RpcHandler rpcHandler = getHandler(broadcast.getPush().getTopic());
         if (rpcHandler != null) {
-            rpcHandler.handle(CoreXUtil.INTERNAL_AUTH, mo);
+            rpcHandler.handle(Auth.internalAuth(), body);
         }
     }
 

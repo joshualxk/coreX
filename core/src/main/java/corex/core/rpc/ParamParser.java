@@ -1,9 +1,9 @@
 package corex.core.rpc;
 
-import corex.core.FutureMo;
-import corex.core.Mo;
+import corex.core.JoHolder;
 import corex.core.annotation.Param;
 import corex.core.exception.CoreException;
+import corex.core.json.JsonObject;
 import corex.core.rpc.MethodParamDetail.ParamDetail;
 import corex.core.rpc.MethodParamDetail.ParamType;
 import io.netty.util.internal.StringUtil;
@@ -51,8 +51,8 @@ public class ParamParser {
                 type = DOUBLE;
             } else if (clz == String.class) {
                 type = STRING;
-            } else if (clz == Mo.class) {
-                type = MO;
+            } else if (clz == JsonObject.class) {
+                type = JO;
             } else if (clz == List.class) {
                 type = LIST;
                 parameterizedType = parseListParameterizedType(p);
@@ -69,7 +69,7 @@ public class ParamParser {
         Class<?> clz = method.getReturnType();
         if (clz == Void.class || clz == void.class) {
             isVoidType = true;
-        } else if (clz == FutureMo.class) {
+        } else if (clz == JoHolder.class) {
             isVoidType = false;
         } else {
             throw new CoreException("不正确的返回参数类型:" + clz.getName());
@@ -104,8 +104,8 @@ public class ParamParser {
             type = DOUBLE;
         } else if (clz == String.class) {
             type = STRING;
-        } else if (clz == Mo.class) {
-            type = MO;
+        } else if (clz == JsonObject.class) {
+            type = JO;
         }
 
         if (type == UNSUPPORTED) {

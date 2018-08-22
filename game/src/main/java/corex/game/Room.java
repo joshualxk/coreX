@@ -1,11 +1,11 @@
 package corex.game;
 
-import corex.core.Moable;
+import corex.core.Joable;
 
 /**
  * Created by Joshua on 2018/3/27.
  */
-public interface Room extends Moable {
+public interface Room extends Joable {
 
     int id();
 

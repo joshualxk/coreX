@@ -5,11 +5,11 @@ import corex.core.annotation.Module;
 import corex.core.define.ExceptionDefine;
 import corex.core.exception.BizException;
 import corex.core.exception.CoreException;
-import corex.core.impl.ReadOnlyFutureMo;
+import corex.core.impl.AsyncJoHolder;
+import corex.core.json.JsonObject;
+import corex.core.model.*;
 import corex.core.rpc.BlockControl;
 import corex.core.rpc.RpcHandler;
-import corex.core.utils.CoreXUtil;
-import corex.proto.ModelProto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,17 +58,11 @@ public abstract class AbstractProcessorService implements Service {
 
     @Override
     public final void handleMsg(Msg msg) {
-        Object body = msg.detach();
-
-        if (body instanceof Payload) {
-            Payload payload = (Payload) body;
-            payload = payload.toBuilder().addRoutes(context.name()).build();
-
-            if (payload.hasRpcRequest()) {
-                handleRequest(msg, payload, payload.getRpcRequest());
-            } else if (payload.hasBroadcast()) {
-                handleBroadcast(msg, payload, payload.getBroadcast());
-            }
+        Payload payload = msg.detach().addRoute(context.name());
+        if (payload.hasRpcRequest()) {
+            handleRequest(msg, payload, payload.getRpcRequest());
+        } else if (payload.hasBroadcast()) {
+            handleBroadcast(msg, payload, payload.getBroadcast());
         }
     }
 
@@ -80,7 +74,7 @@ public abstract class AbstractProcessorService implements Service {
         logger.debug("on rpc request, id:{}.", request.getId());
 
         RpcHandler rpcHandler = null;
-        AsyncResult<Object> ar = null;
+        AsyncResult<Payload> ar = null;
         try {
             rpcHandler = getHandler(request.getMethod().getApi());
 
@@ -90,25 +84,28 @@ public abstract class AbstractProcessorService implements Service {
 
             Auth auth = request.getAuth();
 
-            ReadOnlyFutureMo params = new ReadOnlyFutureMo(request.getBody());
-
-            FutureMo ret = rpcHandler.handle(auth, params);
+            JoHolder ret = rpcHandler.handle(auth, request.getBody());
 
             if (ret == null) {
                 if (msg.needReply()) {
                     throw new CoreException("方法返回值不能为空, method:" + request.getMethod());
                 }
-            } else if (ret instanceof AsyncFutureMo) {
-                AsyncFutureMo asyncFutureMo = (AsyncFutureMo) ret;
+            } else if (ret.isSync()) {
+                RpcResponse rpcResponse = RpcResponse.newSuccessRpcResponse(request.getId(), ret.jo());
+                Payload b = Payload.newPayload(payload.getId(), rpcResponse);
+                ar = Future.succeededFuture(b);
+
+            } else {
+                AsyncJoHolder futureJo = (AsyncJoHolder) ret;
                 int requestId = request.getId();
                 long payloadId = payload.getId();
 
                 if (msg.needReply()) {
-                    asyncFutureMo.setHandler(ar2 -> {
+                    futureJo.setHandler(ar2 -> {
                         if (ar2.succeeded()) {
-                            FutureMo ret2 = ar2.result();
-                            RpcResponse rpcResponse = CoreXUtil.newRpcResponse(requestId, ret2.toBodyHolder());
-                            Payload b = CoreXUtil.assemblePayload(payloadId, rpcResponse).build();
+                            JoHolder ret2 = ar2.result();
+                            RpcResponse rpcResponse = RpcResponse.newSuccessRpcResponse(requestId, ret2.jo());
+                            Payload b = Payload.newPayload(payloadId, rpcResponse);
                             msg.reply(Future.succeededFuture(b));
                         } else {
                             msg.reply(Future.failedFuture(ar2.cause()));
@@ -117,10 +114,6 @@ public abstract class AbstractProcessorService implements Service {
                 }
 
                 return;
-            } else {
-                RpcResponse rpcResponse = CoreXUtil.newRpcResponse(request.getId(), ret.toBodyHolder());
-                Payload b = CoreXUtil.assemblePayload(payload.getId(), rpcResponse).build();
-                ar = Future.succeededFuture(b);
             }
 
         } catch (BizException e) {
@@ -135,11 +128,13 @@ public abstract class AbstractProcessorService implements Service {
         }
     }
 
-    protected FutureMo baseInfo() {
-        FutureMo ret = FutureMo.futureMo();
-        ret.putString("clzName", getClass().getName());
-        ret.putString("address", name());
-        ret.putString("bc", bc().toString());
+    @Override
+    public JoHolder info() {
+        JoHolder ret = JoHolder.newSync();
+        JsonObject jo = ret.jo();
+        jo.put("clz", getClass().getName());
+        jo.put("addr", name());
+        jo.put("bc", bc().toString());
         return ret;
     }
 

@@ -6,23 +6,23 @@ package corex.core.exception;
 public class BizExceptionBuilder implements BizEx {
 
     private final int code;
-    private final String msg;
+    private final String message;
 
     public BizExceptionBuilder(int code, String msg) {
         this.code = code;
-        this.msg = msg;
+        this.message = msg;
     }
 
     public int getCode() {
         return code;
     }
 
-    public String getMsg() {
-        return msg;
+    public String getMessage() {
+        return message;
     }
 
     public BizException build() {
-        return new BizException(code, msg);
+        return new BizException(code, message);
     }
 
 }

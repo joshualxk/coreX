@@ -1,7 +1,8 @@
 package corex.core.service;
 
-import corex.core.AsyncFutureMo;
-import corex.core.FutureMo;
+import corex.core.JoHolder;
+import corex.core.impl.AsyncJoHolder;
+import corex.core.json.JsonObject;
 import corex.module.TestModule;
 
 import java.util.concurrent.TimeUnit;
@@ -12,33 +13,29 @@ import java.util.concurrent.TimeUnit;
 public class TestService extends SimpleModuleService implements TestModule {
 
     @Override
-    public FutureMo info() {
-        FutureMo ret = baseInfo();
+    public JoHolder async(int delaySeconds) {
+        AsyncJoHolder ret = JoHolder.newAsync();
+        long start = System.currentTimeMillis();
+        coreX().setTimer(Math.max(1000, TimeUnit.SECONDS.toMillis(delaySeconds)), tid -> {
+            JoHolder ret2 = JoHolder.newSync();
+            JsonObject jo = ret2.jo();
+            jo.put("start", start);
+            jo.put("end", System.currentTimeMillis());
+            ret.complete(ret2);
+        });
         return ret;
     }
 
     @Override
-    public FutureMo async(int delaySeconds) {
-        AsyncFutureMo asyncFutureMo = FutureMo.asyncFutureMo();
-        long start = System.currentTimeMillis();
-        coreX().setTimer(Math.max(1000, TimeUnit.SECONDS.toMillis(delaySeconds)), tid -> {
-            FutureMo futureMo = FutureMo.futureMo();
-            futureMo.putLong("start", start);
-            futureMo.putLong("end", System.currentTimeMillis());
-            asyncFutureMo.complete(futureMo);
-        });
-        return asyncFutureMo;
-    }
-
-    @Override
-    public FutureMo async2(int delaySeconds) {
-        AsyncFutureMo asyncFutureMo = FutureMo.asyncFutureMo();
+    public JoHolder async2(int delaySeconds) {
+        AsyncJoHolder ret = JoHolder.newAsync();
 
         context.executeBlocking(fut -> {
-            FutureMo futureMo = FutureMo.futureMo();
+            JoHolder ret2 = JoHolder.newSync();
+            JsonObject jo = ret2.jo();
             long start = System.currentTimeMillis();
-            futureMo.putLong("start", start);
-            futureMo.putString("thread", Thread.currentThread().getName());
+            jo.put("start", start);
+            jo.put("thread", Thread.currentThread().getName());
 
             try {
                 TimeUnit.SECONDS.sleep(delaySeconds);
@@ -46,9 +43,9 @@ public class TestService extends SimpleModuleService implements TestModule {
                 e.printStackTrace();
             }
 
-            futureMo.putLong("end", System.currentTimeMillis());
-            asyncFutureMo.complete(futureMo);
+            jo.put("end", System.currentTimeMillis());
+            ret.complete(ret2);
         }, false, null);
-        return asyncFutureMo;
+        return ret;
     }
 }

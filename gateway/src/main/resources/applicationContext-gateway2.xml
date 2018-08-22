@@ -54,7 +54,6 @@
         <property name="role" value="${corex.role}"/>
         <property name="harborPort" value="${corex.harbor.port}"/>
         <property name="httpPort" value="${corex.gateway.http.port}"/>
-        <property name="webRoot" value="${corex.gateway.http.webroot}"/>
     </bean>
 
     <bean id="dashboardService" class="corex.core.service.DashboardService">

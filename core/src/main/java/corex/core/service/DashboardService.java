@@ -1,10 +1,10 @@
 package corex.core.service;
 
-import corex.core.FutureMo;
+import corex.core.JoHolder;
 import corex.core.impl.CoreXImpl;
-import corex.core.utils.CoreXUtil;
+import corex.core.json.JsonObject;
+import corex.core.model.Broadcast;
 import corex.module.DashboardModule;
-import corex.proto.ModelProto;
 
 import java.util.List;
 
@@ -14,25 +14,25 @@ import java.util.List;
 public class DashboardService extends SimpleModuleService implements DashboardModule {
 
     @Override
-    public FutureMo info() {
+    public JoHolder info() {
         return ((CoreXImpl) coreX()).info();
     }
 
     @Override
-    public FutureMo kick(List<String> userIds, int code, String msg) {
+    public JoHolder kick(List<String> userIds, int code, String msg) {
         coreX().broadcast().kick(userIds, code, msg);
 
-        return FutureMo.futureMo();
+        return JoHolder.newSync();
     }
 
     @Override
-    public FutureMo push(List<String> channels, List<String> userIds, String topic, String msg) {
-        FutureMo mo = FutureMo.futureMo();
-        mo.putString("msg", msg);
-        ModelProto.Broadcast broadcast = CoreXUtil.externalBroadcast(channels, userIds, topic, mo.toBodyHolder());
+    public JoHolder push(List<String> channels, List<String> userIds, String topic, String msg) {
+        JsonObject jo = new JsonObject();
+        jo.put("msg", msg);
+        Broadcast broadcast = Broadcast.newExternalBroadcast(channels, userIds, topic, jo);
         coreX().broadcastMessage(broadcast);
 
-        return FutureMo.futureMo();
+        return JoHolder.newSync();
     }
 
 }

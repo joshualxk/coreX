@@ -2,20 +2,19 @@ package corex.game.impl;
 
 import corex.core.Context;
 import corex.core.ContextAware;
-import corex.core.FutureMo;
-import corex.core.Mo;
+import corex.core.JoHolder;
 import corex.core.annotation.Api;
-import corex.core.annotation.Broadcast;
 import corex.core.annotation.Module;
+import corex.core.annotation.Notice;
 import corex.core.define.ConstDefine;
 import corex.core.define.ExceptionDefine;
+import corex.core.json.JsonObject;
+import corex.core.model.Auth;
+import corex.core.model.Broadcast;
 import corex.core.rpc.ModuleParams;
 import corex.core.rpc.RpcHandler;
 import corex.core.rpc.ServerModuleScanner;
-import corex.core.utils.CoreXUtil;
 import corex.game.*;
-import corex.proto.ModelProto;
-import corex.proto.ModelProto.Auth;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -83,7 +82,7 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
         cancelTimeEvent(type);
         long tid = coreX().setTimer(periodTime, t -> {
             timeEvents.remove(type);
-            runWrappedTask(task, CoreXUtil.INTERNAL_AUTH);
+            runWrappedTask(task, Auth.internalAuth());
         });
         timeEvents.put(type, tid);
     }
@@ -98,7 +97,7 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
     public final void handlePlayerOnline(String userId) {
         RoomPlayer roomPlayer = ensurePlayer(userId);
         try {
-            runWrappedTask(() -> roomPlayer.setOnline(true), CoreXUtil.INTERNAL_AUTH);
+            runWrappedTask(() -> roomPlayer.setOnline(true), Auth.internalAuth());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -107,7 +106,7 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
     public final void handlePlayerOffline(String userId) {
         RoomPlayer roomPlayer = ensurePlayer(userId);
         try {
-            runWrappedTask(() -> roomPlayer.setOnline(false), CoreXUtil.INTERNAL_AUTH);
+            runWrappedTask(() -> roomPlayer.setOnline(false), Auth.internalAuth());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -210,7 +209,7 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
     }
 
     @Override
-    public void addBroadcast(ModelProto.Broadcast broadcast) {
+    public void addBroadcast(Broadcast broadcast) {
         xpusher.addBroadcast(broadcast);
     }
 
@@ -231,8 +230,8 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
         }
 
         @Override
-        protected RpcHandler newBroadcastHandler(Broadcast broadcast, Method m, Object invoker) {
-            return new WrappedRpcHandler(super.newBroadcastHandler(broadcast, m, invoker));
+        protected RpcHandler newBroadcastHandler(Notice notice, Method m, Object invoker) {
+            return new WrappedRpcHandler(super.newBroadcastHandler(notice, m, invoker));
         }
     }
 
@@ -255,12 +254,12 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
         }
 
         @Override
-        public FutureMo handle(Auth auth, Mo params) throws Exception {
+        public JoHolder handle(Auth auth, JsonObject params) throws Exception {
             return runWrappedTask(() -> rpcHandler.handle(auth, params), auth);
         }
 
         @Override
-        public FutureMo convert(Object[] args) throws Exception {
+        public JsonObject convert(Object[] args) throws Exception {
             return rpcHandler.convert(args);
         }
     }

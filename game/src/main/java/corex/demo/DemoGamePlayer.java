@@ -1,6 +1,6 @@
 package corex.demo;
 
-import corex.core.Mo;
+import corex.core.json.JsonObject;
 import corex.game.impl.AbstractRoomPlayer;
 
 /**
@@ -13,13 +13,13 @@ public class DemoGamePlayer extends AbstractRoomPlayer {
     }
 
     @Override
-    public Mo toMo() {
-        Mo mo = Mo.mo();
-        mo.putString("nickName", nickName());
-        mo.putString("icon", icon());
-        mo.putInt("seat", seat());
-        mo.putBoolean("isA", isPrepared());
-        mo.putBoolean("isB", isPresent());
-        return mo;
+    public JsonObject toJo() {
+        JsonObject jo = new JsonObject();
+        jo.put("nickName", nickName());
+        jo.put("icon", icon());
+        jo.put("seat", seat());
+        jo.put("isA", isPrepared());
+        jo.put("isB", isPresent());
+        return jo;
     }
 }

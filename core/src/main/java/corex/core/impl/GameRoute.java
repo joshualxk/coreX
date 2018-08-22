@@ -1,7 +1,7 @@
 package corex.core.impl;
 
-import corex.core.Mo;
-import corex.core.Moable;
+import corex.core.Joable;
+import corex.core.json.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +11,7 @@ import static corex.core.impl.ServerInfo.NON_SERVER_ID;
 /**
  * Created by Joshua on 2018/4/8.
  */
-public class GameRoute implements Moable {
+public class GameRoute implements Joable {
 
     private int id;
     private String module;
@@ -104,26 +104,25 @@ public class GameRoute implements Moable {
                 '}';
     }
 
-    public static GameRoute fromMo(Mo mo) {
+    public static GameRoute fromJo(JsonObject jo) {
         GameRoute gameRoute = new GameRoute();
-        gameRoute.setId(mo.getInt("id"));
-        gameRoute.setModule(mo.getString("module"));
-        gameRoute.setVersion(mo.getString("version"));
-        gameRoute.setServerId1(mo.getInt("serverId1"));
-        gameRoute.setServerId2(mo.getInt("serverId2"));
-        gameRoute.setServerId3(mo.getInt("serverId3"));
+        gameRoute.setId(jo.getInteger("id"));
+        gameRoute.setModule(jo.getString("m"));
+        gameRoute.setVersion(jo.getString("v"));
+        gameRoute.setServerId1(jo.getInteger("sId1"));
+        gameRoute.setServerId2(jo.getInteger("sId2"));
+        gameRoute.setServerId3(jo.getInteger("sId3"));
         return gameRoute;
     }
 
     @Override
-    public Mo toMo() {
-        Mo mo = Mo.mo();
-        mo.putInt("id", id);
-        mo.putString("module", module);
-        mo.putString("version", version);
-        mo.putInt("serverId1", serverId1);
-        mo.putInt("serverId2", serverId2);
-        mo.putInt("serverId3", serverId3);
-        return mo;
+    public JsonObject toJo() {
+        return new JsonObject()
+                .put("id", id)
+                .put("m", module)
+                .put("v", version)
+                .put("sId1", serverId1)
+                .put("sId2", serverId2)
+                .put("sId3", serverId3);
     }
 }

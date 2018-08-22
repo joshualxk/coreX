@@ -1,7 +1,8 @@
 package corex.demo;
 
-import corex.core.FutureMo;
+import corex.core.JoHolder;
 import corex.core.define.ExceptionDefine;
+import corex.core.json.JsonObject;
 import corex.game.Room;
 import corex.game.RoomPlayer;
 import corex.game.impl.AbstractGame;
@@ -58,20 +59,21 @@ public class DemoGameImpl extends AbstractGame implements DemoGame {
     }
 
     @Override
-    public FutureMo connect() {
-        FutureMo ret = FutureMo.futureMo();
-        ret.putInt("code", 123);
+    public JoHolder connect() {
+        JoHolder ret = JoHolder.newSync();
+        ret.jo().put("code", 123);
         return ret;
     }
 
     @Override
-    public FutureMo match(int type) {
+    public JoHolder match(int type) {
         String userId = userId();
 
-        FutureMo ret = FutureMo.futureMo();
+        JoHolder ret = JoHolder.newSync();
+        JsonObject jo = ret.jo();
 
         if (isPlayerJoined(userId)) {
-            ret.putString("info", "你已在游戏中");
+            jo.put("info", "你已在游戏中");
         } else {
             checkLimit();
             // 匹配
@@ -96,25 +98,24 @@ public class DemoGameImpl extends AbstractGame implements DemoGame {
             RoomPlayer roomPlayer = new DemoGamePlayer(userId, "roomPlayer" + userId, null, false, true, true, false);
             roomPlayer.enterRoom(found);
 
-            ret.putInt("roomId", found.id());
-            ret.putMo("u", roomPlayer.toMo());
+            jo.put("roomId", found.id());
+            jo.put("u", roomPlayer.toJo());
         }
 
         return ret;
     }
 
     @Override
-    public FutureMo leave() {
+    public JoHolder leave() {
 
         RoomPlayer player = ensurePlayer(userId());
         player.leaveRoom();
 
-        FutureMo ret = FutureMo.futureMo();
-        return ret;
+        return JoHolder.newSync();
     }
 
     @Override
-    public FutureMo prepare(boolean prepared) {
+    public JoHolder prepare(boolean prepared) {
 
         RoomPlayer player = ensurePlayer(userId());
         if (prepared) {
@@ -123,15 +124,13 @@ public class DemoGameImpl extends AbstractGame implements DemoGame {
             player.cancelPrepare();
         }
 
-        FutureMo ret = FutureMo.futureMo();
-        return ret;
+        return JoHolder.newSync();
     }
 
     @Override
-    public FutureMo play(int sjb) {
+    public JoHolder play(int sjb) {
         RoomPlayer player = ensurePlayer(userId());
 
-        FutureMo ret = FutureMo.futureMo();
-        return ret;
+        return JoHolder.newSync();
     }
 }

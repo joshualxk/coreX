@@ -1,8 +1,8 @@
 package corex.demo;
 
-import corex.core.FutureMo;
 import corex.core.define.TopicDefine;
-import corex.core.utils.CoreXUtil;
+import corex.core.json.JsonObject;
+import corex.core.model.Broadcast;
 import corex.core.utils.RandomUtil;
 import corex.game.RoomPlayer;
 import corex.game.impl.AbstractGame;
@@ -28,11 +28,12 @@ public class DemoGameInstance extends AbstractGameInstance {
         logger.debug("onStart");
 
         gotoPhase(1, 5000);
-        FutureMo b = FutureMo.futureMo();
-        b.putString("gid", id);
-        b.putBoolean("start", true);
-        b.putInt("curP", player(curPlayer).seat());
-        game.addBroadcast(CoreXUtil.externalBroadcast(room.roomChannel(), room.playerList(null), TopicDefine.GAME_INFO, b.toBodyHolder()));
+
+        JsonObject jo = new JsonObject();
+        jo.put("gid", id);
+        jo.put("start", true);
+        jo.put("curP", player(curPlayer).seat());
+        game.addBroadcast(Broadcast.newExternalBroadcast(room.roomChannel(), room.playerList(null), TopicDefine.GAME_INFO, jo));
 
     }
 
@@ -47,10 +48,10 @@ public class DemoGameInstance extends AbstractGameInstance {
 
         logger.debug("onPhase, {}", phase);
 
-        FutureMo b = FutureMo.futureMo();
-        b.putString("gid", id);
-        b.putInt("curP", player(curPlayer).seat());
-        game.addBroadcast(CoreXUtil.externalBroadcast(room.roomChannel(), room.playerList(null), TopicDefine.GAME_INFO, b.toBodyHolder()));
+        JsonObject jo = new JsonObject();
+        jo.put("gid", id);
+        jo.put("curP", player(curPlayer).seat());
+        game.addBroadcast(Broadcast.newExternalBroadcast(room.roomChannel(), room.playerList(null), TopicDefine.GAME_INFO, jo));
 
         gotoPhase(phase + 1, 5000);
     }
@@ -60,9 +61,9 @@ public class DemoGameInstance extends AbstractGameInstance {
 
         logger.debug("onEnd");
 
-        FutureMo b = FutureMo.futureMo();
-        b.putString("gid", id);
-        b.putBoolean("end", true);
-        game.addBroadcast(CoreXUtil.externalBroadcast(room.roomChannel(), room.playerList(null), TopicDefine.GAME_INFO, b.toBodyHolder()));
+        JsonObject jo = new JsonObject();
+        jo.put("gid", id);
+        jo.put("end", true);
+        game.addBroadcast(Broadcast.newExternalBroadcast(room.roomChannel(), room.playerList(null), TopicDefine.GAME_INFO, jo));
     }
 }

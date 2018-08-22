@@ -1,4 +1,4 @@
-package corex.core.impl.handler;
+package corex.gateway.handler;
 
 import corex.core.ConnLifeCycle;
 import corex.core.Connection;
@@ -6,10 +6,9 @@ import corex.core.Context;
 import corex.core.Handler;
 import corex.core.exception.CoreException;
 import corex.core.impl.WebSocketConnection;
-import corex.proto.ModelProto.ClientPayload;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 
@@ -17,20 +16,20 @@ import io.netty.util.AttributeKey;
  * Created by Joshua on 2018/2/28.
  */
 @ChannelHandler.Sharable
-public class BridgeHandler extends SimpleChannelInboundHandler<ClientPayload> {
+public class GatewayBridgeHandler extends ChannelInboundHandlerAdapter {
 
     private static final AttributeKey<Connection> CONNECTION_KEY = AttributeKey.valueOf("coreX.connection");
 
     protected final Context context;
     protected final Handler<Connection> openHandler;
 
-    public BridgeHandler(Context context, Handler<Connection> openHandler) {
+    public GatewayBridgeHandler(Context context, Handler<Connection> openHandler) {
         this.context = context;
         this.openHandler = openHandler;
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, ClientPayload msg) throws Exception {
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         triggerConnectionMsg(ctx, msg);
     }
 
@@ -38,7 +37,7 @@ public class BridgeHandler extends SimpleChannelInboundHandler<ClientPayload> {
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof ConnLifeCycle) {
             if (evt == ConnLifeCycle.WS_OPEN) {
-                Connection conn = new WebSocketConnection(ctx.channel(), context.coreX().codec());
+                Connection conn = new WebSocketConnection(ctx.channel());
                 triggerConnectionOpen(ctx, conn);
                 return;
             }
@@ -75,7 +74,7 @@ public class BridgeHandler extends SimpleChannelInboundHandler<ClientPayload> {
         }
     }
 
-    private void triggerConnectionMsg(ChannelHandlerContext ctx, ClientPayload msg) {
+    private void triggerConnectionMsg(ChannelHandlerContext ctx, Object msg) {
         Connection conn = ctx.channel().attr(CONNECTION_KEY).get();
         if (conn == null) {
             throw new CoreException("连接不存在");

@@ -1,9 +1,9 @@
 package corex.game.impl;
 
-import corex.core.FutureMo;
 import corex.core.define.ExceptionDefine;
 import corex.core.define.TopicDefine;
-import corex.core.utils.CoreXUtil;
+import corex.core.json.JsonObject;
+import corex.core.model.Broadcast;
 import corex.game.GameInstance;
 import corex.game.Room;
 import corex.game.RoomPlayer;
@@ -139,40 +139,40 @@ public abstract class AbstractRoom implements Room {
     public void onPlayerEnter(RoomPlayer roomPlayer) {
         logger.debug("onPlayerEnter.");
 
-        FutureMo b = FutureMo.futureMo();
-        b.putMo("roomPlayer", roomPlayer.toMo());
-        b.putBoolean("enter", true);
-        game().addBroadcast(CoreXUtil.externalBroadcast(roomChannel(), playerList(roomPlayer.userId()), TopicDefine.GAME_INFO, b.toBodyHolder()));
+        JsonObject jo = new JsonObject();
+        jo.put("roomPlayer", roomPlayer.toJo());
+        jo.put("enter", true);
+        game().addBroadcast(Broadcast.newExternalBroadcast(roomChannel(), playerList(roomPlayer.userId()), TopicDefine.GAME_INFO, jo));
     }
 
     @Override
     public void onPlayerLeave(RoomPlayer roomPlayer) {
         logger.debug("onPlayerLeave.");
 
-        FutureMo b = FutureMo.futureMo();
-        b.putInt("seat", roomPlayer.seat());
-        b.putBoolean("leave", true);
-        game().addBroadcast(CoreXUtil.externalBroadcast(roomChannel(), playerList(roomPlayer.userId()), TopicDefine.GAME_INFO, b.toBodyHolder()));
+        JsonObject jo = new JsonObject();
+        jo.put("seat", roomPlayer.seat());
+        jo.put("leave", true);
+        game().addBroadcast(Broadcast.newExternalBroadcast(roomChannel(), playerList(roomPlayer.userId()), TopicDefine.GAME_INFO, jo));
     }
 
     @Override
     public void onPlayerPrepared(RoomPlayer roomPlayer) {
         logger.debug("onPlayerPrepared.");
 
-        FutureMo b = FutureMo.futureMo();
-        b.putInt("seat", roomPlayer.seat());
-        b.putBoolean("prepare", true);
-        game().addBroadcast(CoreXUtil.externalBroadcast(roomChannel(), playerList(roomPlayer.userId()), TopicDefine.GAME_INFO, b.toBodyHolder()));
+        JsonObject jo = new JsonObject();
+        jo.put("seat", roomPlayer.seat());
+        jo.put("prepare", true);
+        game().addBroadcast(Broadcast.newExternalBroadcast(roomChannel(), playerList(roomPlayer.userId()), TopicDefine.GAME_INFO, jo));
     }
 
     @Override
     public void onPlayerCancelPrepared(RoomPlayer roomPlayer) {
         logger.debug("onPlayerCancelPrepared.");
 
-        FutureMo b = FutureMo.futureMo();
-        b.putInt("seat", roomPlayer.seat());
-        b.putBoolean("prepare", false);
-        game().addBroadcast(CoreXUtil.externalBroadcast(roomChannel(), playerList(roomPlayer.userId()), TopicDefine.GAME_INFO, b.toBodyHolder()));
+        JsonObject jo = new JsonObject();
+        jo.put("seat", roomPlayer.seat());
+        jo.put("prepare", false);
+        game().addBroadcast(Broadcast.newExternalBroadcast(roomChannel(), playerList(roomPlayer.userId()), TopicDefine.GAME_INFO, jo));
     }
 
     @Override
@@ -188,25 +188,27 @@ public abstract class AbstractRoom implements Room {
     @Override
     public void onPlayerPresent(RoomPlayer roomPlayer) {
         logger.debug("onPlayerPresent.");
-        FutureMo b = FutureMo.futureMo();
-        b.putString("roomPlayer", roomPlayer.nickName());
-        b.putBoolean("online", true);
-        game().addBroadcast(CoreXUtil.externalBroadcast(roomChannel(), playerList(roomPlayer.userId()), TopicDefine.GAME_INFO, b.toBodyHolder()));
+
+        JsonObject jo = new JsonObject();
+        jo.put("roomPlayer", roomPlayer.nickName());
+        jo.put("online", true);
+        game().addBroadcast(Broadcast.newExternalBroadcast(roomChannel(), playerList(roomPlayer.userId()), TopicDefine.GAME_INFO, jo));
     }
 
     @Override
     public void onPlayerAbsent(RoomPlayer roomPlayer) {
         logger.debug("onPlayerAbsent.");
-        FutureMo b = FutureMo.futureMo();
-        b.putString("roomPlayer", roomPlayer.nickName());
-        b.putBoolean("online", false);
-        game().addBroadcast(CoreXUtil.externalBroadcast(roomChannel(), playerList(roomPlayer.userId()), TopicDefine.GAME_INFO, b.toBodyHolder()));
+
+        JsonObject jo = new JsonObject();
+        jo.put("roomPlayer", roomPlayer.nickName());
+        jo.put("online", false);
+        game().addBroadcast(Broadcast.newExternalBroadcast(roomChannel(), playerList(roomPlayer.userId()), TopicDefine.GAME_INFO, jo));
     }
 
     protected void broadcastRoomInfo() {
-        FutureMo b = FutureMo.futureMo();
-        b.putMo("room", toMo());
-        game().addBroadcast(CoreXUtil.externalBroadcast(roomChannel(), playerList(null), TopicDefine.GAME_INFO, b.toBodyHolder()));
+        JsonObject jo = new JsonObject();
+        jo.put("room", toJo());
+        game().addBroadcast(Broadcast.newExternalBroadcast(roomChannel(), playerList(null), TopicDefine.GAME_INFO, jo));
     }
 
     @Override

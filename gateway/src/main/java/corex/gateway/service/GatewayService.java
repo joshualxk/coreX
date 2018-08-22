@@ -5,18 +5,18 @@ import corex.core.define.ExceptionDefine;
 import corex.core.define.ServiceNameDefine;
 import corex.core.exception.BizEx;
 import corex.core.exception.BizException;
-import corex.core.impl.ReadOnlyFutureMo;
 import corex.core.impl.SessionManagerImpl;
-import corex.core.impl.handler.BridgeHandler;
+import corex.gateway.handler.GatewayBridgeHandler;
+import corex.core.json.JsonObject;
+import corex.core.model.ClientPayload;
+import corex.core.model.Payload;
+import corex.core.model.RpcRequest;
+import corex.core.model.RpcResponse;
 import corex.core.service.SimpleModuleService;
 import corex.core.utils.CoreXUtil;
-import corex.gateway.handler.GatewayCodecHandler;
+import corex.gateway.handler.GatewayHttpHandler;
 import corex.module.GatewayModule;
 import corex.module.LoginModule;
-import corex.proto.ModelProto.ClientPayload;
-import corex.proto.ModelProto.Payload;
-import corex.proto.ModelProto.RpcRequest;
-import corex.proto.ModelProto.RpcResponse;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -32,7 +32,6 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
     private final SessionManager sessionManager = new SessionManagerImpl();
 
     private int port;
-    private String webroot;
 
     @Override
     public void init(Context context) {
@@ -42,11 +41,10 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
     @Override
     public void start(Future<Void> completeFuture) {
         port = coreX().config().getHttpPort();
-        webroot = coreX().config().getWebRoot();
 
         sessionManager.init(context);
 
-        BridgeHandler bridgeHandler = new BridgeHandler(context(), this::handleConn);
+        GatewayBridgeHandler gatewayBridgeHandler = new GatewayBridgeHandler(context(), this::handleConn);
 
         coreX().createNetServer(port, new ChannelInitializer<SocketChannel>() {
 
@@ -55,8 +53,8 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
                 ChannelPipeline pipeline = socketChannel.pipeline();
                 pipeline.addLast("httpServerCodec", new HttpServerCodec());
                 pipeline.addLast("httpObjectAggregator", new HttpObjectAggregator(65536));
-                pipeline.addLast("gatewayCodecHandler", new GatewayCodecHandler(coreX().codec(), false, webroot));
-                pipeline.addLast("bridgeHandler", bridgeHandler);
+                pipeline.addLast("gatewayCodecHandler", new GatewayHttpHandler(Codec.defaultCodec(), false));
+                pipeline.addLast("gatewayBridgeHandler", gatewayBridgeHandler);
             }
         }, ar -> {
             if (ar.succeeded()) {
@@ -82,7 +80,7 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
                     if (CoreXUtil.validateRpcRequest(request)) {
                         moduleRouter(conn, request);
                     } else {
-                        logger.info("消息格式不正确:{}.", request);
+                        logger.debug("客户端消息格式不正确:{}.", request);
                     }
                 }
             }
@@ -109,7 +107,7 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
                 return;
             }
 
-            request = CoreXUtil.authorize(request, sessionManager.userId(conn));
+            request = request.authorize(sessionManager.userId(conn));
             sendRequestForward(request, conn, request.getId());
         }
     }
@@ -140,21 +138,14 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
         }
     }
 
-    private Handler<AsyncResult<Object>> resultHandler(Connection conn, int requestId) {
+    private Handler<AsyncResult<Payload>> resultHandler(Connection conn, int requestId) {
 
-        return new OnlySuccessHandler<Object>(conn, requestId) {
+        return new OnlySuccessHandler<Payload>(conn, requestId) {
             @Override
-            public void onSuccess(Object o) {
-                if (o instanceof Payload) {
-                    Payload payload = (Payload) o;
-
-                    if (payload.hasRpcResponse()) {
-                        sendResponse(conn, payload.getRpcResponse());
-                        return;
-                    }
+            public void onSuccess(Payload o) {
+                if (o.hasRpcResponse()) {
+                    sendResponse(conn, o.getRpcResponse());
                 }
-                logger.warn("返回类型错误:{}.", o);
-                sendResponse(conn, requestId, ExceptionDefine.SYSTEM_ERR);
             }
         };
     }
@@ -164,7 +155,7 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
     }
 
     private static void sendResponse(Connection conn, int requestId, BizEx bizEx) {
-        conn.write(CoreXUtil.bizExRpcResponse(requestId, bizEx));
+        conn.write(RpcResponse.newBizExRpcResponse(requestId, bizEx));
     }
 
     private void handleLogin(Connection conn, RpcRequest request) {
@@ -173,17 +164,20 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
             return;
         }
 
-        String token = request.getAuth().getToken();
-        if (StringUtil.isNullOrEmpty(token)) {
+        String token;
+
+        try {
+            token = request.getBody().getString("to");
+        } catch (Exception e) {
             sendResponse(conn, request.getId(), ExceptionDefine.PARAM_ERR);
             return;
         }
 
         coreX().asyncAgent(LoginModule.class).authorize(token)
-                .addListener(new OnlySuccessHandler<Mo>(conn, request.getId()) {
+                .addListener(new OnlySuccessHandler<JoHolder>(conn, request.getId()) {
                     @Override
-                    public void onSuccess(Mo futureMapObject) {
-                        String userId = futureMapObject.getString("userId");
+                    public void onSuccess(JoHolder joHolder) {
+                        String userId = joHolder.jo().getString("userId");
 
                         if (sessionManager.hasLogin(conn)) {
                             sendResponse(conn, request.getId(), ExceptionDefine.ALREADY_LOGIN);
@@ -192,9 +186,9 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
 
                         sessionManager.login(conn, userId);
 
-                        FutureMo param = FutureMo.futureMo();
-                        param.putString("userId", userId);
-                        sendResponse(conn, CoreXUtil.newRpcResponse(request.getId(), param.toBodyHolder()));
+                        JsonObject param = new JsonObject();
+                        param.put("userId", userId);
+                        sendResponse(conn, RpcResponse.newSuccessRpcResponse(request.getId(), param));
 
                         logger.info("[session] userId:{}, action:login.", userId);
                     }
@@ -209,41 +203,41 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
 
         String userId = sessionManager.logout(conn);
 
-        sendResponse(conn, CoreXUtil.newRpcResponse(request.getId()));
+        sendResponse(conn, RpcResponse.newSuccessRpcResponse(request.getId()));
 
         logger.info("[session] userId:{}, action:logout.", userId);
     }
 
     private void handleRegister(Connection conn, RpcRequest request) throws Exception {
-        Mo params = new ReadOnlyFutureMo(request.getBody());
-        String channel = params.getString("register");
+        JsonObject jo = request.getBody();
+        String channel = jo.getString("register");
         if (StringUtil.isNullOrEmpty(channel) || channel.length() > 50) {
             throw new IllegalArgumentException("channel长度不合法");
         }
 
         sessionManager.register(conn, channel);
-        sendResponse(conn, CoreXUtil.newRpcResponse(request.getId()));
+        sendResponse(conn, RpcResponse.newSuccessRpcResponse(request.getId()));
     }
 
     private void handleUnregister(Connection conn, RpcRequest request) {
         sessionManager.unregister(conn);
-        sendResponse(conn, CoreXUtil.newRpcResponse(request.getId()));
+        sendResponse(conn, RpcResponse.newSuccessRpcResponse(request.getId()));
     }
 
     private void handleTest(Connection conn, RpcRequest request) {
-        sendResponse(conn, CoreXUtil.newRpcResponse(request.getId()));
+        sendResponse(conn, RpcResponse.newSuccessRpcResponse(request.getId()));
     }
 
     private void sendRequestForward(RpcRequest request, Connection conn, int requestId) {
-        Handler<AsyncResult<Object>> handler = resultHandler(conn, requestId);
+        Handler<AsyncResult<Payload>> handler = resultHandler(conn, requestId);
         coreX().sendMessage(request.getMethod().getModule(), request, handler);
     }
 
     @Override
-    public FutureMo info() {
-        FutureMo ret = baseInfo();
-        ret.putInt("port", port);
-        ret.putString("webroot", webroot);
+    public JoHolder info() {
+        JoHolder ret = super.info();
+        JsonObject jo = ret.jo();
+        jo.put("port", port);
         return ret;
     }
 

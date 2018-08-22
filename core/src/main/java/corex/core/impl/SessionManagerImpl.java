@@ -6,8 +6,8 @@ import corex.core.Session;
 import corex.core.SessionManager;
 import corex.core.define.ExceptionDefine;
 import corex.core.exception.BizEx;
+import corex.core.model.Broadcast;
 import corex.core.utils.CoreXUtil;
-import corex.proto.ModelProto.Broadcast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,7 +105,7 @@ public class SessionManagerImpl implements SessionManager {
 
     private void killOldSession(Session session) {
         BizEx bizEx = ExceptionDefine.DUPLICATE_LOGIN;
-        session.connection().write(CoreXUtil.kickMessage(bizEx.getCode(), bizEx.getMsg()));
+        session.connection().write(CoreXUtil.kickMessage(bizEx.getCode(), bizEx.getMessage()));
         logout0(session.connection());
     }
 
@@ -154,10 +154,7 @@ public class SessionManagerImpl implements SessionManager {
         protected int broadcast2Users(Broadcast broadcast) {
             Set<Connection> notifyConns = new HashSet<>();
 
-            int channelsCount = broadcast.getChannelsCount();
-            for (int i = 0; i < channelsCount; ++i) {
-                String channel = broadcast.getChannels(i);
-
+            for (String channel : broadcast.getChannels()) {
                 Set<Connection> set = channelMaps.get(channel);
                 if (set == null) {
                     continue;
@@ -165,10 +162,7 @@ public class SessionManagerImpl implements SessionManager {
                 notifyConns.addAll(set);
             }
 
-            int userIdsCount = broadcast.getUserIdsCount();
-            for (int i = 0; i < userIdsCount; ++i) {
-                String userId = broadcast.getUserIds(i);
-
+            for (String userId : broadcast.getUserIds()) {
                 Session session = onlineUsers.get(userId);
                 if (session == null) {
                     continue;

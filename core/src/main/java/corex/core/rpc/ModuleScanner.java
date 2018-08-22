@@ -1,7 +1,7 @@
 package corex.core.rpc;
 
 import corex.core.annotation.Api;
-import corex.core.annotation.Broadcast;
+import corex.core.annotation.Notice;
 import corex.core.annotation.Module;
 import corex.core.define.ConstDefine;
 import corex.core.define.ServiceNameDefine;
@@ -65,11 +65,11 @@ public abstract class ModuleScanner {
             }
         }
 
-        Broadcast broadcast = method.getAnnotation(Broadcast.class);
-        if (broadcast != null) {
-            RpcHandler handler = newBroadcastHandler(broadcast, method, invoker);
-            if (handlerMap.putIfAbsent(broadcast.topic(), handler) != null) {
-                throw new CoreException("broadcast 名字不能重复:" + handler.name());
+        Notice notice = method.getAnnotation(Notice.class);
+        if (notice != null) {
+            RpcHandler handler = newBroadcastHandler(notice, method, invoker);
+            if (handlerMap.putIfAbsent(notice.topic(), handler) != null) {
+                throw new CoreException("notice 名字不能重复:" + handler.name());
             }
         }
 
@@ -109,6 +109,6 @@ public abstract class ModuleScanner {
 
     protected abstract RpcHandler newApiHandler(Api api, Method m, Object invoker);
 
-    protected abstract RpcHandler newBroadcastHandler(Broadcast broadcast, Method m, Object invoker);
+    protected abstract RpcHandler newBroadcastHandler(Notice notice, Method m, Object invoker);
 
 }

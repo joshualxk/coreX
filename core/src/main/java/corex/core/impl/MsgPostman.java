@@ -1,10 +1,10 @@
 package corex.core.impl;
 
 import corex.core.Context;
-import corex.core.FutureMo;
 import corex.core.Handler;
 import corex.core.define.ConstDefine;
 import corex.core.define.ExceptionDefine;
+import corex.core.json.JsonObject;
 import corex.core.utils.CoreXUtil;
 import corex.core.utils.RandomUtil;
 import org.slf4j.Logger;
@@ -104,7 +104,7 @@ public class MsgPostman {
         msgHandler = handler;
     }
 
-    public FutureMo info() {
+    public JsonObject info() {
         return recoverableConnectionManager.info();
     }
 

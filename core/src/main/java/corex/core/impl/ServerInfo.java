@@ -1,14 +1,14 @@
 package corex.core.impl;
 
-import corex.core.Mo;
-import corex.core.Moable;
+import corex.core.Joable;
+import corex.core.json.JsonObject;
 
 import java.util.Objects;
 
 /**
  * Created by Joshua on 2018/3/20.
  */
-public class ServerInfo implements Moable {
+public class ServerInfo implements Joable {
 
     public static final int NON_SERVER_ID = 0;
 
@@ -86,22 +86,21 @@ public class ServerInfo implements Moable {
                 '}';
     }
 
-    public static ServerInfo fromMo(Mo mo) {
+    public static ServerInfo fromJo(JsonObject jo) {
         ServerInfo serverInfo = new ServerInfo();
-        serverInfo.setServerId(mo.getInt("serverId"));
-        serverInfo.setRole(mo.getInt("role"));
-        serverInfo.setHost(mo.getString("host"));
-        serverInfo.setPort(mo.getInt("port"));
+        serverInfo.setServerId(jo.getInteger("id"));
+        serverInfo.setRole(jo.getInteger("r"));
+        serverInfo.setHost(jo.getString("h"));
+        serverInfo.setPort(jo.getInteger("p"));
         return serverInfo;
     }
 
     @Override
-    public Mo toMo() {
-        Mo mo = Mo.mo();
-        mo.putInt("serverId", serverId);
-        mo.putInt("role", role);
-        mo.putString("host", host);
-        mo.putInt("port", port);
-        return mo;
+    public JsonObject toJo() {
+        return new JsonObject()
+                .put("id", serverId)
+                .put("r", role)
+                .put("h", host)
+                .put("p", port);
     }
 }

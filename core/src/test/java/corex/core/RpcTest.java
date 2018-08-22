@@ -26,7 +26,7 @@ public class RpcTest {
 
         ServerInfo s = serverInfos.get(0);
 
-        System.out.println(standaloneClient.connect(s.getHost(), s.getPort(), HarborClientModule.class).info());
-        System.out.println();
+        System.out.println(standaloneClient.connect(s.getHost(), s.getPort(), HarborClientModule.class).info().jo());
     }
+
 }

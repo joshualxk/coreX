@@ -1,99 +1,103 @@
 package corex.core;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import corex.proto.ModelProto;
-import corex.proto.ModelProto.ListValue;
-import org.junit.Before;
+import corex.core.json.JsonArray;
+import corex.core.json.JsonObject;
+import corex.core.model.Payload;
+import corex.core.model.RpcResponse;
+import corex.core.utils.CoreXUtil;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 /**
- * Created by Joshua on 2018/2/27.
+ * Created by Joshua on 2018/8/24
  */
 public class CodecTest {
 
-    ObjectMapper objectMapper = new ObjectMapper();
-    Map<String, Long> map;
-    ModelProto.Struct struct;
+    @Test
+    public void method1() throws InterruptedException {
+    }
 
-    List<String> list;
-    ListValue listValue;
+    @Test
+    public void method2() throws InterruptedException {
+        codecSpeedTest(20000, CoreXUtil::initPipeline);
+    }
 
-    byte[] bs1;
-    byte[] bs2;
+    private void codecSpeedTest(int counter, Handler<ChannelPipeline> handler) throws InterruptedException {
 
-    @Before
-    public void before() throws JsonProcessingException {
-        int n = 1000;
-        map = new HashMap<>();
-        list = new ArrayList<>();
-        ModelProto.Struct.Builder builder = ModelProto.Struct.newBuilder();
-        ListValue.Builder listBuilder = ListValue.newBuilder();
-        for (int i = 0; i < n; ++i) {
-            map.put("param" + i, (long) i);
-            list.add("str" + i);
-            builder.putFields("param" + i, ModelProto.Value.newBuilder().setLongValue(i).build());
-            listBuilder.addValues(ModelProto.Value.newBuilder().setStringValue("str" + i));
+        CountDownLatch countDownLatch = new CountDownLatch(counter);
+
+        {
+            EventLoopGroup boss = new NioEventLoopGroup(1);
+            EventLoopGroup worker = new NioEventLoopGroup(1);
+            ServerBootstrap b = new ServerBootstrap();
+            b.group(boss, worker)
+                    .channel(NioServerSocketChannel.class)
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        protected void initChannel(SocketChannel socketChannel) throws Exception {
+                            ChannelPipeline p = socketChannel.pipeline();
+                            handler.handle(p);
+
+                            p.addLast(new SimpleChannelInboundHandler<Payload>() {
+                                @Override
+                                protected void channelRead0(ChannelHandlerContext ctx, Payload msg) throws Exception {
+//                                    System.out.println(msg.getId());
+
+                                    int ix = msg.getRpcResponse().getBody().getInteger("ix");
+                                    countDownLatch.countDown();
+                                }
+                            });
+                        }
+                    });
+
+            b.bind(2333).sync();
         }
 
-        struct = builder.build();
-        listValue = listBuilder.build();
+        {
+            EventLoopGroup worker = new NioEventLoopGroup(1);
+            Bootstrap b = new Bootstrap();
+            b.group(worker)
+                    .channel(NioSocketChannel.class)
+                    .handler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        protected void initChannel(SocketChannel socketChannel) throws Exception {
+                            ChannelPipeline p = socketChannel.pipeline();
+                            handler.handle(p);
+                        }
+                    });
 
-        bs1 = objectMapper.writeValueAsBytes(map);
-        bs2 = struct.toByteArray();
-    }
+            Channel ch = b.connect("127.0.0.1", 2333).sync().channel();
 
-    @Test
-    public void sizeTest1() throws IOException {
-        byte[] bs = objectMapper.writeValueAsBytes(map);
-        System.out.println(bs.length);
-        byte[] bs2 = struct.toByteArray();
-        System.out.println(bs2.length);
-    }
+            for (int i = 0; i < counter; ++i) {
+                Payload payload = Payload.newPayload(i, RpcResponse.newSuccessRpcResponse(i, newJo(i)));
+                ch.write(payload);
 
-    @Test
-    public void sizeTest2() throws IOException {
-        byte[] bs = objectMapper.writeValueAsBytes(list);
-        System.out.println(bs.length);
-        byte[] bs2 = listValue.toByteArray();
-        System.out.println(bs2.length);
-    }
+                if (i % 23 == 0) {
+                    ch.flush();
+                }
+            }
 
-    @Test
-    public void speedTest1() throws IOException {
-        for (int i = 0; i < 10000; ++i) {
-//            struct.toByteArray();
-            listValue.toByteArray();
+            ch.flush();
         }
+
+        countDownLatch.await();
     }
 
-    @Test
-    public void speedTest2() throws IOException {
-        for (int i = 0; i < 10000; ++i) {
-//            objectMapper.writeValueAsBytes(map);
-            objectMapper.writeValueAsBytes(list);
-        }
-    }
-
-    @Test
-    public void speedTest3() throws IOException {
-        for (int i = 0; i < 10000; ++i) {
-            ModelProto.Struct.parseFrom(bs2);
-
-        }
-    }
-
-    @Test
-    public void speedTest4() throws IOException {
-        for (int i = 0; i < 10000; ++i) {
-            objectMapper.readValue(bs1, Map.class);
-        }
+    private JsonObject newJo(int ix) {
+        return new JsonObject()
+                .put("ix", ix)
+                .put("param1", ix)
+                .put("param2", "str_" + ix)
+                .put("arr", new JsonArray().add(1).add(2))
+                .put("f1", 0.1f + ix);
     }
 
 }

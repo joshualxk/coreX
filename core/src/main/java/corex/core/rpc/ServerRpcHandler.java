@@ -1,15 +1,17 @@
 package corex.core.rpc;
 
-import corex.core.FutureMo;
-import corex.core.Lo;
-import corex.core.Mo;
+import corex.core.JoHolder;
 import corex.core.define.ConstDefine;
 import corex.core.define.ExceptionDefine;
 import corex.core.exception.CoreException;
+import corex.core.json.JsonArray;
+import corex.core.json.JsonObject;
+import corex.core.model.Auth;
 import corex.core.rpc.MethodParamDetail.ParamDetail;
-import corex.proto.ModelProto.Auth;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by Joshua on 2018/3/8.
@@ -26,7 +28,7 @@ public class ServerRpcHandler implements RpcHandler {
         this.requireType = requireType;
     }
 
-    public FutureMo handle(Auth auth, Mo params) throws Exception {
+    public JoHolder handle(Auth auth, JsonObject params) throws Exception {
 
         // 授权类型不一致
         final int clientType = auth.getType();
@@ -59,17 +61,17 @@ public class ServerRpcHandler implements RpcHandler {
             }
             return null;
         } else {
-            return (FutureMo) ret;
+            return (JoHolder) ret;
         }
 
     }
 
     @Override
-    public FutureMo convert(Object[] args) throws Exception {
+    public JsonObject convert(Object[] args) throws Exception {
         throw new UnsupportedOperationException("convert");
     }
 
-    private Object invoke(Mo params, MethodParamDetail methodParamDetail) throws Exception {
+    private Object invoke(JsonObject params, MethodParamDetail methodParamDetail) throws Exception {
         if (methodParamDetail.params.length == 0) {
             return methodParamDetail.method.invoke(invoker);
         } else {
@@ -94,30 +96,37 @@ public class ServerRpcHandler implements RpcHandler {
         }
     }
 
-    private static Object getListValue(Mo params, ParamDetail pd) {
-        Lo lo = params.getList(pd.param.value());
+    private static List getListValue(JsonObject params, ParamDetail pd) {
+        JsonArray ja = params.getJsonArray(pd.param.value());
+
+        if (ja == null) {
+            return Collections.EMPTY_LIST;
+        }
+
         switch (pd.parameterizedType) {
             case BOOLEAN:
-                return lo.getBooleanList();
             case INT:
-                return lo.getIntList();
             case LONG:
-                return lo.getLongList();
             case DOUBLE:
-                return lo.getDoubleList();
             case STRING:
-                return lo.getStringList();
-            case MO:
-                return lo.getMoList();
+                return ja.getList();
+            case JO:
+            default:
+                break;
         }
         throw new CoreException("List参数类型不合法:" + pd.parameterizedType);
     }
 
-    private static Object getMo(Mo params, ParamDetail pd) {
-        return params.getMo(pd.param.value());
+    private static JsonObject getJo(JsonObject params, ParamDetail pd) {
+        JsonObject jo = params.getJsonObject(pd.param.value());
+        if (jo == null) {
+            jo = new JsonObject();
+        }
+
+        return jo;
     }
 
-    private static Object getValue(Mo params, ParamDetail pd) {
+    private static Object getValue(JsonObject params, ParamDetail pd) {
         if (!params.containsKey(pd.param.value())) {
             if (!pd.param.optional()) {
                 throw ExceptionDefine.PARAM_ERR.build();
@@ -128,25 +137,25 @@ public class ServerRpcHandler implements RpcHandler {
             switch (pd.type) {
                 case LIST:
                     return getListValue(params, pd);
-                case MO:
-                    return getMo(params, pd);
+                case JO:
+                    return getJo(params, pd);
                 case ARRAY:
                     break;
                 case BOOLEAN:
-                    return params.getBooleanOrDefault(pd.param.value(), false);
+                    return params.getBoolean(pd.param.value(), false);
                 case INT:
-                    return params.getIntOrDefault(pd.param.value(), 0);
+                    return params.getInteger(pd.param.value(), 0);
                 case LONG:
-                    return params.getLongOrDefault(pd.param.value(), 0L);
+                    return params.getLong(pd.param.value(), 0L);
                 case DOUBLE:
-                    return params.getDoubleOrDefault(pd.param.value(), 0D);
+                    return params.getDouble(pd.param.value(), 0D);
                 case STRING:
-                    return params.getStringOrDefault(pd.param.value(), "");
+                    return params.getString(pd.param.value(), "");
                 default:
                     // do nothing
                     break;
             }
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             throw ExceptionDefine.PARAM_ERR.build();
         }
 

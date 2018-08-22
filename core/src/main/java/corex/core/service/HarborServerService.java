@@ -5,14 +5,13 @@ import corex.core.define.ConstDefine;
 import corex.core.define.ExceptionDefine;
 import corex.core.exception.BizEx;
 import corex.core.exception.BizException;
-import corex.core.exception.CoreException;
 import corex.core.impl.RecoverableConnectionManager;
+import corex.core.model.Broadcast;
+import corex.core.model.Payload;
+import corex.core.model.RpcRequest;
+import corex.core.model.RpcResponse;
 import corex.core.utils.CoreXUtil;
 import corex.module.HarborServerModule;
-import corex.proto.ModelProto.Broadcast;
-import corex.proto.ModelProto.Payload;
-import corex.proto.ModelProto.RpcRequest;
-import corex.proto.ModelProto.RpcResponse;
 
 /**
  * Created by Joshua on 2018/2/27.
@@ -79,22 +78,14 @@ public class HarborServerService extends SimpleModuleService implements HarborSe
         });
     }
 
-    private Handler<AsyncResult<Object>> resultHandler(long id, int requestId, Connection conn) {
+    private Handler<AsyncResult<Payload>> resultHandler(long id, int requestId, Connection conn) {
         return ar -> {
-            Payload payload = null;
-            Throwable th = null;
+            Payload payload;
 
             if (ar.succeeded()) {
-                if (ar.result() instanceof Payload) {
-                    payload = (Payload) ar.result();
-                } else {
-                    th = new CoreException("返回类型错误, expected: " + Payload.class.getName() + ", found:" + ar.result().getClass().getName());
-                }
+                payload = ar.result();
             } else {
-                th = ar.cause();
-            }
-
-            if (th != null) {
+                Throwable th = ar.cause();
                 BizEx bizEx;
                 if (th instanceof BizException) {
                     bizEx = (BizException) th;
@@ -102,12 +93,13 @@ public class HarborServerService extends SimpleModuleService implements HarborSe
                     th.printStackTrace();
                     bizEx = ExceptionDefine.SYSTEM_ERR;
                 }
-                RpcResponse rpcResponse = CoreXUtil.bizExRpcResponse(requestId, bizEx);
+                RpcResponse rpcResponse = RpcResponse.newBizExRpcResponse(requestId, bizEx);
 
-                payload = Payload.newBuilder().setId(id).setRpcResponse(rpcResponse).build();
+                payload = Payload.newPayload(id, rpcResponse);
             }
 
             conn.write(payload);
+
         };
 
     }
@@ -120,8 +112,4 @@ public class HarborServerService extends SimpleModuleService implements HarborSe
         recoverableConnectionManager.broadcast(payload, broadcast.getRole(), excepted);
     }
 
-    @Override
-    public FutureMo info() {
-        return baseInfo();
-    }
 }

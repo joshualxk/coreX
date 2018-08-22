@@ -7,6 +7,6 @@ public interface BizEx {
 
     int getCode();
 
-    String getMsg();
+    String getMessage();
 
 }

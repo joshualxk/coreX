@@ -1,7 +1,7 @@
 package corex.core.rpc;
 
 import corex.core.annotation.Api;
-import corex.core.annotation.Broadcast;
+import corex.core.annotation.Notice;
 import corex.core.define.ConstDefine;
 import corex.core.exception.CoreException;
 
@@ -34,7 +34,7 @@ public class ServerModuleScanner extends ModuleScanner {
     }
 
     @Override
-    protected RpcHandler newBroadcastHandler(Broadcast broadcast, Method m, Object invoker) {
+    protected RpcHandler newBroadcastHandler(Notice notice, Method m, Object invoker) {
         MethodParamDetail methodParamDetail = new ParamParser().parseMethodParamDetail(m);
         return new ServerRpcHandler(methodParamDetail, invoker, ConstDefine.AUTH_TYPE_INTERNAL);
     }

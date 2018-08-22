@@ -1,7 +1,7 @@
 package corex.game;
 
-import corex.proto.ModelProto.Auth;
-import corex.proto.ModelProto.Broadcast;
+import corex.core.model.Auth;
+import corex.core.model.Broadcast;
 
 /**
  * Created by Joshua on 2018/3/27.

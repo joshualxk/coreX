@@ -1,6 +1,6 @@
 package corex.module;
 
-import corex.core.FutureMo;
+import corex.core.JoHolder;
 import corex.core.annotation.Api;
 import corex.core.annotation.Module;
 import corex.core.annotation.Param;
@@ -13,11 +13,11 @@ import corex.core.define.ConstDefine;
 public interface TestModule {
 
     @Api(value = "i", type = ConstDefine.AUTH_TYPE_ADMIN)
-    FutureMo info();
+    JoHolder info();
 
     @Api(value = "async", type = ConstDefine.AUTH_TYPE_NON)
-    FutureMo async(@Param("1") int delaySeconds);
+    JoHolder async(@Param("1") int delaySeconds);
 
     @Api(value = "async2", type = ConstDefine.AUTH_TYPE_NON)
-    FutureMo async2(@Param("1") int delaySeconds);
+    JoHolder async2(@Param("1") int delaySeconds);
 }

@@ -1,18 +1,18 @@
 package corex.core.impl;
 
-import corex.core.*;
+import corex.core.AsyncResult;
+import corex.core.Connection;
+import corex.core.Context;
+import corex.core.Handler;
 import corex.core.exception.CoreException;
 import corex.core.impl.handler.InitialHandler;
+import corex.core.json.JsonObject;
+import corex.core.model.Payload;
 import corex.core.utils.CoreXUtil;
-import corex.proto.ModelProto.Payload;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.protobuf.ProtobufDecoder;
-import io.netty.handler.codec.protobuf.ProtobufEncoder;
-import io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
-import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -106,15 +106,12 @@ public class RecoverableConnectionManager {
             @Override
             protected void initChannel(SocketChannel socketChannel) throws Exception {
                 ChannelPipeline p = socketChannel.pipeline();
-                p.addLast("frameDecoder", new ProtobufVarint32FrameDecoder());
-                p.addLast("protobufDecoder", new ProtobufDecoder(Payload.getDefaultInstance()));
-                p.addLast("frameEncoder", new ProtobufVarint32LengthFieldPrepender());
-                p.addLast("protobufEncoder", new ProtobufEncoder());
+                CoreXUtil.initPipeline(p);
 
                 InitialHandler initialHandler = new InitialHandler(context.coreX().serverId(), context.coreX().role(), context.coreX().startTime());
                 p.addLast("initialHandler", initialHandler);
-                initialHandler.setFirstPingHandler(ping -> context.executeFromIO(v -> {
-                    final long startTime = ping.getStartTime();
+                initialHandler.setServerAuthHandler(auth -> context.executeFromIO(v -> {
+                    final long startTime = auth.startTime;
 
                     RecoverableConnection conn = connection;
                     if (conn.getStartTime() == 0) {
@@ -161,17 +158,14 @@ public class RecoverableConnectionManager {
             @Override
             protected void initChannel(SocketChannel socketChannel) throws Exception {
                 ChannelPipeline p = socketChannel.pipeline();
-                p.addLast("frameDecoder", new ProtobufVarint32FrameDecoder());
-                p.addLast("protobufDecoder", new ProtobufDecoder(Payload.getDefaultInstance()));
-                p.addLast("frameEncoder", new ProtobufVarint32LengthFieldPrepender());
-                p.addLast("protobufEncoder", new ProtobufEncoder());
+                CoreXUtil.initPipeline(p);
 
                 InitialHandler initialHandler = new InitialHandler(context.coreX().serverId(), context.coreX().role(), context.coreX().startTime());
                 p.addLast("initialHandler", initialHandler);
-                initialHandler.setFirstPingHandler(ping -> context.executeFromIO(v -> {
-                    final int serverId = ping.getServerId();
-                    final int role = ping.getRole();
-                    final long startTime = ping.getStartTime();
+                initialHandler.setServerAuthHandler(auth -> context.executeFromIO(v -> {
+                    final int serverId = auth.id;
+                    final int role = auth.role;
+                    final long startTime = auth.startTime;
                     final Channel channel = p.channel();
 
                     boolean requireNew = false;
@@ -210,10 +204,10 @@ public class RecoverableConnectionManager {
         }, resultHandler);
     }
 
-    public FutureMo info() {
-        FutureMo ret = FutureMo.futureMo();
+    public JsonObject info() {
+        JsonObject ret = new JsonObject();
         for (Map.Entry<Integer, RecoverableConnection> entry : allConnections.entrySet()) {
-            ret.putBoolean("" + entry.getKey(), entry.getValue().isOpen());
+            ret.put("" + entry.getKey(), entry.getValue().isOpen());
         }
         return ret;
     }

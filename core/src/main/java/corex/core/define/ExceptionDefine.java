@@ -16,9 +16,6 @@ public final class ExceptionDefine {
         return new BizException(code, msg);
     }
 
-    // 正数与后端错误对应
-    public static final BizExceptionBuilder LACK_OF_GOLD = new BizExceptionBuilder(1301, "金币不足");
-
     // -1 ~ -999 为不可忽略错误
     public static final BizExceptionBuilder SYSTEM_BUSY = new BizExceptionBuilder(-67, "系统繁忙");
     public static final BizExceptionBuilder SYSTEM_ERR = new BizExceptionBuilder(-68, "系统错误");
@@ -39,18 +36,9 @@ public final class ExceptionDefine {
     public static final BizExceptionBuilder NOT_IN_GAME = new BizExceptionBuilder(-83, "不在游戏中");
 
     //  -1000+为游戏逻辑错误
-    public static final BizExceptionBuilder VOTE_END = new BizExceptionBuilder(-1001, "投注已结束");
-
-    public static final BizExceptionBuilder GUEST_EXPIRE = new BizExceptionBuilder(-1005, "长时间未登陆");
-    public static final BizExceptionBuilder IDLE_EXPIRE = new BizExceptionBuilder(-1006, "长时间未投注");
-    public static final BizExceptionBuilder ROOM_CLOSED = new BizExceptionBuilder(-1007, "房间已关闭");
     public static final BizExceptionBuilder IN_ROOM = new BizExceptionBuilder(-1008, "你已在房间中");
     public static final BizExceptionBuilder NOT_IN_ROOM = new BizExceptionBuilder(-1009, "你不在房间中");
     public static final BizExceptionBuilder ROOM_NUM_LIMIT = new BizExceptionBuilder(-1010, "人数已满");
     public static final BizExceptionBuilder ROOM_NOT_MATCH = new BizExceptionBuilder(-1011, "找不到匹配房间");
 
-    // 运营活动
-    public static final BizExceptionBuilder HAS_SIGNIN = new BizExceptionBuilder(-2001, "本日已签到");
-    public static final BizExceptionBuilder RECV_FAIL = new BizExceptionBuilder(-2002, "领取礼包失败");
-    public static final BizExceptionBuilder LOTTO_ZERO = new BizExceptionBuilder(-2002, "刮刮乐次数已用完");
 }

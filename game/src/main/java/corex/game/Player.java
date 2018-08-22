@@ -1,11 +1,11 @@
 package corex.game;
 
-import corex.core.Moable;
+import corex.core.Joable;
 
 /**
  * Created by Joshua on 2018/3/23.
  */
-public interface Player extends Moable {
+public interface Player extends Joable {
 
     String userId();
 

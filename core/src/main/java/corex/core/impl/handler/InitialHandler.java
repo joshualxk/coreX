@@ -1,11 +1,13 @@
 package corex.core.impl.handler;
 
 import corex.core.Handler;
-import corex.core.exception.CoreException;
-import corex.proto.ModelProto.Payload;
-import corex.proto.ModelProto.Ping;
+import corex.core.model.Payload;
+import corex.core.model.ServerAuth;
+import corex.core.utils.CoreXUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
@@ -14,10 +16,12 @@ import java.util.Objects;
  */
 public class InitialHandler extends SimpleChannelInboundHandler<Payload> {
 
+    private static Logger LOG = LoggerFactory.getLogger(InitialHandler.class);
+
     private int serverId;
     private int role;
     private long startTime;
-    private Handler<Ping> firstPingHandler;
+    private Handler<ServerAuth> serverAuthHandler;
     private Handler<Payload> payloadHandler;
 
     private boolean hasReadFirstMsg;
@@ -28,8 +32,8 @@ public class InitialHandler extends SimpleChannelInboundHandler<Payload> {
         this.startTime = startTime;
     }
 
-    public void setFirstPingHandler(Handler<Ping> firstPingHandler) {
-        this.firstPingHandler = Objects.requireNonNull(firstPingHandler);
+    public void setServerAuthHandler(Handler<ServerAuth> serverAuthHandler) {
+        this.serverAuthHandler = Objects.requireNonNull(serverAuthHandler);
     }
 
     public void setPayloadHandler(Handler<Payload> payloadHandler) {
@@ -40,17 +44,21 @@ public class InitialHandler extends SimpleChannelInboundHandler<Payload> {
     protected void channelRead0(ChannelHandlerContext ctx, Payload msg) throws Exception {
         if (!hasReadFirstMsg) {
             hasReadFirstMsg = true;
-            if (msg.hasPing()) {
-                Handler<Ping> handler = firstPingHandler;
-                if (handler != null) {
-                    // 收到ping后才算连接成功
-                    handler.handle(msg.getPing());
-                } else {
-                    throw new CoreException("firstPingHandler未初始化");
+
+            try {
+                if (msg.hasServerAuth()) {
+                    Handler<ServerAuth> handler = serverAuthHandler;
+                    if (handler != null) {
+                        // 收到auth后才算连接成功
+                        handler.handle(msg.getServerAuth());
+                        return;
+                    }
                 }
-            } else {
-                ctx.close();
+            } catch (Exception e) {
+
             }
+
+            ctx.close();
         } else {
             payloadHandler.handle(msg);
         }
@@ -59,17 +67,11 @@ public class InitialHandler extends SimpleChannelInboundHandler<Payload> {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
-        ctx.writeAndFlush(newPing());
+        ctx.writeAndFlush(buildFirstPayload());
     }
 
-    private Payload newPing() {
-        return Payload.newBuilder().setPing(
-                Ping.newBuilder()
-                        .setServerId(serverId)
-                        .setRole(role)
-                        .setStartTime(startTime)
-                        .setTimestamp(System.currentTimeMillis())
-                        .build()
-        ).build();
+    private Payload buildFirstPayload() {
+        ServerAuth sa = new ServerAuth(serverId, role, startTime, CoreXUtil.sysTime());
+        return Payload.newPayload(sa);
     }
 }

@@ -6,13 +6,14 @@ import corex.core.define.ConstDefine;
 import corex.core.define.ExceptionDefine;
 import corex.core.define.ServiceNameDefine;
 import corex.core.exception.CoreException;
+import corex.core.json.JsonArray;
+import corex.core.json.JsonObject;
+import corex.core.model.Broadcast;
+import corex.core.model.Payload;
+import corex.core.model.RpcRequest;
 import corex.core.rpc.BlockControl;
 import corex.core.rpc.RpcClient;
-import corex.core.utils.CoreXUtil;
 import corex.module.BroadcastModule;
-import corex.proto.ModelProto.Broadcast;
-import corex.proto.ModelProto.Payload;
-import corex.proto.ModelProto.RpcRequest;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -68,7 +69,6 @@ public class CoreXImpl implements CoreX {
     private final EventLoopGroup acceptorEventLoopGroup;
     private final EventLoopGroup eventLoopGroup;
     private final ExecutorService workerPool;
-    private final Codec codec = new ProtobufCodec();
     private final CoreXConfig coreXConfig;
     private final int serverId;
     private final int role;
@@ -115,11 +115,6 @@ public class CoreXImpl implements CoreX {
     @Override
     public int role() {
         return role;
-    }
-
-    @Override
-    public Codec codec() {
-        return codec;
     }
 
     @Override
@@ -248,24 +243,24 @@ public class CoreXImpl implements CoreX {
 
     private Msg wrapMsg(Context context, boolean needReply, Object raw) {
         long id = needReply ? msgCounter.getAndIncrement() : 0;
-        Object body;
+        Payload body;
         if (raw instanceof RpcRequest) {
             RpcRequest rpcRequest = (RpcRequest) raw;
-            Payload payload = CoreXUtil.assemblePayload(id, rpcRequest).addRoutes(context.name()).build();
-            body = payload;
+            body = Payload.newPayload(id, rpcRequest).addRoute(context.name());
         } else if (raw instanceof Broadcast) {
             Broadcast broadcast = (Broadcast) raw;
-            Payload payload = CoreXUtil.assemblePayload(id, broadcast).addRoutes(context.name()).build();
-            body = payload;
+            body = Payload.newPayload(id, broadcast).addRoute(context.name());
+        } else if (raw instanceof Payload) {
+            body = (Payload) raw;
         } else {
-            body = raw;
+            throw new CoreException("不支持的消息类型:" + (raw == null ? null : raw.getClass().getName()));
         }
 
         return new InternalMsg(context, id, body);
     }
 
     @Override
-    public void sendMessage(String address, Object msg, Handler<AsyncResult<Object>> replyHandler) {
+    public void sendMessage(String address, Object msg, Handler<AsyncResult<Payload>> replyHandler) {
         Context context = ensureContext();
         Service service = getService(address);
 
@@ -391,11 +386,7 @@ public class CoreXImpl implements CoreX {
 
     @Override
     public void onBroadcast(Broadcast broadcast) {
-        if (!broadcast.hasPush()) {
-            return;
-        }
-
-        List<Handler<Broadcast>> handlers = broadcast.getInternal() ? internalBroadcastHandlers : externalBroadcastHandlers;
+        List<Handler<Broadcast>> handlers = broadcast.isInternal() ? internalBroadcastHandlers : externalBroadcastHandlers;
         for (Handler<Broadcast> h : handlers) {
             h.handle(broadcast);
         }
@@ -431,7 +422,7 @@ public class CoreXImpl implements CoreX {
     }
 
     @Override
-    public void onMsgSent(long id, Handler<AsyncResult<Object>> handler) {
+    public void onMsgSent(long id, Handler<AsyncResult<Payload>> handler) {
         Context context = ensureContext();
         msgHandler.onMsgSent(id, ar -> {
             context.runOnContext(v -> handler.handle(ar));
@@ -439,7 +430,7 @@ public class CoreXImpl implements CoreX {
     }
 
     @Override
-    public void onMsgReply(long id, AsyncResult<Object> resp) {
+    public void onMsgReply(long id, AsyncResult<Payload> resp) {
         msgHandler.onMsgReply(id, resp);
     }
 
@@ -448,20 +439,20 @@ public class CoreXImpl implements CoreX {
         msgHandler.removeExpireMsg();
     }
 
-    public FutureMo info() {
-        FutureMo ret = FutureMo.futureMo();
-        ret.putInt("serverId", serverId);
-        ret.putInt("role", role);
-        ret.putLong("startTime", startTime);
+    public JoHolder info() {
+        JoHolder ret = JoHolder.newSync();
+        JsonObject jo = ret.jo();
+        jo.put("serverId", serverId);
+        jo.put("role", role);
+        jo.put("startTime", startTime);
 
-        Lo lo = Lo.lo();
+        JsonArray ja = new JsonArray();
         for (Map.Entry<String, Service> entry : serviceMap.entrySet()) {
-            lo.addString(entry.getKey());
+            ja.add(entry.getKey());
         }
-        ret.putList("services", lo);
-
-        ret.putInt("timeoutsNum", timeouts.size());
-        ret.putInt("pendingMsgNum", msgHandler.pendingMsgNum());
+        jo.put("services", ja);
+        jo.put("timeoutsNum", timeouts.size());
+        jo.put("pendingMsgNum", msgHandler.pendingMsgNum());
 
         return ret;
     }

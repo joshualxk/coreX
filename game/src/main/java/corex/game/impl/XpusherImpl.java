@@ -3,9 +3,9 @@ package corex.game.impl;
 import corex.core.Context;
 import corex.core.define.ConstDefine;
 import corex.core.define.ExceptionDefine;
+import corex.core.model.Auth;
+import corex.core.model.Broadcast;
 import corex.game.Xpusher;
-import corex.proto.ModelProto.Auth;
-import corex.proto.ModelProto.Broadcast;
 
 import java.util.LinkedList;
 import java.util.List;

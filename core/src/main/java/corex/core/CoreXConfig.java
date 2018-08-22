@@ -8,7 +8,6 @@ public class CoreXConfig {
     private int role;
     private int harborPort;
     private int httpPort;
-    private String webRoot;
 
     public int getId() {
         return id;
@@ -42,14 +41,6 @@ public class CoreXConfig {
         this.httpPort = httpPort;
     }
 
-    public String getWebRoot() {
-        return webRoot;
-    }
-
-    public void setWebRoot(String webRoot) {
-        this.webRoot = webRoot;
-    }
-
     @Override
     public String toString() {
         return "CoreXConfig{" +
@@ -57,7 +48,6 @@ public class CoreXConfig {
                 ", role=" + role +
                 ", harborPort=" + harborPort +
                 ", httpPort=" + httpPort +
-                ", webRoot='" + webRoot + '\'' +
                 '}';
     }
 }

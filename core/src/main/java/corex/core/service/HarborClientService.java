@@ -1,8 +1,7 @@
 package corex.core.service;
 
 import corex.core.Future;
-import corex.core.FutureMo;
-import corex.core.Lo;
+import corex.core.JoHolder;
 import corex.core.Msg;
 import corex.core.define.CacheDefine;
 import corex.core.define.ConstDefine;
@@ -13,15 +12,14 @@ import corex.core.impl.BroadcastReceiver;
 import corex.core.impl.GameRoute;
 import corex.core.impl.MsgPostman;
 import corex.core.impl.ServerInfo;
+import corex.core.model.Broadcast;
+import corex.core.model.Method;
+import corex.core.model.Payload;
+import corex.core.model.RpcRequest;
 import corex.module.CacheModule;
 import corex.module.HarborClientModule;
-import corex.proto.ModelProto;
-import corex.proto.ModelProto.Method;
-import corex.proto.ModelProto.Payload;
-import corex.proto.ModelProto.RpcRequest;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static corex.core.utils.CoreXUtil.isRole;
 
@@ -59,7 +57,7 @@ public class HarborClientService extends SimpleModuleService implements HarborCl
     }
 
     @Override
-    protected void handleBroadcast(Msg msg, Payload payload, ModelProto.Broadcast broadcast) {
+    protected void handleBroadcast(Msg msg, Payload payload, Broadcast broadcast) {
         coreX().onBroadcast(payload.getBroadcast());
         if (broadcast.getRole() == ConstDefine.ROLE_LOCAL) {
             return;
@@ -105,9 +103,9 @@ public class HarborClientService extends SimpleModuleService implements HarborCl
     }
 
     @Override
-    public FutureMo info() {
-        FutureMo ret = baseInfo();
-        ret.putMo("conns", msgPostman.info());
+    public JoHolder info() {
+        JoHolder ret = super.info();
+        ret.jo().put("conns", msgPostman.info());
         return ret;
     }
 
@@ -119,32 +117,28 @@ public class HarborClientService extends SimpleModuleService implements HarborCl
 
         @Override
         public void onServerInfoUpdate(long updateTime) {
-            logger.info("---------------------------> #onServerInfoUpdate# at {}.", updateTime);
+            logger.debug("---------------------------> #onServerInfoUpdate# at {}.", updateTime);
 
             coreX().asyncAgent(CacheModule.class).getCache(CacheDefine.SERVER_INFO).addListener(ar -> {
                 if (ar.succeeded()) {
-                    Lo lo = ar.result().getMo("cache").getList("body");
 
-                    List<ServerInfo> list = lo.getMoList().stream().map(ServerInfo::fromMo)
-                            .filter(HarborClientService.this::checkAddConnection).collect(Collectors.toList());
+                    List<ServerInfo> list = CacheService.parseServerInfos(ar.result().jo(), HarborClientService.this::checkAddConnection);
                     msgPostman.updateServerInfos(list);
 
-                    logger.info("---------------------------> #onServerInfoUpdate# {} at {} success.", CacheDefine.SERVER_INFO, updateTime);
+                    logger.debug("---------------------------> #onServerInfoUpdate# {} at {} success.", CacheDefine.SERVER_INFO, updateTime);
                 } else {
-                    logger.info("---------------------------> #onServerInfoUpdate# {} at {} failed.", CacheDefine.SERVER_INFO, updateTime, ar.cause());
+                    logger.debug("---------------------------> #onServerInfoUpdate# {} at {} failed.", CacheDefine.SERVER_INFO, updateTime, ar.cause());
                 }
             });
 
             coreX().asyncAgent(CacheModule.class).getCache(CacheDefine.ROUTE_INFO).addListener(ar -> {
                 if (ar.succeeded()) {
-                    Lo lo = ar.result().getMo("cache").getList("body");
-
-                    List<GameRoute> list = lo.getMoList().stream().map(GameRoute::fromMo).collect(Collectors.toList());
+                    List<GameRoute> list = CacheService.parseGameRoutes(ar.result().jo());
                     msgPostman.updateRoutes(list);
 
-                    logger.info("---------------------------> #onServerInfoUpdate# {} at {} success.", CacheDefine.ROUTE_INFO, updateTime);
+                    logger.debug("---------------------------> #onServerInfoUpdate# {} at {} success.", CacheDefine.ROUTE_INFO, updateTime);
                 } else {
-                    logger.info("---------------------------> #onServerInfoUpdate# {} at {} failed.", CacheDefine.ROUTE_INFO, updateTime, ar.cause());
+                    logger.debug("---------------------------> #onServerInfoUpdate# {} at {} failed.", CacheDefine.ROUTE_INFO, updateTime, ar.cause());
                 }
             });
         }

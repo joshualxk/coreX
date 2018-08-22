@@ -1,7 +1,8 @@
 package corex.core;
 
+import corex.core.model.Broadcast;
+import corex.core.model.Payload;
 import corex.module.BroadcastModule;
-import corex.proto.ModelProto.Broadcast;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.EventLoopGroup;
@@ -19,8 +20,6 @@ public interface CoreX extends MsgHandler {
 
     long startTime();
 
-    Codec codec();
-
     CoreXConfig config();
 
     EventLoopGroup acceptorEventLoopGroup();
@@ -33,7 +32,7 @@ public interface CoreX extends MsgHandler {
 
     void stopService(String name, Handler<AsyncResult<Void>> resultHandler);
 
-    void sendMessage(String address, Object msg, Handler<AsyncResult<Object>> replyHandler);
+    void sendMessage(String address, Object msg, Handler<AsyncResult<Payload>> replyHandler);
 
     void broadcastMessage(Broadcast broadcast);
 

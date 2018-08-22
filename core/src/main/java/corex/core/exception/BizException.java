@@ -6,20 +6,20 @@ package corex.core.exception;
 public class BizException extends RuntimeException implements BizEx {
 
     private final int code;
-    private final String msg;
+    private final String message;
 
-    public BizException(int code, String msg) {
-        super(msg, null, false, false);
+    public BizException(int code, String message) {
+        super(message, null, false, false);
         this.code = code;
-        this.msg = msg;
+        this.message = message;
     }
 
     public int getCode() {
         return code;
     }
 
-    public String getMsg() {
-        return msg;
+    public String getMessage() {
+        return message;
     }
 
 }

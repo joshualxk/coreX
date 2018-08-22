@@ -1,21 +1,23 @@
 package corex.core.rpc;
 
-import corex.core.*;
+import corex.core.AsyncResult;
+import corex.core.CoreX;
+import corex.core.Handler;
+import corex.core.JoHolder;
 import corex.core.annotation.Api;
-import corex.core.annotation.Broadcast;
 import corex.core.annotation.Module;
+import corex.core.annotation.Notice;
 import corex.core.define.ConstDefine;
 import corex.core.define.ExceptionDefine;
 import corex.core.exception.CoreException;
-import corex.core.impl.DummyFutureMo;
-import corex.core.impl.ReadOnlyFutureMo;
+import corex.core.impl.AsyncJoHolder;
+import corex.core.json.JsonObject;
+import corex.core.model.Payload;
+import corex.core.model.RpcRequest;
+import corex.core.model.RpcResponse;
 import corex.core.utils.CoreXUtil;
 import corex.core.utils.PackageUtil;
 import corex.module.BroadcastModule;
-import corex.proto.ModelProto;
-import corex.proto.ModelProto.Payload;
-import corex.proto.ModelProto.RpcRequest;
-import corex.proto.ModelProto.RpcResponse;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -96,6 +98,10 @@ public class RpcClient {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            return invoke0(proxy, method, args);
+        }
+
+        private JoHolder invoke0(Object proxy, Method method, Object[] args) throws Throwable {
             Api api = method.getAnnotation(Api.class);
             if (api == null) {
                 throw new CoreException("不支持的方法:" + method.getName());
@@ -112,21 +118,26 @@ public class RpcClient {
 
             boolean isVoidType = rpcHandler.isVoidType();
             try {
-                FutureMo futureMapObject = rpcHandler.convert(args);
+                JsonObject jo = rpcHandler.convert(args);
 
-                RpcRequest rpcRequest = CoreXUtil.internalRpcRequest(1, moduleParams.module().address(), api.value(), moduleParams.module().version(), futureMapObject.toBodyHolder());
+                RpcRequest rpcRequest = RpcRequest.internalRpcRequest(1, moduleParams.module().address(), api.value(), moduleParams.module().version(), jo);
 
-                FutureMoHandler responseHandler = null;
+                JoHolder joHolder = null;
+                Handler<AsyncResult<Payload>> replyHandler = null;
+
                 if (!rpcHandler.isVoidType()) {
-                    responseHandler = new FutureMoHandler();
+                    AsyncJoHolder asyncJoHolder = JoHolder.newAsync();
+                    replyHandler = newPayloadHandler(asyncJoHolder);
+                    joHolder = asyncJoHolder;
                 }
-                coreX.sendMessage(moduleParams.module().address(), rpcRequest, responseHandler);
-                return responseHandler;
+                coreX.sendMessage(moduleParams.module().address(), rpcRequest, replyHandler);
+                return joHolder;
             } catch (Throwable t) {
                 if (isVoidType) throw t;
-                return new FailedFutureMoHandler(t);
+                return JoHolder.newFailedAsync(t);
             }
         }
+
     }
 
     private static class BroadcastInvocationHandler implements InvocationHandler {
@@ -140,73 +151,45 @@ public class RpcClient {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            Broadcast broadcast = method.getAnnotation(Broadcast.class);
-            if (broadcast == null) {
+            Notice notice = method.getAnnotation(Notice.class);
+            if (notice == null) {
                 throw new CoreException("不支持的方法:" + method.getName());
             }
 
-            RpcHandler rpcHandler = moduleParams.getHandler(broadcast.topic());
+            RpcHandler rpcHandler = moduleParams.getHandler(notice.topic());
             if (rpcHandler == null) {
                 throw new CoreException("找不到方法:" + method.getName());
             }
 
-            FutureMo futureMapObject = rpcHandler.convert(args);
+            JsonObject jo = rpcHandler.convert(args);
 
-            ModelProto.Broadcast b = CoreXUtil.internalBroadcast(broadcast.role(), broadcast.topic(), futureMapObject.toBodyHolder());
+            corex.core.model.Broadcast b = corex.core.model.Broadcast.newInternalBroadcast(notice.role(), notice.topic(), jo);
 
             coreX.broadcastMessage(b);
             return null;
         }
     }
 
-    private static class FailedFutureMoHandler extends DummyFutureMo {
-
-        private final Future<Mo> future;
-
-        public FailedFutureMoHandler(Throwable th) {
-            future = Future.failedFuture(th);
-        }
-
-        @Override
-        public void addListener(Handler<AsyncResult<Mo>> handler) {
-            future.setHandler(handler);
-        }
-    }
-
-    private static class FutureMoHandler extends DummyFutureMo implements Handler<AsyncResult<Object>> {
-
-        private final Future<Mo> future = Future.future();
-
-        @Override
-        public void handle(AsyncResult<Object> ar) {
+    private static Handler<AsyncResult<Payload>> newPayloadHandler(AsyncJoHolder asyncJoHolder) {
+        return ar -> {
             if (ar.succeeded()) {
-                if (!(ar.result() instanceof Payload)) {
-                    future.fail(new CoreException("未知类型"));
-                    return;
-                }
 
-                Payload payload = (Payload) ar.result();
+                Payload payload = ar.result();
                 if (payload.hasRpcResponse()) {
                     RpcResponse rpcResponse = payload.getRpcResponse();
                     if (CoreXUtil.isSuccessResponse(rpcResponse)) {
-                        FutureMo futureMapObject = new ReadOnlyFutureMo(rpcResponse.getBody());
-                        future.complete(futureMapObject);
+                        asyncJoHolder.complete(JoHolder.newSync(rpcResponse.getBody()));
                     } else {
-                        future.fail(ExceptionDefine.newException(rpcResponse.getCode(), rpcResponse.getMsg()));
+                        asyncJoHolder.fail(ExceptionDefine.newException(rpcResponse.getCode(), rpcResponse.getMessage()));
                     }
 
                 } else {
-                    future.fail(new CoreException("payload中不包含response"));
+                    asyncJoHolder.fail(new CoreException("payload中不包含response"));
                 }
             } else {
-                future.fail(ar.cause());
+                asyncJoHolder.fail(ar.cause());
             }
-        }
-
-        @Override
-        public void addListener(Handler<AsyncResult<Mo>> handler) {
-            future.setHandler(handler);
-        }
+        };
     }
 
 }

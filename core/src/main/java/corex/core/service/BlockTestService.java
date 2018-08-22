@@ -1,6 +1,7 @@
 package corex.core.service;
 
-import corex.core.FutureMo;
+import corex.core.JoHolder;
+import corex.core.json.JsonObject;
 import corex.module.BlockTestModule;
 
 import java.util.concurrent.TimeUnit;
@@ -11,23 +12,18 @@ import java.util.concurrent.TimeUnit;
 public class BlockTestService extends SimpleModuleService implements BlockTestModule {
 
     @Override
-    public FutureMo info() {
-        FutureMo ret = baseInfo();
-        return ret;
-    }
-
-    @Override
-    public FutureMo block(int seconds) {
-        FutureMo ret = FutureMo.futureMo();
-        ret.putString("thread", Thread.currentThread().getName());
-        ret.putLong("startTime", System.currentTimeMillis());
+    public JoHolder block(int seconds) {
+        JoHolder ret = JoHolder.newSync();
+        JsonObject jo = ret.jo();
+        jo.put("thread", Thread.currentThread().getName());
+        jo.put("startTime", System.currentTimeMillis());
 
         try {
             TimeUnit.SECONDS.sleep(seconds);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        ret.putLong("endTime", System.currentTimeMillis());
+        jo.put("endTime", System.currentTimeMillis());
 
         return ret;
     }

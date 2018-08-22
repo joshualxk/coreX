@@ -28,9 +28,6 @@ public class ConstDefine {
     public static final int AUTH_TYPE_ADMIN = 2;
     public static final int AUTH_TYPE_INTERNAL = 3;
 
-    /******************************** Body holder type定义  ********************************/
-
-    public static final int BODY_TYPE_STRUCT = 1;
 
     /******************************** end                  ********************************/
 }

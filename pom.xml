@@ -17,10 +17,11 @@
     </modules>
 
     <properties>
-        <netty.version>4.1.22.Final</netty.version>
-        <spring.version>4.3.14.RELEASE</spring.version>
-        <jackson.version>2.9.4</jackson.version>
+        <netty.version>4.1.28.Final</netty.version>
+        <spring.version>4.3.18.RELEASE</spring.version>
+        <jackson.version>2.9.6</jackson.version>
         <junit.version>4.12</junit.version>
+        <HikariCP.version>3.2.0</HikariCP.version>
 
         <maven.test.skip>true</maven.test.skip>
         <maven.shade.version>2.3</maven.shade.version>

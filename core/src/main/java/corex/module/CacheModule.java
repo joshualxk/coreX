@@ -1,6 +1,6 @@
 package corex.module;
 
-import corex.core.FutureMo;
+import corex.core.JoHolder;
 import corex.core.annotation.Api;
 import corex.core.annotation.Module;
 import corex.core.annotation.Param;
@@ -15,11 +15,11 @@ import corex.core.rpc.BlockControl;
 public interface CacheModule {
 
     @Api(value = "i", type = ConstDefine.AUTH_TYPE_ADMIN)
-    FutureMo info();
+    JoHolder info();
 
     @Api(value = "uc", type = ConstDefine.AUTH_TYPE_ADMIN)
-    FutureMo updateCache();
+    JoHolder updateCache();
 
     @Api(value = "gc", type = ConstDefine.AUTH_TYPE_INTERNAL)
-    FutureMo getCache(@Param("1") String name);
+    JoHolder getCache(@Param("1") String name);
 }

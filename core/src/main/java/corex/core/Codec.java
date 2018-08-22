@@ -1,6 +1,8 @@
 package corex.core;
 
-import corex.proto.ModelProto;
+import corex.core.impl.JsonCodec;
+import corex.core.model.ClientPayload;
+import corex.core.model.Payload;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -10,11 +12,15 @@ import java.io.OutputStream;
  */
 public interface Codec {
 
-    ModelProto.Payload readPayload(InputStream inputStream) throws Exception;
+    Payload readPayload(InputStream is) throws Exception;
 
-    void writePayload(OutputStream outputStream, ModelProto.Payload payload) throws Exception;
+    void writePayload(OutputStream os, Payload payload) throws Exception;
 
-    ModelProto.ClientPayload readClientPayload(InputStream inputStream) throws Exception;
+    ClientPayload readClientPayload(InputStream is) throws Exception;
 
-    void writeClientPayload(OutputStream outputStream, ModelProto.ClientPayload payload) throws Exception;
+    void writeClientPayload(OutputStream os, ClientPayload payload) throws Exception;
+
+    static Codec defaultCodec() {
+        return new JsonCodec();
+    }
 }

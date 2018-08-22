@@ -1,26 +1,31 @@
 package corex.core.impl;
 
-import corex.core.FutureMo;
+import corex.core.JoHolder;
 import corex.core.annotation.Api;
 import corex.core.annotation.Module;
 import corex.core.define.ConstDefine;
 import corex.core.define.ExceptionDefine;
 import corex.core.exception.CoreException;
 import corex.core.impl.handler.InitialHandler;
+import corex.core.impl.handler.PayloadCodecHandler;
+import corex.core.json.JsonObject;
+import corex.core.model.Payload;
+import corex.core.model.RpcRequest;
+import corex.core.model.RpcResponse;
 import corex.core.rpc.ModuleParams;
 import corex.core.rpc.ModuleScanner;
 import corex.core.rpc.RpcHandler;
 import corex.core.utils.CoreXUtil;
 import corex.core.utils.PackageUtil;
-import corex.proto.ModelProto;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.protobuf.ProtobufDecoder;
-import io.netty.handler.codec.protobuf.ProtobufEncoder;
-import io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
-import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
+import io.netty.handler.codec.LineBasedFrameDecoder;
+import io.netty.handler.codec.string.LineEncoder;
+import io.netty.handler.codec.string.LineSeparator;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.util.CharsetUtil;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -119,6 +124,10 @@ public class StandaloneClient {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            return invoke0(proxy, method, args);
+        }
+
+        private JoHolder invoke0(Object proxy, Method method, Object[] args) throws Throwable {
             Api api = method.getAnnotation(Api.class);
             if (api == null) {
                 throw new CoreException("不支持的方法:" + method.getName());
@@ -135,12 +144,12 @@ public class StandaloneClient {
 
             boolean isVoidType = rpcHandler.isVoidType();
 
-            FutureMo futureMapObject = rpcHandler.convert(args);
+            JsonObject argsJo = rpcHandler.convert(args);
 
-            ModelProto.RpcRequest rpcRequest = CoreXUtil.adminRpcRequest(1, moduleParams.module().address(), api.value(), moduleParams.module().version(), futureMapObject.toBodyHolder());
-            ModelProto.Payload payload = CoreXUtil.assemblePayload(isVoidType ? 0 : 1, rpcRequest).build();
+            RpcRequest rpcRequest = RpcRequest.newAdminRpcRequest(1, moduleParams.module().address(), api.value(), moduleParams.module().version(), argsJo);
+            Payload payload = Payload.newPayload(isVoidType ? 0 : 1, rpcRequest);
 
-            CompletableFuture<FutureMo> completableFuture = new CompletableFuture<>();
+            CompletableFuture<JoHolder> completableFuture = new CompletableFuture<>();
             io.netty.bootstrap.Bootstrap b = new io.netty.bootstrap.Bootstrap();
             b.group(worker)
                     .channel(NioSocketChannel.class)
@@ -148,14 +157,11 @@ public class StandaloneClient {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline p = ch.pipeline();
-                            p.addLast("frameDecoder", new ProtobufVarint32FrameDecoder());
-                            p.addLast("protobufDecoder", new ProtobufDecoder(ModelProto.Payload.getDefaultInstance()));
-                            p.addLast("frameEncoder", new ProtobufVarint32LengthFieldPrepender());
-                            p.addLast("protobufEncoder", new ProtobufEncoder());
+                            CoreXUtil.initPipeline(p);
 
                             InitialHandler initialHandler = new InitialHandler(serverId, role, startTime);
                             p.addLast("initialHandler", initialHandler);
-                            initialHandler.setFirstPingHandler(ping -> {
+                            initialHandler.setServerAuthHandler(ping -> {
                                 p.channel().writeAndFlush(payload);
                                 if (isVoidType) {
                                     completableFuture.complete(null);
@@ -163,19 +169,12 @@ public class StandaloneClient {
                             });
                             initialHandler.setPayloadHandler(pl -> {
                                 if (pl.hasRpcResponse()) {
-                                    ModelProto.RpcResponse rpcResponse = pl.getRpcResponse();
+                                    RpcResponse rpcResponse = pl.getRpcResponse();
                                     if (CoreXUtil.isSuccessResponse(rpcResponse)) {
-                                        ReadOnlyFutureMo futureMo;
-                                        try {
-                                            futureMo = new ReadOnlyFutureMo(rpcResponse.getBody());
-                                        } catch (Exception e) {
-                                            completableFuture.completeExceptionally(e);
-                                            return;
-                                        }
-
-                                        completableFuture.complete(futureMo);
+                                        JsonObject jo = rpcResponse.getBody();
+                                        completableFuture.complete(JoHolder.newSync(jo));
                                     } else {
-                                        completableFuture.completeExceptionally(ExceptionDefine.newException(rpcResponse.getCode(), rpcResponse.getMsg()));
+                                        completableFuture.completeExceptionally(ExceptionDefine.newException(rpcResponse.getCode(), rpcResponse.getMessage()));
                                     }
 
                                 }

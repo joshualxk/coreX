@@ -1,6 +1,6 @@
 package corex.module;
 
-import corex.core.annotation.Broadcast;
+import corex.core.annotation.Notice;
 import corex.core.annotation.Module;
 import corex.core.annotation.Param;
 import corex.core.define.ConstDefine;
@@ -15,27 +15,27 @@ import java.util.List;
 @Module(address = ServiceNameDefine.BROADCAST)
 public interface BroadcastModule {
 
-    @Broadcast(topic = TopicDefine.USER_LOGIN, role = ConstDefine.ROLE_SET1)
+    @Notice(topic = TopicDefine.USER_LOGIN, role = ConstDefine.ROLE_SET1)
     default void onUserLogin(@Param("1") String userId, @Param("2") int serverId, @Param("3") long loginTime) {
     }
 
-    @Broadcast(topic = TopicDefine.USER_LOGOUT, role = ConstDefine.ROLE_SET1)
+    @Notice(topic = TopicDefine.USER_LOGOUT, role = ConstDefine.ROLE_SET1)
     default void onUserLogout(@Param("1") String userId, @Param("2") int serverId, @Param("3") long loginTime) {
     }
 
-    @Broadcast(topic = TopicDefine.SERVER_UP, role = ConstDefine.ROLE_ALL)
+    @Notice(topic = TopicDefine.SERVER_UP, role = ConstDefine.ROLE_ALL)
     default void onServerUp(@Param("1") int serverId, @Param("2") long startTime) {
     }
 
-    @Broadcast(topic = TopicDefine.SERVER_DOWN, role = ConstDefine.ROLE_ALL)
+    @Notice(topic = TopicDefine.SERVER_DOWN, role = ConstDefine.ROLE_ALL)
     default void onServerDown(@Param("1") int serverId, @Param("2") long startTime) {
     }
 
-    @Broadcast(topic = TopicDefine.SERVER_INFO_UPDATE, role = ConstDefine.ROLE_LOCAL)
+    @Notice(topic = TopicDefine.SERVER_INFO_UPDATE, role = ConstDefine.ROLE_LOCAL)
     default void onServerInfoUpdate(@Param("1") long updateTime) {
     }
 
-    @Broadcast(topic = TopicDefine.KICK, role = ConstDefine.ROLE_GATEWAY)
+    @Notice(topic = TopicDefine.KICK, role = ConstDefine.ROLE_GATEWAY)
     default void kick(@Param("1") List<String> userIds, @Param("2") int code, @Param("3") String msg) {
     }
 }

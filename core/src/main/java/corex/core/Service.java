@@ -19,4 +19,6 @@ public interface Service extends ContextAware {
 
     void handleMsg(Msg msg);
 
+    JoHolder info();
+
 }

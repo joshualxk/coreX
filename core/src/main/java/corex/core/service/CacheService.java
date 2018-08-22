@@ -1,12 +1,12 @@
 package corex.core.service;
 
 import corex.core.Future;
-import corex.core.FutureMo;
-import corex.core.Lo;
-import corex.core.Mo;
+import corex.core.JoHolder;
 import corex.core.define.CacheDefine;
 import corex.core.impl.GameRoute;
 import corex.core.impl.ServerInfo;
+import corex.core.json.JsonArray;
+import corex.core.json.JsonObject;
 import corex.dao.BasicDao;
 import corex.module.CacheModule;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Created by Joshua on 2018/4/4.
@@ -25,7 +27,7 @@ public class CacheService extends SimpleModuleService implements CacheModule {
     @Autowired
     BasicDao basicDao;
 
-    private final Map<String, Mo> caches = new ConcurrentHashMap<>();
+    private final Map<String, JsonObject> caches = new ConcurrentHashMap<>();
 
     @Override
     public void start(Future<Void> completeFuture) {
@@ -48,17 +50,17 @@ public class CacheService extends SimpleModuleService implements CacheModule {
     private void updateServerInfo() {
         List<ServerInfo> list = basicDao.selectServerInfos();
 
-        Lo lo = Lo.lo();
+        JsonArray ja = new JsonArray();
         for (ServerInfo si : list) {
-            lo.addMo(si.toMo());
+            ja.add(si.toJo());
         }
 
         long updateTime = System.currentTimeMillis();
-        Mo cache = Mo.mo();
+        JsonObject cache = new JsonObject();
 
-        cache.putString("name", CacheDefine.SERVER_INFO);
-        cache.putLong("updateTime", updateTime);
-        cache.putList("body", lo);
+        cache.put("name", CacheDefine.SERVER_INFO);
+        cache.put("updateTime", updateTime);
+        cache.put("body", ja);
 
         caches.put(CacheDefine.SERVER_INFO, cache);
     }
@@ -66,38 +68,45 @@ public class CacheService extends SimpleModuleService implements CacheModule {
     private void updateGameRoute() {
         List<GameRoute> list = basicDao.selectGameRoutes();
 
-        Lo lo = Lo.lo();
+        JsonArray ja = new JsonArray();
         for (GameRoute si : list) {
-            lo.addMo(si.toMo());
+            ja.add(si.toJo());
         }
 
         long updateTime = System.currentTimeMillis();
-        Mo cache = Mo.mo();
+        JsonObject cache = new JsonObject();
 
-        cache.putString("name", CacheDefine.ROUTE_INFO);
-        cache.putLong("updateTime", updateTime);
-        cache.putList("body", lo);
+        cache.put("name", CacheDefine.ROUTE_INFO);
+        cache.put("updateTime", updateTime);
+        cache.put("body", ja);
 
         caches.put(CacheDefine.ROUTE_INFO, cache);
     }
 
-    @Override
-    public FutureMo info() {
-        return baseInfo();
+    @SuppressWarnings("unchecked")
+    public static List<ServerInfo> parseServerInfos(JsonObject jo, Predicate<ServerInfo> predicate) {
+        JsonArray ja = jo.getJsonObject("cache").getJsonArray("body");
+        return ((List<JsonObject>) ja.getList()).stream().map(ServerInfo::fromJo)
+                .filter(predicate).collect(Collectors.toList());
+    }
+
+    @SuppressWarnings("unchecked")
+    public static List<GameRoute> parseGameRoutes(JsonObject jo) {
+        JsonArray ja = jo.getJsonObject("cache").getJsonArray("body");
+        return ((List<JsonObject>) ja.getList()).stream().map(GameRoute::fromJo).collect(Collectors.toList());
     }
 
     @Override
-    public FutureMo updateCache() {
+    public JoHolder updateCache() {
         updateCache0();
-        FutureMo futureMo = FutureMo.futureMo();
-        return futureMo;
+        return JoHolder.newSync();
     }
 
     @Override
-    public FutureMo getCache(String name) {
-        FutureMo futureMo = FutureMo.futureMo();
-        futureMo.putMo("cache", caches.get(name));
-        return futureMo;
+    public JoHolder getCache(String name) {
+        JoHolder ret = JoHolder.newSync();
+        ret.jo().put("cache", caches.get(name));
+        return ret;
     }
 
 }

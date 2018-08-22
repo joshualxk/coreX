@@ -1,11 +1,11 @@
 package corex.core.rpc;
 
-import corex.core.FutureMo;
-import corex.core.Lo;
-import corex.core.Mo;
+import corex.core.JoHolder;
 import corex.core.exception.CoreException;
+import corex.core.json.JsonArray;
+import corex.core.json.JsonObject;
+import corex.core.model.Auth;
 import corex.core.rpc.MethodParamDetail.ParamDetail;
-import corex.proto.ModelProto.Auth;
 
 import java.util.List;
 
@@ -21,12 +21,12 @@ class ClientRpcHandler implements RpcHandler {
     }
 
     @Override
-    public FutureMo convert(Object[] args) throws Exception {
+    public JsonObject convert(Object[] args) throws Exception {
         if ((args == null ? 0 : args.length) != methodParamDetail.params.length) {
             throw new CoreException("参数数量不一致");
         }
 
-        FutureMo futureMapObject = FutureMo.futureMo();
+        JsonObject jo = new JsonObject();
         int i = 0;
         for (ParamDetail paramDetail : methodParamDetail.params) {
             Object arg = args[i];
@@ -35,70 +35,69 @@ class ClientRpcHandler implements RpcHandler {
             }
             switch (paramDetail.type) {
                 case LIST:
-                    parseList(paramDetail, futureMapObject, arg);
+                    parseList(paramDetail, jo, arg);
                     break;
-                case MO:
-                    parseMo(paramDetail, futureMapObject, arg);
+                case JO:
+                    parseJo(paramDetail, jo, arg);
                     break;
                 case ARRAY:
                     break;
                 default:
-                    parseValue(paramDetail, futureMapObject, arg);
+                    parseValue(paramDetail, jo, arg);
                     break;
             }
             ++i;
         }
-        return futureMapObject;
+        return jo;
     }
 
     @SuppressWarnings("unchecked")
-    private static void parseList(ParamDetail paramDetail, FutureMo futureMapObject, Object obj) {
-        Lo lo = Lo.lo();
+    private static void parseList(ParamDetail paramDetail, JsonObject jo, Object obj) {
+        JsonArray ja;
         switch (paramDetail.parameterizedType) {
             case BOOLEAN:
-                lo.setBooleanList((List<Boolean>) obj);
+                ja = new JsonArray((List<Boolean>) obj);
                 break;
             case INT:
-                lo.setIntList((List<Integer>) obj);
+                ja = new JsonArray((List<Integer>) obj);
                 break;
             case LONG:
-                lo.setLongList((List<Long>) obj);
+                ja = new JsonArray((List<Long>) obj);
                 break;
             case DOUBLE:
-                lo.setDoubleList((List<Double>) obj);
+                ja = new JsonArray((List<Double>) obj);
                 break;
             case STRING:
-                lo.setStringList((List<String>) obj);
+                ja = new JsonArray((List<String>) obj);
                 break;
-            case MO:
-                lo.setMoList((List<Mo>) obj);
+            case JO:
             default:
                 throw new CoreException("未知List类型");
         }
-        futureMapObject.putList(paramDetail.param.value(), lo);
+        jo.put(paramDetail.param.value(), ja);
 
     }
 
-    private static void parseMo(ParamDetail paramDetail, FutureMo futureMapObject, Object obj) {
-        futureMapObject.putMo(paramDetail.param.value(), (Mo) obj);
+    private static void parseJo(ParamDetail paramDetail, JsonObject jo, Object obj) {
+        jo.put(paramDetail.param.value(), (JsonObject) obj);
     }
 
-    private static void parseValue(ParamDetail paramDetail, FutureMo futureMapObject, Object obj) {
+    private static void parseValue(ParamDetail paramDetail, JsonObject jo, Object obj) {
         switch (paramDetail.type) {
             case BOOLEAN:
-                futureMapObject.putBoolean(paramDetail.param.value(), (Boolean) obj);
+                jo.put(paramDetail.param.value(), (Boolean) obj);
                 return;
             case INT:
-                futureMapObject.putInt(paramDetail.param.value(), (Integer) obj);
+                jo.put(paramDetail.param.value(), (Integer) obj);
                 return;
             case LONG:
-                futureMapObject.putLong(paramDetail.param.value(), (Long) obj);
+                jo.put(paramDetail.param.value(), (Long) obj);
                 return;
             case DOUBLE:
-                futureMapObject.putDouble(paramDetail.param.value(), (Double) obj);
+                jo.put(paramDetail.param.value(), (Double) obj);
                 return;
             case STRING:
-                futureMapObject.putString(paramDetail.param.value(), (String) obj);
+                jo.put(paramDetail.param.value(), (String) obj);
                 return;
         }
 
@@ -116,7 +115,7 @@ class ClientRpcHandler implements RpcHandler {
     }
 
     @Override
-    public FutureMo handle(Auth auth, Mo params) throws Exception {
+    public JoHolder handle(Auth auth, JsonObject params) throws Exception {
         throw new UnsupportedOperationException();
     }
 }

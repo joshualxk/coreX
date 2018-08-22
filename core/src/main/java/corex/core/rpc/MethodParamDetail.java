@@ -44,6 +44,6 @@ public class MethodParamDetail {
         STRING,
         ARRAY,
         LIST,
-        MO,
+        JO,
     }
 }

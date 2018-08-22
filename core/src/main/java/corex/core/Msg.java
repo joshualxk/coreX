@@ -1,5 +1,6 @@
 package corex.core;
 
+import corex.core.model.Payload;
 import corex.core.utils.CoreXUtil;
 
 /**
@@ -10,9 +11,9 @@ public interface Msg {
     long id();
 
     // 解引用
-    Object detach();
+    Payload detach();
 
-    void reply(AsyncResult<Object> resp);
+    void reply(AsyncResult<Payload> resp);
 
     default boolean needReply() {
         return CoreXUtil.needReply(id());

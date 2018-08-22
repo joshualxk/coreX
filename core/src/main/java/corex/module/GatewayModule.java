@@ -1,6 +1,6 @@
 package corex.module;
 
-import corex.core.FutureMo;
+import corex.core.JoHolder;
 import corex.core.annotation.Api;
 import corex.core.annotation.Module;
 import corex.core.define.ConstDefine;
@@ -13,5 +13,5 @@ import corex.core.define.ServiceNameDefine;
 public interface GatewayModule {
 
     @Api(value = "i", type = ConstDefine.AUTH_TYPE_ADMIN)
-    FutureMo info();
+    JoHolder info();
 }

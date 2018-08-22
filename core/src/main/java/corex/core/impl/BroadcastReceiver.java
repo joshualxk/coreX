@@ -4,10 +4,10 @@ import corex.core.Context;
 import corex.core.ContextAware;
 import corex.core.Handler;
 import corex.core.exception.CoreException;
+import corex.core.model.Broadcast;
 import corex.core.rpc.ModuleParams;
 import corex.core.rpc.ServerModuleScanner;
 import corex.module.BroadcastModule;
-import corex.proto.ModelProto.Broadcast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

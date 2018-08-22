@@ -2,58 +2,58 @@ package corex.core.impl;
 
 import corex.core.AbstractConnection;
 import corex.core.Codec;
-import corex.core.Connection;
 import corex.core.Session;
 import corex.core.exception.CoreException;
-import corex.proto.ModelProto;
+import corex.core.model.ClientPayload;
+import corex.core.model.Push;
+import corex.core.model.RpcResponse;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.Channel;
-import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.util.AttributeKey;
-
-import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * Created by Joshua on 2018/3/1.
  */
 public class WebSocketConnection extends AbstractConnection {
 
+    private static final Codec codec = Codec.defaultCodec();
+
     private final Channel channel;
-    private final Codec codec;
 
-    static final AttributeKey<Session> SESSION = AttributeKey.valueOf("coreX.session");
+    private static final AttributeKey<Session> SESSION = AttributeKey.valueOf("coreX.session");
 
-    public WebSocketConnection(Channel channel, Codec codec) {
+    public WebSocketConnection(Channel channel) {
         super(channelId(channel));
         this.channel = channel;
-        this.codec = codec;
     }
 
     @Override
     public void write(Object msg) {
-        ModelProto.ClientPayload clientPayload;
-        if (msg instanceof ModelProto.RpcResponse) {
-            ModelProto.RpcResponse response = (ModelProto.RpcResponse) msg;
-            clientPayload = ModelProto.ClientPayload.newBuilder().setRpcResponse(response).build();
-        } else if (msg instanceof ModelProto.Push) {
-            ModelProto.Push push = (ModelProto.Push) msg;
-            clientPayload = ModelProto.ClientPayload.newBuilder().setPush(push).build();
+        ClientPayload clientPayload;
+        if (msg instanceof RpcResponse) {
+            RpcResponse response = (RpcResponse) msg;
+            clientPayload = ClientPayload.newClientPayload(response);
+        } else if (msg instanceof Push) {
+            Push push = (Push) msg;
+            clientPayload = ClientPayload.newClientPayload(push);
         } else {
             throw new CoreException("未知类型:" + msg.getClass().getName());
         }
 
         ByteBuf byteBuf = null;
-        OutputStream os = null;
         try {
             byteBuf = channel.alloc().ioBuffer();
-            os = new ByteBufOutputStream(byteBuf);
-            codec.writeClientPayload(os, clientPayload);
 
-            WebSocketFrame webSocketFrame = new BinaryWebSocketFrame(byteBuf);
+            try (ByteBufOutputStream os = new ByteBufOutputStream(byteBuf)) {
+                codec.writeClientPayload(os, clientPayload);
+            }
+
+            WebSocketFrame webSocketFrame = new TextWebSocketFrame(byteBuf);
             channel.writeAndFlush(webSocketFrame);
             byteBuf = null;
         } catch (Exception e) {
@@ -61,12 +61,6 @@ public class WebSocketConnection extends AbstractConnection {
         } finally {
             if (byteBuf != null) {
                 byteBuf.release();
-            }
-            if (os != null) {
-                try {
-                    os.close();
-                } catch (IOException ignore) {
-                }
             }
         }
     }
@@ -90,4 +84,16 @@ public class WebSocketConnection extends AbstractConnection {
         channel.writeAndFlush(new CloseWebSocketFrame());
     }
 
+    @Override
+    public void onMsg(Object msg) {
+        if (msg instanceof ByteBuf) {
+            try (ByteBufInputStream is = new ByteBufInputStream((ByteBuf) msg)) {
+                msg = codec.readClientPayload(is);
+            } catch (Exception e) {
+                close();
+                return;
+            }
+        }
+        super.onMsg(msg);
+    }
 }

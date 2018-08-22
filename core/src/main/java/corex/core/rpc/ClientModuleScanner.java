@@ -1,8 +1,7 @@
 package corex.core.rpc;
 
 import corex.core.annotation.Api;
-import corex.core.annotation.Broadcast;
-import corex.core.exception.CoreException;
+import corex.core.annotation.Notice;
 
 import java.lang.reflect.Method;
 
@@ -26,7 +25,7 @@ class ClientModuleScanner extends ModuleScanner {
     }
 
     @Override
-    protected RpcHandler newBroadcastHandler(Broadcast broadcast, Method m, Object invoker) {
+    protected RpcHandler newBroadcastHandler(Notice notice, Method m, Object invoker) {
         MethodParamDetail methodParamDetail = new ParamParser().parseMethodParamDetail(m);
         return new ClientRpcHandler(methodParamDetail);
     }

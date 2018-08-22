@@ -1,10 +1,9 @@
 package corex.demo;
 
-import corex.core.FutureMo;
-import corex.core.Lo;
-import corex.core.Mo;
 import corex.core.define.TopicDefine;
-import corex.core.utils.CoreXUtil;
+import corex.core.json.JsonArray;
+import corex.core.json.JsonObject;
+import corex.core.model.Broadcast;
 import corex.game.RoomPlayer;
 import corex.game.impl.AbstractRoom;
 
@@ -109,18 +108,18 @@ public class DemoGameRoom extends AbstractRoom {
         setStartAt(System.currentTimeMillis() + delay);
         game().setTimeEvent(startEventType(id()), delay, this::startGame);
 
-        FutureMo b = FutureMo.futureMo();
-        b.putLong("startAt", getStartAt());
-        game().addBroadcast(CoreXUtil.externalBroadcast(roomChannel(), playerList(null), TopicDefine.GAME_INFO, b.toBodyHolder()));
+        JsonObject jo = new JsonObject();
+        jo.put("startAt", getStartAt());
+        game().addBroadcast(Broadcast.newExternalBroadcast(roomChannel(), playerList(null), TopicDefine.GAME_INFO, jo));
     }
 
     private void cancelStartTimeEvent() {
         game().cancelTimeEvent(startEventType(id()));
         setStartAt(0);
 
-        FutureMo b = FutureMo.futureMo();
-        b.putLong("startAt", getStartAt());
-        game().addBroadcast(CoreXUtil.externalBroadcast(roomChannel(), playerList(null), TopicDefine.GAME_INFO, b.toBodyHolder()));
+        JsonObject jo = new JsonObject();
+        jo.put("startAt", getStartAt());
+        game().addBroadcast(Broadcast.newExternalBroadcast(roomChannel(), playerList(null), TopicDefine.GAME_INFO, jo));
     }
 
     private void startGame() {
@@ -141,23 +140,23 @@ public class DemoGameRoom extends AbstractRoom {
     }
 
     @Override
-    public Mo toMo() {
-        Mo mo = Mo.mo();
-        mo.putInt("id", id());
-        mo.putInt("t", type());
-        mo.putInt("n", num());
-        mo.putLong("sa", getStartAt());
+    public JsonObject toJo() {
+        JsonObject jo = new JsonObject();
+        jo.put("id", id());
+        jo.put("t", type());
+        jo.put("n", num());
+        jo.put("sa", getStartAt());
 
         if (num() > 0) {
-            Lo lo = Lo.lo();
+            JsonArray ja = new JsonArray();
             for (RoomPlayer roomPlayer : this.roomPlayers) {
                 if (roomPlayer != null) {
-                    lo.addMo(roomPlayer.toMo());
+                    ja.add(roomPlayer.toJo());
                 }
             }
-            mo.putList("pl", lo);
+            jo.put("pl", ja);
         }
 
-        return mo;
+        return jo;
     }
 }

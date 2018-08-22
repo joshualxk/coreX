@@ -6,6 +6,7 @@ import corex.core.Handler;
 import corex.core.MsgHandler;
 import corex.core.define.ExceptionDefine;
 import corex.core.exception.CoreException;
+import corex.core.model.Payload;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -15,7 +16,7 @@ public class DefaultMsgHandler implements MsgHandler {
 
     private final int maxPendingMsg;
     private final long expireTime;
-    private final Map<Long, TimeHandler<AsyncResult<Object>>> handlerMap = new LinkedHashMap<>();
+    private final Map<Long, TimeHandler<AsyncResult<Payload>>> handlerMap = new LinkedHashMap<>();
 
     public DefaultMsgHandler(int maxPendingMsg, long expireTime) {
         this.maxPendingMsg = maxPendingMsg;
@@ -23,7 +24,7 @@ public class DefaultMsgHandler implements MsgHandler {
     }
 
     @Override
-    public void onMsgSent(long id, Handler<AsyncResult<Object>> handler) {
+    public void onMsgSent(long id, Handler<AsyncResult<Payload>> handler) {
         synchronized (this) {
             if (handlerMap.size() >= maxPendingMsg) {
                 throw ExceptionDefine.SYSTEM_BUSY.build();
@@ -35,8 +36,8 @@ public class DefaultMsgHandler implements MsgHandler {
     }
 
     @Override
-    public void onMsgReply(long id, AsyncResult<Object> resp) {
-        Handler<AsyncResult<Object>> handler;
+    public void onMsgReply(long id, AsyncResult<Payload> resp) {
+        Handler<AsyncResult<Payload>> handler;
         synchronized (this) {
             handler = handlerMap.remove(id);
         }
@@ -54,9 +55,9 @@ public class DefaultMsgHandler implements MsgHandler {
     public void removeExpireMsg() {
         long now = System.currentTimeMillis();
         synchronized (this) {
-            Iterator<Map.Entry<Long, TimeHandler<AsyncResult<Object>>>> it = handlerMap.entrySet().iterator();
+            Iterator<Map.Entry<Long, TimeHandler<AsyncResult<Payload>>>> it = handlerMap.entrySet().iterator();
             for (; it.hasNext(); ) {
-                Map.Entry<Long, TimeHandler<AsyncResult<Object>>> entry = it.next();
+                Map.Entry<Long, TimeHandler<AsyncResult<Payload>>> entry = it.next();
 
                 if (entry.getValue().expireTime > now) {
                     break;
