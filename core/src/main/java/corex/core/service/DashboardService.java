@@ -29,7 +29,7 @@ public class DashboardService extends SimpleModuleService implements DashboardMo
     public JoHolder push(List<String> channels, List<String> userIds, String topic, String msg) {
         JsonObject jo = new JsonObject();
         jo.put("msg", msg);
-        Broadcast broadcast = Broadcast.newExternalBroadcast(channels, userIds, topic, jo);
+        Broadcast broadcast = Broadcast.newCsUsBroadcast(channels, userIds, topic, jo);
         coreX().broadcastMessage(broadcast);
 
         return JoHolder.newSync();

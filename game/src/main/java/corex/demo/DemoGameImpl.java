@@ -3,21 +3,24 @@ package corex.demo;
 import corex.core.JoHolder;
 import corex.core.define.ExceptionDefine;
 import corex.core.json.JsonObject;
-import corex.game.Room;
-import corex.game.RoomPlayer;
+import corex.game.GameInstance;
+import corex.game.Player;
 import corex.game.impl.AbstractGame;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by Joshua on 2018/3/26.
  */
 public class DemoGameImpl extends AbstractGame implements DemoGame {
 
-    private final Map<Integer, Set<Integer>> typeRoomsMaps = new HashMap<>();
+    public static final int STATE_IDLE = 0;
+    public static final int STATE_MATCHING = 1;
+    public static final int STATE_PLAYING = 2;
+
+    private static int GAME_INSTANCE_COUNTER = 0;
+
+    private LinkedHashMap<String, Player> matchingQueue = new LinkedHashMap<>();
 
     public DemoGameImpl() {
         super(DemoGame.class);
@@ -34,28 +37,13 @@ public class DemoGameImpl extends AbstractGame implements DemoGame {
     }
 
     @Override
-    public void onInit() {
-        for (int i = 0; i < 4; ++i) {
-            addTTTRoom(new DemoGameRoom(this, i + 1, 3, i % 2));
-        }
+    public void onGameInit() {
+        setPeriodic("init", 4000, this::tryFindMatch);
     }
 
     @Override
-    public void onDestroy() {
-    }
-
-    private boolean addTTTRoom(DemoGameRoom room) {
-        if (addRoom(room)) {
-            return typeRoomsMaps.computeIfAbsent(room.type(), key -> new HashSet<>()).add(room.id());
-        }
-        return false;
-    }
-
-    private boolean removeTTTRoom(DemoGameRoom room) {
-        if (removeRoom(room)) {
-            return typeRoomsMaps.computeIfAbsent(room.type(), key -> new HashSet<>()).remove(room.id());
-        }
-        return false;
+    public void onGameDestroy() {
+        cancelTimeEvent("init");
     }
 
     @Override
@@ -66,71 +54,81 @@ public class DemoGameImpl extends AbstractGame implements DemoGame {
     }
 
     @Override
-    public JoHolder match(int type) {
+    public JoHolder match() {
         String userId = userId();
 
         JoHolder ret = JoHolder.newSync();
         JsonObject jo = ret.jo();
 
-        if (isPlayerJoined(userId)) {
-            jo.put("info", "你已在游戏中");
-        } else {
+        Player player = getPlayer(userId);
+        if (player == null) {
             checkLimit();
-            // 匹配
-
-            if (!typeRoomsMaps.containsKey(type)) {
-                throw ExceptionDefine.PARAM_ERR.build();
-            }
-
-            Room found = null;
-            for (int roomId : typeRoomsMaps.get(type)) {
-                Room room = getRoom(roomId);
-                if (!room.isFull() && !room.hasGameBegun()) {
-                    found = room;
-                    break;
-                }
-            }
-
-            if (found == null) {
-                throw ExceptionDefine.ROOM_NOT_MATCH.build();
-            }
-
-            RoomPlayer roomPlayer = new DemoGamePlayer(userId, "roomPlayer" + userId, null, false, true, true, false);
-            roomPlayer.enterRoom(found);
-
-            jo.put("roomId", found.id());
-            jo.put("u", roomPlayer.toJo());
+            player = new DemoGamePlayer(this, userId, "player-" + userId, null, false, true, STATE_MATCHING);
+            addPlayer(player);
+        } else if (player.state() != STATE_IDLE) {
+            throw ExceptionDefine.ALREADY_IN_GAME.build();
         }
+
+        // 匹配
+        joinMatch(player);
+        jo.put("u", player.toJo());
 
         return ret;
     }
 
     @Override
-    public JoHolder leave() {
+    public JoHolder cancelMatch() {
 
-        RoomPlayer player = ensurePlayer(userId());
-        player.leaveRoom();
+        Player player = ensurePlayer(userId());
 
-        return JoHolder.newSync();
-    }
-
-    @Override
-    public JoHolder prepare(boolean prepared) {
-
-        RoomPlayer player = ensurePlayer(userId());
-        if (prepared) {
-            player.prepare();
-        } else {
-            player.cancelPrepare();
+        if (player.state() == STATE_MATCHING) {
+            cancelMatch(player.userId());
         }
 
         return JoHolder.newSync();
     }
 
-    @Override
-    public JoHolder play(int sjb) {
-        RoomPlayer player = ensurePlayer(userId());
+    private static String gameInstanceId() {
+        return "demo-" + GAME_INSTANCE_COUNTER++;
+    }
 
-        return JoHolder.newSync();
+    private void tryFindMatch() {
+        while (matchingQueue.size() >= DemoGameInstance.PLAYER_NUM) {
+            Iterator<Map.Entry<String, Player>> iterator = matchingQueue.entrySet().iterator();
+            List<Player> players = new ArrayList<>(DemoGameInstance.PLAYER_NUM);
+            for (int i = 0; i < DemoGameInstance.PLAYER_NUM; ++i) {
+                players.add(iterator.next().getValue());
+                iterator.remove();
+            }
+
+            DemoGameInstance gameInstance = new DemoGameInstance(this, gameInstanceId(), players);
+            gameInstance.start();
+        }
+    }
+
+    private void joinMatch(Player player) {
+        matchingQueue.put(player.userId(), player);
+        player.setState(STATE_MATCHING);
+        logger.info("玩家 {} 加入匹配", player.nickName());
+    }
+
+    public void cancelMatch(String userId) {
+        Player player = matchingQueue.remove(userId);
+        if (player != null) {
+            player.setState(STATE_IDLE);
+            logger.info("玩家 {} 退出匹配", player.nickName());
+        }
+    }
+
+    @Override
+    public JoHolder play(JsonObject op) {
+        Player player = ensurePlayer(userId());
+
+        GameInstance gameInstance = player.gameInstance();
+        if (gameInstance == null) {
+            throw ExceptionDefine.NOT_IN_GAME.build();
+        }
+
+        return gameInstance.play(player, op);
     }
 }

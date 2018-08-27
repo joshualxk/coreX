@@ -72,26 +72,28 @@ public class ServerRpcHandler implements RpcHandler {
     }
 
     private Object invoke(JsonObject params, MethodParamDetail methodParamDetail) throws Exception {
+        Object[] objects;
         if (methodParamDetail.params.length == 0) {
-            return methodParamDetail.method.invoke(invoker);
+            objects = null;
         } else {
-            Object[] objects = new Object[methodParamDetail.params.length];
+            objects = new Object[methodParamDetail.params.length];
             int i = 0;
 
             for (ParamDetail pd : methodParamDetail.params) {
                 objects[i++] = getValue(params, pd);
             }
 
-            try {
-                return methodParamDetail.method.invoke(invoker, objects);
-            } catch (InvocationTargetException e) {
-                Throwable cause = e.getCause();
-                if (cause instanceof Exception) {
-                    throw (Exception) cause;
-                } else {
-                    e.printStackTrace();
-                    throw ExceptionDefine.SYSTEM_ERR.build();
-                }
+        }
+
+        try {
+            return methodParamDetail.method.invoke(invoker, objects);
+        } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof Exception) {
+                throw (Exception) cause;
+            } else {
+                e.printStackTrace();
+                throw ExceptionDefine.SYSTEM_ERR.build();
             }
         }
     }

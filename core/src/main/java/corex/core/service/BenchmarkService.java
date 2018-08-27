@@ -14,7 +14,7 @@ public class BenchmarkService extends SimpleModuleService implements BenchmarkMo
     public JoHolder connect(String msg) {
         JsonObject b = new JsonObject();
         b.put("msg", msg);
-        Broadcast broadcast = Broadcast.newExternalBroadcast("benchmark-channel", null, "haha", b);
+        Broadcast broadcast = Broadcast.newGroupBroadcast("benchmark-channel", null, "haha", b);
         coreX().broadcastMessage(broadcast);
 
         JoHolder ret = JoHolder.newSync();

@@ -55,7 +55,7 @@ public class InitialHandler extends SimpleChannelInboundHandler<Payload> {
                     }
                 }
             } catch (Exception e) {
-
+                // do nothing
             }
 
             ctx.close();

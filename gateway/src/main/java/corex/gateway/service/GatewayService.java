@@ -80,7 +80,7 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
                     if (CoreXUtil.validateRpcRequest(request)) {
                         moduleRouter(conn, request);
                     } else {
-                        logger.debug("客户端消息格式不正确:{}.", request);
+                        logger.debug("客户端验证类型不正确.");
                     }
                 }
             }
@@ -164,14 +164,7 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
             return;
         }
 
-        String token;
-
-        try {
-            token = request.getBody().getString("to");
-        } catch (Exception e) {
-            sendResponse(conn, request.getId(), ExceptionDefine.PARAM_ERR);
-            return;
-        }
+        String token = request.getBody().getStringParam("to");
 
         coreX().asyncAgent(LoginModule.class).authorize(token)
                 .addListener(new OnlySuccessHandler<JoHolder>(conn, request.getId()) {

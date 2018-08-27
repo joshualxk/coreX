@@ -5,6 +5,7 @@ import corex.core.annotation.Api;
 import corex.core.annotation.Module;
 import corex.core.annotation.Param;
 import corex.core.define.ConstDefine;
+import corex.core.json.JsonObject;
 
 /**
  * Created by Joshua on 2018/3/26.
@@ -16,15 +17,12 @@ public interface DemoGame {
     JoHolder connect();
 
     @Api("match")
-    JoHolder match(@Param("1") int type);
+    JoHolder match();
 
-    @Api("leave")
-    JoHolder leave();
-
-    @Api("prepare")
-    JoHolder prepare(@Param("1") boolean prepared);
+    @Api("cancelMatch")
+    JoHolder cancelMatch();
 
     @Api("play")
-    JoHolder play(@Param("1") int sjb);
+    JoHolder play(@Param("1") JsonObject op);
 
 }

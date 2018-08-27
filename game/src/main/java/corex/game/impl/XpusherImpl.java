@@ -65,7 +65,7 @@ public class XpusherImpl implements Xpusher {
         final Auth auth;
         final List<Broadcast> broadcasts = new LinkedList<>();
 
-        public AuthAndBroadcast(Auth auth) {
+        AuthAndBroadcast(Auth auth) {
             this.auth = auth;
         }
     }

@@ -14,7 +14,12 @@ import corex.core.model.Broadcast;
 import corex.core.rpc.ModuleParams;
 import corex.core.rpc.RpcHandler;
 import corex.core.rpc.ServerModuleScanner;
-import corex.game.*;
+import corex.game.Game;
+import corex.game.GameInstance;
+import corex.game.Player;
+import corex.game.Xpusher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -27,13 +32,14 @@ import java.util.concurrent.Callable;
  */
 public abstract class AbstractGame implements Game, ContextAware, Xpusher {
 
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     private final ModuleParams moduleParams;
 
     private Context context;
-    private XpusherImpl xpusher;
+    private Xpusher xpusher;
     private Map<String, Long> timeEvents = new HashMap<>();
-    private Map<String, RoomPlayer> players = new HashMap<>();
-    private Map<Integer, Room> rooms = new HashMap<>();
+    private Map<String, Player> players = new HashMap<>();
     private Map<String, GameInstance> instances = new HashMap<>();
 
     public AbstractGame(Class<?> clz) {
@@ -50,12 +56,11 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
     public void init(Context context) {
         this.context = context;
         this.xpusher = new XpusherImpl(context);
-        onInit();
+        onGameInit();
     }
 
-
     public final void destroy() {
-        onDestroy();
+        onGameDestroy();
     }
 
     @Override
@@ -74,14 +79,27 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
     }
 
     @Override
-    public boolean isPlayerJoined(String userId) {
-        return players.containsKey(userId);
+    public Player getPlayer(String userId) {
+        return players.get(userId);
     }
 
-    public void setTimeEvent(String type, long periodTime, Runnable task) {
+    public void setTimer(String type, long periodTime, Runnable task) {
         cancelTimeEvent(type);
-        long tid = coreX().setTimer(periodTime, t -> {
-            timeEvents.remove(type);
+        if (periodTime <= 0) {
+            context().runOnContext(v -> runWrappedTask(task, Auth.internalAuth()));
+        } else {
+            long tid = coreX().setTimer(periodTime, t -> {
+                timeEvents.remove(type);
+                runWrappedTask(task, Auth.internalAuth());
+            });
+            timeEvents.put(type, tid);
+        }
+
+    }
+
+    public void setPeriodic(String type, long delay, Runnable task) {
+        cancelTimeEvent(type);
+        long tid = coreX().setPeriodic(delay, t -> {
             runWrappedTask(task, Auth.internalAuth());
         });
         timeEvents.put(type, tid);
@@ -95,18 +113,18 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
     }
 
     public final void handlePlayerOnline(String userId) {
-        RoomPlayer roomPlayer = ensurePlayer(userId);
+        Player player = ensurePlayer(userId);
         try {
-            runWrappedTask(() -> roomPlayer.setOnline(true), Auth.internalAuth());
+            runWrappedTask(() -> player.setOnline(true), Auth.internalAuth());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public final void handlePlayerOffline(String userId) {
-        RoomPlayer roomPlayer = ensurePlayer(userId);
+        Player player = ensurePlayer(userId);
         try {
-            runWrappedTask(() -> roomPlayer.setOnline(false), Auth.internalAuth());
+            runWrappedTask(() -> player.setOnline(false), Auth.internalAuth());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -120,12 +138,14 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
         return moduleParams.module();
     }
 
-    public void addPlayer(RoomPlayer roomPlayer) {
-        players.put(roomPlayer.userId(), roomPlayer);
+    public void addPlayer(Player player) {
+        players.put(player.userId(), player);
+        logger.info("玩家 {} 加入游戏", player.nickName());
     }
 
-    public void removePlayer(RoomPlayer roomPlayer) {
-        players.remove(roomPlayer.userId());
+    public void removePlayer(Player player) {
+        players.remove(player.userId());
+        logger.info("玩家 {} 离开游戏", player.nickName());
     }
 
     public boolean addGame(GameInstance gameInstance) {
@@ -136,18 +156,6 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
         return instances.remove(gameInstance.id()) != null;
     }
 
-    protected boolean addRoom(Room room) {
-        return rooms.putIfAbsent(room.id(), room) == null;
-    }
-
-    protected boolean removeRoom(Room room) {
-        return room.num() == 0 && rooms.remove(room.id()) != null;
-    }
-
-    protected Room getRoom(int roomId) {
-        return rooms.get(roomId);
-    }
-
     // 当前游戏人数是否已满
     protected final void checkLimit() {
         if (playerLimit() > 0 && playerNum() >= playerLimit()) {
@@ -155,12 +163,12 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
         }
     }
 
-    protected RoomPlayer ensurePlayer(String userId) {
-        RoomPlayer roomPlayer = players.get(userId);
-        if (roomPlayer == null) {
+    protected Player ensurePlayer(String userId) {
+        Player player = players.get(userId);
+        if (player == null) {
             throw ExceptionDefine.NOT_IN_GAME.build();
         }
-        return roomPlayer;
+        return player;
     }
 
     protected <V> V runWrappedTask(Callable<V> task, Auth auth) throws Exception {
@@ -201,6 +209,10 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
             }
         }
         xpusher.before(auth);
+    }
+
+    public boolean isPlayerJoined(String userId) {
+        return getPlayer(userId) != null;
     }
 
     @Override

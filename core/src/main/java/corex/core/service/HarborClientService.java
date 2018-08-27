@@ -82,8 +82,7 @@ public class HarborClientService extends SimpleModuleService implements HarborCl
                 msgPostman.deliver(module, method.getVersion(), payload);
             }
             return;
-        } catch (BizException e) {
-
+        } catch (BizException ignore) {
         } catch (Exception e) {
             logger.warn("转发 RpcRequest 失败.", e);
         }

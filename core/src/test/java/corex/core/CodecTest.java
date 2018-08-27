@@ -27,10 +27,10 @@ public class CodecTest {
 
     @Test
     public void method2() throws InterruptedException {
-        codecSpeedTest(20000, CoreXUtil::initPipeline);
+        codecSpeedTest(20000);
     }
 
-    private void codecSpeedTest(int counter, Handler<ChannelPipeline> handler) throws InterruptedException {
+    private void codecSpeedTest(int counter) throws InterruptedException {
 
         CountDownLatch countDownLatch = new CountDownLatch(counter);
 
@@ -44,7 +44,7 @@ public class CodecTest {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             ChannelPipeline p = socketChannel.pipeline();
-                            handler.handle(p);
+                            CoreXUtil.initPipeline(p);
 
                             p.addLast(new SimpleChannelInboundHandler<Payload>() {
                                 @Override
@@ -70,7 +70,7 @@ public class CodecTest {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             ChannelPipeline p = socketChannel.pipeline();
-                            handler.handle(p);
+                            CoreXUtil.initPipeline(p);
                         }
                     });
 
@@ -99,5 +99,18 @@ public class CodecTest {
                 .put("arr", new JsonArray().add(1).add(2))
                 .put("f1", 0.1f + ix);
     }
+
+    @Test
+    public void nullTest() {
+        String s = "";
+//        JsonObject jo1 = new JsonObject(s);
+//        System.out.println(jo1);
+
+        s = null;
+        JsonObject jo2 = new JsonObject(s);
+        System.out.println(jo2);
+
+    }
+
 
 }

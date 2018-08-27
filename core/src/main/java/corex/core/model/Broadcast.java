@@ -35,15 +35,19 @@ public class Broadcast implements Joable {
         return new Broadcast(true, role, null, null, push);
     }
 
-    public static Broadcast newExternalBroadcast(List<String> channels, List<String> userIds, String topic, JsonObject body) {
+    public static Broadcast newCsUsBroadcast(List<String> channels, List<String> userIds, String topic, JsonObject body) {
         Push push = Push.newPush(topic, CoreXUtil.sysTime(), body);
         channels = channels == null ? new LinkedList<>() : channels;
         userIds = userIds == null ? new LinkedList<>() : userIds;
         return new Broadcast(false, ConstDefine.ROLE_GATEWAY, channels, userIds, push);
     }
 
-    public static Broadcast newExternalBroadcast(String channel, List<String> userIds, String topic, JsonObject body) {
-        return newExternalBroadcast(Collections.singletonList(channel), userIds, topic, body);
+    public static Broadcast newGroupBroadcast(String channel, List<String> userIds, String topic, JsonObject body) {
+        return newCsUsBroadcast(Collections.singletonList(channel), userIds, topic, body);
+    }
+
+    public static Broadcast newSingleBroadcast(String channel, String userId, String topic, JsonObject body) {
+        return newCsUsBroadcast(Collections.singletonList(channel), Collections.singletonList(userId), topic, body);
     }
 
     public boolean isInternal() {

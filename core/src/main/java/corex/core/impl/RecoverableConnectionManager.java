@@ -13,6 +13,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +25,8 @@ import java.util.Set;
  * Created by Joshua on 2018/3/21.
  */
 public class RecoverableConnectionManager {
+
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     // 重连延时
     private static final long[] retryDelayTimes = {0, 500, 1000, 3000, 3000, 5000, 10000, 10000, 30000, 30000, 60000};
@@ -138,6 +142,7 @@ public class RecoverableConnectionManager {
             }
         }, ar -> {
             if (!ar.succeeded()) {
+                logger.info("fail to connect {}", serverInfo);
                 connection.triggerErrorEvent();
             }
         });

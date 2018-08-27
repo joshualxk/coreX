@@ -88,7 +88,13 @@ public class WebSocketConnection extends AbstractConnection {
     public void onMsg(Object msg) {
         if (msg instanceof ByteBuf) {
             try (ByteBufInputStream is = new ByteBufInputStream((ByteBuf) msg)) {
-                msg = codec.readClientPayload(is);
+                ClientPayload clientPayload = codec.readClientPayload(is);
+                if (!clientPayload.hasRpcRequest()) {
+                    close();
+                    return;
+                }
+
+                msg = clientPayload;
             } catch (Exception e) {
                 close();
                 return;

@@ -1,5 +1,8 @@
 package corex.game;
 
+import corex.core.JoHolder;
+import corex.core.json.JsonObject;
+
 import java.util.List;
 
 /**
@@ -11,13 +14,18 @@ public interface GameInstance {
 
     long createTime();
 
-    List<RoomPlayer> players();
+    List<Player> players();
 
-    Room room();
+    // 给某个玩家推送详细的游戏信息
+    void pushDetailedInfo(Player player);
+
+    JoHolder play(Player player, JsonObject op);
 
     int phase();
 
-    boolean gotoPhase(int phase, long delay);
+    void gotoPhaseNow(int phase);
+
+    void gotoPhase(int phase, long delay);
 
     void onStart();
 

@@ -25,8 +25,17 @@ public interface Player extends Joable {
      */
     boolean setOnline(boolean online);
 
-    void onOnline();
+    void onOnlineChange(boolean online);
 
-    void onOffline();
+    boolean setState(int state);
 
+    int state();
+
+    void onStateChange(int oldState, int newState);
+
+    GameInstance gameInstance();
+
+    void setGameInstance(GameInstance gameInstance);
+
+    int index();
 }

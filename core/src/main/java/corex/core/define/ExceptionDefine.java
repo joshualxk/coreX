@@ -9,7 +9,7 @@ import corex.core.exception.BizExceptionBuilder;
 public final class ExceptionDefine {
 
     public static BizException newException(String msg) {
-        return new BizException(-1000, msg);
+        return new BizException(-999, msg);
     }
 
     public static BizException newException(int code, String msg) {
@@ -30,15 +30,12 @@ public final class ExceptionDefine {
     public static final BizExceptionBuilder NOT_LOGIN = new BizExceptionBuilder(-77, "尚未登录");
     public static final BizExceptionBuilder DUPLICATE_LOGIN = new BizExceptionBuilder(-78, "重复登录");
     public static final BizExceptionBuilder ALREADY_LOGIN = new BizExceptionBuilder(-79, "已经登录");
-    public static final BizExceptionBuilder GAME_CLOSING = new BizExceptionBuilder(-80, "游戏已关闭");
-    public static final BizExceptionBuilder GAME_PLAYER_LIMIT = new BizExceptionBuilder(-81, "游戏人数已满");
-    public static final BizExceptionBuilder GAME_HAS_BEGUN = new BizExceptionBuilder(-82, "游戏已开始");
-    public static final BizExceptionBuilder NOT_IN_GAME = new BizExceptionBuilder(-83, "不在游戏中");
 
-    //  -1000+为游戏逻辑错误
-    public static final BizExceptionBuilder IN_ROOM = new BizExceptionBuilder(-1008, "你已在房间中");
-    public static final BizExceptionBuilder NOT_IN_ROOM = new BizExceptionBuilder(-1009, "你不在房间中");
-    public static final BizExceptionBuilder ROOM_NUM_LIMIT = new BizExceptionBuilder(-1010, "人数已满");
-    public static final BizExceptionBuilder ROOM_NOT_MATCH = new BizExceptionBuilder(-1011, "找不到匹配房间");
 
+    public static final BizExceptionBuilder GAME_CLOSING = new BizExceptionBuilder(-1000, "游戏已关闭");
+    public static final BizExceptionBuilder GAME_PLAYER_LIMIT = new BizExceptionBuilder(-1001, "游戏人数已满");
+    public static final BizExceptionBuilder GAME_HAS_BEGUN = new BizExceptionBuilder(-1002, "游戏已开始");
+    public static final BizExceptionBuilder ALREADY_IN_GAME = new BizExceptionBuilder(-1003, "已经在游戏中");
+    public static final BizExceptionBuilder NOT_IN_GAME = new BizExceptionBuilder(-1004, "不在游戏中");
+    public static final BizExceptionBuilder NOT_UR_TURN = new BizExceptionBuilder(-1005, "不是你的回合");
 }

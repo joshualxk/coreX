@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  */
 public class CacheService extends SimpleModuleService implements CacheModule {
 
-    private static final long UPDATE_CACHE_INTERVAL = 60 * 1000; // 60s;
+    private static final long UPDATE_CACHE_INTERVAL = 5 * 60 * 1000; // 5min;
 
     @Autowired
     BasicDao basicDao;

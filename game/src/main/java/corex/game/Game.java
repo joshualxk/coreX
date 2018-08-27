@@ -5,24 +5,26 @@ package corex.game;
  */
 public interface Game {
 
+    // 游戏id
     int gameId();
 
+    // 游戏正在关闭
     boolean isClosing();
 
     // 玩家数量上限,-1无上限
     int playerLimit();
 
-    // 多少名玩家正在玩
+    // 多少名玩家在这个游戏
     int playerNum();
 
     // 正在进行多少场游戏
     int instanceNum();
 
-    // 玩家是否在这个游戏
-    boolean isPlayerJoined(String userId);
+    // 获取玩家状态，为null不在这个游戏中
+    Player getPlayer(String userId);
 
-    void onInit();
+    void onGameInit();
 
-    void onDestroy();
+    void onGameDestroy();
 
 }

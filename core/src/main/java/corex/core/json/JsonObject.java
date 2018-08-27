@@ -1,5 +1,7 @@
 package corex.core.json;
 
+import corex.core.define.ExceptionDefine;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Instant;
@@ -896,6 +898,44 @@ public class JsonObject implements Iterable<Map.Entry<String, Object>> {
 
     private void fromJson(InputStream is) {
         map = Json.decodeValue(is, Map.class);
+    }
+
+    /**
+     * 获取字符串参数，不能为空
+     *
+     * @param key
+     * @return
+     */
+    public String getStringParam(String key) {
+        String param = null;
+        try {
+            param = getString(key);
+        } catch (Exception ignore) {
+        }
+        if (param == null) {
+            throw ExceptionDefine.PARAM_ERR.build();
+        }
+
+        return param;
+    }
+
+    /**
+     * 获取int参数，不能为空
+     *
+     * @param key
+     * @return
+     */
+    public int getIntegerParam(String key) {
+        Integer param = null;
+        try {
+            param = getInteger(key);
+        } catch (Exception ignore) {
+        }
+        if (param == null) {
+            throw ExceptionDefine.PARAM_ERR.build();
+        }
+
+        return param;
     }
 
     private class Iter implements Iterator<Map.Entry<String, Object>> {
