@@ -17,7 +17,7 @@ import java.util.jar.JarFile;
 /**
  * Created by Joshua on 2018/3/1.
  */
-public class PackageUtil {
+public final class PackageUtil {
 
     public static void main(String[] args) throws Exception {
         String packageName = "corex.module";

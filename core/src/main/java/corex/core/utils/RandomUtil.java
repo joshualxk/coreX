@@ -6,7 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * Created by Joshua on 2018/3/28.
  */
-public class RandomUtil {
+public final class RandomUtil {
 
     public static int nextInt(int lower, int upper) {
         return ThreadLocalRandom.current().nextInt(lower, upper);
