@@ -31,8 +31,8 @@ public class SucceededFuture<T> implements Future<T> {
     }
 
     @Override
-    public T sync() {
-        return result;
+    public Future<T> sync() {
+        return this;
     }
 
     @Override

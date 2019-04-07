@@ -1,5 +1,8 @@
 package io.bigoldbro.corex.service;
 
+import io.bigoldbro.corex.Callback;
+import io.bigoldbro.corex.impl.SucceededCallback;
+import io.bigoldbro.corex.json.JsonObject;
 import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.module.BlockTestModule;
 
@@ -11,9 +14,8 @@ import java.util.concurrent.TimeUnit;
 public class BlockTestService extends SimpleModuleService implements BlockTestModule {
 
     @Override
-    public JoHolder block(int seconds) {
-        JoHolder ret = JoHolder.newSync();
-        JsonObjectImpl jo = ret.jo();
+    public Callback<JsonObject> block(int seconds) {
+        JsonObject jo = new JsonObjectImpl();
         jo.put("thread", Thread.currentThread().getName());
         jo.put("startTime", System.currentTimeMillis());
 
@@ -24,7 +26,7 @@ public class BlockTestService extends SimpleModuleService implements BlockTestMo
         }
         jo.put("endTime", System.currentTimeMillis());
 
-        return ret;
+        return new SucceededCallback<>(jo);
     }
 
 }

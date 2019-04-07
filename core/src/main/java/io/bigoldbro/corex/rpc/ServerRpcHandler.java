@@ -1,10 +1,12 @@
 package io.bigoldbro.corex.rpc;
 
-import io.bigoldbro.corex.json.JsonObjectImpl;
+import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.exception.CoreException;
-import io.bigoldbro.corex.json.JsonArrayImpl;
+import io.bigoldbro.corex.json.JsonArray;
+import io.bigoldbro.corex.json.JsonObject;
+import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.model.Auth;
 import io.bigoldbro.corex.rpc.MethodParamDetail.ParamDetail;
 
@@ -27,7 +29,7 @@ public class ServerRpcHandler implements RpcHandler {
         this.requireType = requireType;
     }
 
-    public JoHolder handle(Auth auth, JsonObjectImpl params) throws Exception {
+    public Callback<Object> handle(Auth auth, JsonObject params) throws Exception {
 
         // 授权类型不一致
         final int clientType = auth.getType();
@@ -60,7 +62,7 @@ public class ServerRpcHandler implements RpcHandler {
             }
             return null;
         } else {
-            return (JoHolder) ret;
+            return (Callback<Object>) ret;
         }
 
     }
@@ -70,7 +72,7 @@ public class ServerRpcHandler implements RpcHandler {
         throw new UnsupportedOperationException("convert");
     }
 
-    private Object invoke(JsonObjectImpl params, MethodParamDetail methodParamDetail) throws Exception {
+    private Object invoke(JsonObject params, MethodParamDetail methodParamDetail) throws Exception {
         Object[] objects;
         if (methodParamDetail.params.length == 0) {
             objects = null;
@@ -97,8 +99,8 @@ public class ServerRpcHandler implements RpcHandler {
         }
     }
 
-    private static List getListValue(JsonObjectImpl params, ParamDetail pd) {
-        JsonArrayImpl ja = params.getJsonArray(pd.param.value());
+    private static List getListValue(JsonObject params, ParamDetail pd) {
+        JsonArray ja = params.getJsonArray(pd.param.value());
 
         if (ja == null) {
             return Collections.EMPTY_LIST;
@@ -118,8 +120,8 @@ public class ServerRpcHandler implements RpcHandler {
         throw new CoreException("List参数类型不合法:" + pd.parameterizedType);
     }
 
-    private static JsonObjectImpl getJo(JsonObjectImpl params, ParamDetail pd) {
-        JsonObjectImpl jo = params.getJsonObject(pd.param.value());
+    private static JsonObject getJo(JsonObject params, ParamDetail pd) {
+        JsonObject jo = params.getJsonObject(pd.param.value());
         if (jo == null) {
             jo = new JsonObjectImpl();
         }
@@ -127,7 +129,7 @@ public class ServerRpcHandler implements RpcHandler {
         return jo;
     }
 
-    private static Object getValue(JsonObjectImpl params, ParamDetail pd) {
+    private static Object getValue(JsonObject params, ParamDetail pd) {
         if (!params.containsKey(pd.param.value())) {
             if (!pd.param.optional()) {
                 throw ExceptionDefine.PARAM_ERR.build();

@@ -1,9 +1,11 @@
 package io.bigoldbro.corex.module;
 
+import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.annotation.Api;
 import io.bigoldbro.corex.annotation.Module;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ServiceNameDefine;
+import io.bigoldbro.corex.json.JsonObject;
 
 /**
  * Created by Joshua on 2018/3/29.
@@ -12,5 +14,5 @@ import io.bigoldbro.corex.define.ServiceNameDefine;
 public interface HarborClientModule {
 
     @Api(value = "i", type = ConstDefine.AUTH_TYPE_ADMIN)
-    void info();
+    Callback<JsonObject> info();
 }

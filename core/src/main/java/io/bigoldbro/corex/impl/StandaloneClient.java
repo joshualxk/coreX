@@ -1,11 +1,13 @@
 package io.bigoldbro.corex.impl;
 
+import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.annotation.Api;
 import io.bigoldbro.corex.annotation.Module;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.exception.CoreException;
 import io.bigoldbro.corex.impl.handler.InitialHandler;
+import io.bigoldbro.corex.json.JsonObject;
 import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.model.Payload;
 import io.bigoldbro.corex.model.RpcRequest;
@@ -25,10 +27,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -116,11 +115,11 @@ public class StandaloneClient {
         }
 
         @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        public Callback<Object> invoke(Object proxy, Method method, Object[] args) throws Throwable {
             return invoke0(proxy, method, args);
         }
 
-        private JoHolder invoke0(Object proxy, Method method, Object[] args) throws Throwable {
+        private Callback<Object> invoke0(Object proxy, Method method, Object[] args) throws Throwable {
             Api api = method.getAnnotation(Api.class);
             if (api == null) {
                 throw new CoreException("不支持的方法:" + method.getName());
@@ -142,7 +141,8 @@ public class StandaloneClient {
             RpcRequest rpcRequest = RpcRequest.newAdminRpcRequest(1, moduleParams.module().address(), api.value(), moduleParams.module().version(), argsJo);
             Payload payload = Payload.newPayload(isVoidType ? 0 : 1, rpcRequest);
 
-            CompletableFuture<JoHolder> completableFuture = new CompletableFuture<>();
+            Callback<Object> callback = new CallbackImpl<>();
+
             io.netty.bootstrap.Bootstrap b = new io.netty.bootstrap.Bootstrap();
             b.group(worker)
                     .channel(NioSocketChannel.class)
@@ -157,19 +157,18 @@ public class StandaloneClient {
                             initialHandler.setServerAuthHandler(ping -> {
                                 p.channel().writeAndFlush(payload);
                                 if (isVoidType) {
-                                    completableFuture.complete(null);
+                                    callback.complete(null);
                                 }
                             });
                             initialHandler.setPayloadHandler(pl -> {
                                 if (pl.hasRpcResponse()) {
                                     RpcResponse rpcResponse = pl.getRpcResponse();
                                     if (CoreXUtil.isSuccessResponse(rpcResponse)) {
-                                        JsonObjectImpl jo = rpcResponse.getBody();
-                                        completableFuture.complete(JoHolder.newSync(jo));
+                                        JsonObject jo = rpcResponse.getBody();
+                                        callback.complete(jo);
                                     } else {
-                                        completableFuture.completeExceptionally(ExceptionDefine.newException(rpcResponse.getCode(), rpcResponse.getMessage()));
+                                        callback.fail(ExceptionDefine.newException(rpcResponse.getCode(), rpcResponse.getMessage()));
                                     }
-
                                 }
 
                             });
@@ -180,14 +179,13 @@ public class StandaloneClient {
             ChannelFuture future = b.connect(host, port).sync();
             if (future.isSuccess()) {
                 channel = future.channel();
+                channel.closeFuture().addListener(v -> callback.tryFail(ExceptionDefine.CONN_FAIL.build()));
             } else {
-                completableFuture.completeExceptionally(future.cause());
+                callback.fail(future.cause());
             }
 
             try {
-                return completableFuture.get(timeoutMillis, TimeUnit.MILLISECONDS);
-            } catch (ExecutionException e) {
-                throw e.getCause();
+                return callback.sync();
             } finally {
                 if (channel != null) {
                     channel.close();

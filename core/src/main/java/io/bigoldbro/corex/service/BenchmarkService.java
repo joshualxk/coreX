@@ -1,6 +1,7 @@
 package io.bigoldbro.corex.service;
 
-import io.bigoldbro.corex.impl.SyncCallback;
+import io.bigoldbro.corex.Callback;
+import io.bigoldbro.corex.impl.SucceededCallback;
 import io.bigoldbro.corex.json.JsonObject;
 import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.model.Broadcast;
@@ -18,7 +19,7 @@ public class BenchmarkService extends SimpleModuleService implements BenchmarkMo
         Broadcast broadcast = Broadcast.newGroupBroadcast("benchmark-channel", null, "haha", b);
         coreX().broadcastMessage(broadcast);
 
-        return new SyncCallback<>(1);
+        return new SucceededCallback<>(1);
     }
 
 }

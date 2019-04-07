@@ -49,5 +49,5 @@ public interface Future<T> extends AsyncResult<T>, Handler<AsyncResult<T>> {
 
     Future<T> setHandler(Handler<AsyncResult<T>> handler);
 
-    T sync();
+    Future<T> sync();
 }

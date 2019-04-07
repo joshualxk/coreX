@@ -6,7 +6,7 @@ import io.bigoldbro.corex.annotation.Module;
 import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.exception.BizException;
 import io.bigoldbro.corex.exception.CoreException;
-import io.bigoldbro.corex.impl.SyncCallback;
+import io.bigoldbro.corex.impl.SucceededCallback;
 import io.bigoldbro.corex.json.Json;
 import io.bigoldbro.corex.json.JsonObject;
 import io.bigoldbro.corex.json.JsonObjectImpl;
@@ -86,25 +86,24 @@ public abstract class AbstractProcessorService implements Service {
 
             Auth auth = request.getAuth();
 
-            Callback ret = rpcHandler.handle(auth, request.getBody());
+            Callback<Object> ret = rpcHandler.handle(auth, request.getBody());
 
             if (ret == null) {
                 if (msg.needReply()) {
                     throw new CoreException("方法返回值不能为空, method:" + request.getMethod());
                 }
-            } else if (ret instanceof SyncCallback) {
+            } else if (ret instanceof SucceededCallback) {
                 Object body = ret.sync();
                 RpcResponse rpcResponse = RpcResponse.newSuccessRpcResponse(request.getId(), Json.wrap(body));
                 Payload b = Payload.newPayload(payload.getId(), rpcResponse);
                 ar = Future.succeededFuture(b);
 
             } else {
-                AsyncCallback<Object> asyncCallback = (AsyncCallback<Object>) ret;
                 int requestId = request.getId();
                 long payloadId = payload.getId();
 
                 if (msg.needReply()) {
-                    asyncCallback.setHandler(ar2 -> {
+                    ret.setHandler(ar2 -> {
                         if (ar2.succeeded()) {
                             Object body = ar2.result();
                             RpcResponse rpcResponse = RpcResponse.newSuccessRpcResponse(requestId, Json.wrap(body));
@@ -137,7 +136,7 @@ public abstract class AbstractProcessorService implements Service {
         jo.put("clz", getClass().getName());
         jo.put("addr", name());
         jo.put("bc", bc().toString());
-        return new SyncCallback<>(jo);
+        return new SucceededCallback<>(jo);
     }
 
     private static String rpcHandlerName(RpcHandler rpcHandler) {

@@ -16,6 +16,17 @@ public class ServerAuth implements Joable {
     public long startTime;
     public long timestamp;
 
+    public ServerAuth() {
+
+    }
+
+    public ServerAuth(int id, int role, long startTime, long timestamp) {
+        this.id = id;
+        this.role = role;
+        this.startTime = startTime;
+        this.timestamp = timestamp;
+    }
+
     public void readFrom(JsonObject jo) {
         id = jo.getInteger("id");
         role = jo.getInteger("r");

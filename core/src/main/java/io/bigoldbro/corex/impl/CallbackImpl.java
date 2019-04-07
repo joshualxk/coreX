@@ -10,11 +10,12 @@ import io.bigoldbro.corex.exception.CoreException;
 public class CallbackImpl<T> extends FutureImpl<T> implements Callback<T> {
 
     @Override
-    public T sync() {
+    public Callback<T> sync() {
         Context context = CoreXImpl.getContext();
         if (context != null && !context.isWorker()) {
             throw new CoreException("io线程不能阻塞!");
         }
-        return super.sync();
+        super.sync();
+        return this;
     }
 }

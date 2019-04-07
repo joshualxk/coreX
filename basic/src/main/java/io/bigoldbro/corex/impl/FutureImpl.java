@@ -3,7 +3,6 @@ package io.bigoldbro.corex.impl;
 import io.bigoldbro.corex.AsyncResult;
 import io.bigoldbro.corex.Future;
 import io.bigoldbro.corex.Handler;
-import io.bigoldbro.corex.exception.BizException;
 import io.bigoldbro.corex.exception.NoStackTraceThrowable;
 
 /**
@@ -142,36 +141,24 @@ public class FutureImpl<T> implements Future<T> {
     }
 
     @Override
-    public T sync() {
-        Throwable cause = null;
-        boolean succeeded = true;
+    public Future<T> sync() {
         synchronized (this) {
-            if (this.failed) {
-                succeeded = false;
-                cause = throwable;
-            } else if (this.succeeded) {
+            if (failed || succeeded) {
+                return this;
             } else {
                 try {
                     wait();
-                    if (this.failed) {
+                    if (failed) {
                         succeeded = false;
-                        cause = throwable;
                     }
                 } catch (InterruptedException e) {
-                    succeeded = false;
-                    cause = e;
+                    failed = true;
+                    throwable = e;
                 }
             }
         }
 
-        if (succeeded) {
-            return result;
-        }
-        if (cause instanceof BizException) {
-            throw (BizException) cause;
-        } else {
-            throw new RuntimeException(cause);
-        }
+        return this;
     }
 
     @Override

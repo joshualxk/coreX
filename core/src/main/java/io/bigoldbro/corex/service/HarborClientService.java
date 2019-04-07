@@ -1,5 +1,6 @@
 package io.bigoldbro.corex.service;
 
+import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.Future;
 import io.bigoldbro.corex.Msg;
 import io.bigoldbro.corex.define.CacheDefine;
@@ -11,6 +12,7 @@ import io.bigoldbro.corex.impl.BroadcastReceiver;
 import io.bigoldbro.corex.impl.GameRoute;
 import io.bigoldbro.corex.impl.MsgPostman;
 import io.bigoldbro.corex.impl.ServerInfo;
+import io.bigoldbro.corex.json.JsonObject;
 import io.bigoldbro.corex.model.Broadcast;
 import io.bigoldbro.corex.model.Method;
 import io.bigoldbro.corex.model.Payload;
@@ -101,9 +103,9 @@ public class HarborClientService extends SimpleModuleService implements HarborCl
     }
 
     @Override
-    public JoHolder info() {
-        JoHolder ret = super.info();
-        ret.jo().put("conns", msgPostman.info());
+    public Callback<JsonObject> info() {
+        Callback<JsonObject> ret = super.info();
+        ret.result().put("conns", msgPostman.info());
         return ret;
     }
 

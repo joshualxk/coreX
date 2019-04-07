@@ -1,5 +1,6 @@
 package io.bigoldbro.corex.rpc;
 
+import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.annotation.Param;
 import io.bigoldbro.corex.exception.CoreException;
 import io.bigoldbro.corex.json.JsonObjectImpl;
@@ -69,6 +70,7 @@ public class ParamParser {
         if (clz == Void.class || clz == void.class) {
             isVoidType = true;
         } else if (clz == Callback.class) {
+            // TODO 检查类型
             isVoidType = false;
         } else {
             throw new CoreException("不正确的返回参数类型:" + clz.getName());

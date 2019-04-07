@@ -8,6 +8,7 @@ import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.define.ServiceNameDefine;
 import io.bigoldbro.corex.exception.CoreException;
 import io.bigoldbro.corex.json.JsonArrayImpl;
+import io.bigoldbro.corex.json.JsonObject;
 import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.model.Broadcast;
 import io.bigoldbro.corex.model.Payload;
@@ -439,9 +440,8 @@ public class CoreXImpl implements CoreX {
         msgHandler.removeExpireMsg();
     }
 
-    public JoHolder info() {
-        JoHolder ret = JoHolder.newSync();
-        JsonObjectImpl jo = ret.jo();
+    public Callback<JsonObject> info() {
+        JsonObject jo = new JsonObjectImpl();
         jo.put("serverId", serverId);
         jo.put("role", role);
         jo.put("startTime", startTime);
@@ -454,7 +454,7 @@ public class CoreXImpl implements CoreX {
         jo.put("timeoutsNum", timeouts.size());
         jo.put("pendingMsgNum", msgHandler.pendingMsgNum());
 
-        return ret;
+        return new SucceededCallback<>(jo);
     }
 
     private class InternalTimerHandler implements Handler<Void> {

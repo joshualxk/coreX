@@ -30,6 +30,7 @@ public final class ExceptionDefine {
     public static final BizExceptionBuilder NOT_LOGIN = new BizExceptionBuilder(-77, "尚未登录");
     public static final BizExceptionBuilder DUPLICATE_LOGIN = new BizExceptionBuilder(-78, "重复登录");
     public static final BizExceptionBuilder ALREADY_LOGIN = new BizExceptionBuilder(-79, "已经登录");
+    public static final BizExceptionBuilder CONN_FAIL = new BizExceptionBuilder(-80, "连接失败");
 
 
     public static final BizExceptionBuilder GAME_CLOSING = new BizExceptionBuilder(-1000, "游戏已关闭");
