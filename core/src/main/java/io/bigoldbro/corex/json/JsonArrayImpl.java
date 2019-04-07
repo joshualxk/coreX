@@ -203,6 +203,12 @@ public class JsonArrayImpl implements JsonArray {
         return this;
     }
 
+    public JsonArrayImpl add(Joable value) {
+        Objects.requireNonNull(value);
+        list.add(Json.toJsonObject(value));
+        return this;
+    }
+
     public JsonArrayImpl add(Object value) {
         Objects.requireNonNull(value);
         value = Json.checkAndCopy(value, false);

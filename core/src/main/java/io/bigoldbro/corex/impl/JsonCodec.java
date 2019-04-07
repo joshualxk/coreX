@@ -1,6 +1,7 @@
 package io.bigoldbro.corex.impl;
 
 import io.bigoldbro.corex.Codec;
+import io.bigoldbro.corex.json.Json;
 import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.model.ClientPayload;
 import io.bigoldbro.corex.model.Payload;
@@ -16,12 +17,14 @@ public class JsonCodec implements Codec {
     @Override
     public Payload readPayload(InputStream is) throws Exception {
         JsonObjectImpl jo = new JsonObjectImpl(is);
-        return Payload.fromJo(jo);
+        Payload payload = new Payload();
+        payload.readFrom(jo);
+        return payload;
     }
 
     @Override
     public void writePayload(OutputStream os, Payload payload) throws Exception {
-        payload.toJo().encode(os);
+        Json.toJsonObject(payload).encode(os);
     }
 
     @Override

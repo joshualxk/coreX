@@ -118,11 +118,9 @@ public class JsonObjectImpl implements JsonObject {
     }
 
     @Override
-    public <T extends Joable> T getJoable(String key, Class<T> clz) throws Exception {
+    public <T extends Joable> T getJoable(String key, Class<T> clz) {
         JsonObject jo = getJsonObject(key);
-        T t = clz.newInstance();
-        t.readFrom(jo);
-        return t;
+        return Json.fromJsonObject(jo, clz);
     }
 
     public byte[] getBinary(String key) {
@@ -345,9 +343,7 @@ public class JsonObjectImpl implements JsonObject {
 
     public JsonObjectImpl put(String key, Joable value) {
         Objects.requireNonNull(key);
-        JsonObject jo = new JsonObjectImpl();
-        value.writeTo(jo);
-        map.put(key, jo);
+        map.put(key, Json.toJsonObject(value));
         return this;
     }
 
@@ -569,11 +565,6 @@ public class JsonObjectImpl implements JsonObject {
         }
 
         return param;
-    }
-
-    public static JsonObject wrap(Object val) {
-        Objects.requireNonNull(val);
-        Obj
     }
 
     private class Iter implements Iterator<Map.Entry<String, Object>> {

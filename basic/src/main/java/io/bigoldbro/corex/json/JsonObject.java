@@ -27,7 +27,7 @@ public interface JsonObject extends Iterable<Map.Entry<String, Object>> {
 
     JsonArray getJsonArray(String key);
 
-    <T extends Joable> T getJoable(String key, Class<T> clz) throws Exception;
+    <T extends Joable> T getJoable(String key, Class<T> clz);
 
     byte[] getBinary(String key);
 

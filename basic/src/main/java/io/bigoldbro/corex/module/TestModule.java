@@ -13,7 +13,7 @@ import io.bigoldbro.corex.json.JsonObject;
 public interface TestModule {
 
     @Api(value = "i", type = ConstDefine.AUTH_TYPE_ADMIN)
-    JsonObject info();
+    Callback<JsonObject> info();
 
     @Api(value = "async", type = ConstDefine.AUTH_TYPE_NON)
     void async(@Param("1") int delaySeconds);

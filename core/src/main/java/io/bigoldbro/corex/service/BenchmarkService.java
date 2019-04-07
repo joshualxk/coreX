@@ -1,7 +1,6 @@
 package io.bigoldbro.corex.service;
 
 import io.bigoldbro.corex.impl.SyncCallback;
-import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.json.JsonObject;
 import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.model.Broadcast;

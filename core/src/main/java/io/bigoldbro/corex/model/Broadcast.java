@@ -30,6 +30,9 @@ public class Broadcast implements Joable {
         this.push = push;
     }
 
+    public Broadcast() {
+    }
+
     public static Broadcast newInternalBroadcast(int role, String topic, JsonObject body) {
         Push push = Push.newPush(topic, CoreXUtil.sysTime(), body);
         return new Broadcast(true, role, null, null, push);
@@ -72,7 +75,7 @@ public class Broadcast implements Joable {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void readFrom(JsonObject jo) throws Exception {
+    public void readFrom(JsonObject jo) {
         internal = jo.getBoolean("itn");
         role = jo.getInteger("role");
         channels = jo.getJsonArray("chs").getList();

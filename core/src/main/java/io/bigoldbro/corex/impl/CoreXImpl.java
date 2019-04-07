@@ -1,19 +1,19 @@
 package io.bigoldbro.corex.impl;
 
-import io.bigoldbro.corex.*;
 import io.bigoldbro.corex.Future;
+import io.bigoldbro.corex.*;
 import io.bigoldbro.corex.annotation.BlockControl;
+import io.bigoldbro.corex.define.ConstDefine;
+import io.bigoldbro.corex.define.ExceptionDefine;
+import io.bigoldbro.corex.define.ServiceNameDefine;
+import io.bigoldbro.corex.exception.CoreException;
 import io.bigoldbro.corex.json.JsonArrayImpl;
 import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.model.Broadcast;
 import io.bigoldbro.corex.model.Payload;
 import io.bigoldbro.corex.model.RpcRequest;
-import io.bigoldbro.corex.rpc.RpcClient;
-import io.bigoldbro.corex.define.ConstDefine;
-import io.bigoldbro.corex.define.ExceptionDefine;
-import io.bigoldbro.corex.define.ServiceNameDefine;
-import io.bigoldbro.corex.exception.CoreException;
 import io.bigoldbro.corex.module.BroadcastModule;
+import io.bigoldbro.corex.rpc.RpcClient;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -137,7 +137,7 @@ public class CoreXImpl implements CoreX {
         return workerPool;
     }
 
-    public Context getContext() {
+    public static Context getContext() {
         Thread currentThread = Thread.currentThread();
         if (currentThread instanceof CoreXThread) {
             return ((CoreXThread) currentThread).getContext();

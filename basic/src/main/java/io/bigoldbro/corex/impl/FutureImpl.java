@@ -3,6 +3,7 @@ package io.bigoldbro.corex.impl;
 import io.bigoldbro.corex.AsyncResult;
 import io.bigoldbro.corex.Future;
 import io.bigoldbro.corex.Handler;
+import io.bigoldbro.corex.exception.BizException;
 import io.bigoldbro.corex.exception.NoStackTraceThrowable;
 
 /**
@@ -77,6 +78,7 @@ public class FutureImpl<T> implements Future<T> {
             this.result = result;
             succeeded = true;
             h = handler;
+            notifyAll();
         }
         if (h != null) {
             h.handle(this);
@@ -99,6 +101,7 @@ public class FutureImpl<T> implements Future<T> {
             this.throwable = cause != null ? cause : new NoStackTraceThrowable(null);
             failed = true;
             h = handler;
+            notifyAll();
         }
         if (h != null) {
             h.handle(this);
@@ -136,6 +139,39 @@ public class FutureImpl<T> implements Future<T> {
             handler.handle(this);
         }
         return this;
+    }
+
+    @Override
+    public T sync() {
+        Throwable cause = null;
+        boolean succeeded = true;
+        synchronized (this) {
+            if (this.failed) {
+                succeeded = false;
+                cause = throwable;
+            } else if (this.succeeded) {
+            } else {
+                try {
+                    wait();
+                    if (this.failed) {
+                        succeeded = false;
+                        cause = throwable;
+                    }
+                } catch (InterruptedException e) {
+                    succeeded = false;
+                    cause = e;
+                }
+            }
+        }
+
+        if (succeeded) {
+            return result;
+        }
+        if (cause instanceof BizException) {
+            throw (BizException) cause;
+        } else {
+            throw new RuntimeException(cause);
+        }
     }
 
     @Override

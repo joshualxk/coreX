@@ -1,7 +1,6 @@
 package io.bigoldbro.corex.impl;
 
 import io.bigoldbro.corex.AsyncResult;
-import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.Handler;
 
 /**

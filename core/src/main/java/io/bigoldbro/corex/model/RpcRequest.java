@@ -1,7 +1,9 @@
 package io.bigoldbro.corex.model;
 
-import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.define.ConstDefine;
+import io.bigoldbro.corex.json.Joable;
+import io.bigoldbro.corex.json.JsonObject;
+import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.utils.CoreXUtil;
 
 import java.util.Objects;
@@ -13,24 +15,25 @@ public class RpcRequest implements Joable {
 
     public static final int T = 3;
 
-    private final int id;
-    private final int type;
-    private final Method method;
-    private final Auth auth;
-    private final long timestamp;
-    private final JsonObjectImpl body;
+    private int id;
+    private int type;
+    private Method method;
+    private Auth auth;
+    private long timestamp;
+    private String body;
 
-    private RpcRequest(int id, int type, Method method, Auth auth, long timestamp, JsonObjectImpl body) {
+    private RpcRequest(int id, int type, Method method, Auth auth, long timestamp, JsonObject body) {
         this.id = id;
         this.type = type;
         this.method = Objects.requireNonNull(method);
         this.auth = Objects.requireNonNull(auth);
         this.timestamp = timestamp;
-        this.body = Objects.requireNonNull(body);
+        this.body = Objects.requireNonNull(body).encode();
     }
 
     public RpcRequest authorize(String token) {
-        return new RpcRequest(id, type, method, Auth.newAuth(ConstDefine.AUTH_TYPE_CLIENT, token), timestamp, body);
+        auth = Auth.newAuth(ConstDefine.AUTH_TYPE_CLIENT, token);
+        return this;
     }
 
     private static RpcRequest newRpcRequest(int id, int type, Method method, Auth auth, long timestamp, JsonObjectImpl body) {
@@ -65,27 +68,25 @@ public class RpcRequest implements Joable {
         return timestamp;
     }
 
-    public JsonObjectImpl getBody() {
-        return body;
+    public JsonObject getBody() {
+        return new JsonObjectImpl(body);
     }
 
-    public static RpcRequest fromJo(JsonObjectImpl jo) throws Exception {
-        int id = jo.getInteger("id");
-        int type = jo.getInteger("t");
-        Method method = Method.fromJo(jo.getJsonObject("m"));
-        Auth auth = Auth.fromJo(jo.getJsonObject("a"));
-        long timestamp = jo.getLong("ts");
-        JsonObjectImpl body = jo.getJsonObject("b");
-        return new RpcRequest(id, type, method, auth, timestamp, body);
+    public void readFrom(JsonObject jo) {
+        id = jo.getInteger("id");
+        type = jo.getInteger("t");
+        method = jo.getJoable("m", Method.class);
+        auth = jo.getJoable("a", Auth.class);
+        timestamp = jo.getLong("ts");
+        body = jo.getString("bs");
     }
 
     @Override
-    public JsonObjectImpl toJo() {
-        return new JsonObjectImpl()
-                .put("id", id)
+    public void writeTo(JsonObject jo) {
+        jo.put("id", id)
                 .put("t", type)
-                .put("m", method.toJo())
-                .put("a", auth.toJo())
+                .put("m", method)
+                .put("a", auth)
                 .put("ts", timestamp)
                 .put("b", body);
     }

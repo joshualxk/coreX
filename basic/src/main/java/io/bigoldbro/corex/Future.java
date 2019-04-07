@@ -48,4 +48,6 @@ public interface Future<T> extends AsyncResult<T>, Handler<AsyncResult<T>> {
     boolean isComplete();
 
     Future<T> setHandler(Handler<AsyncResult<T>> handler);
+
+    T sync();
 }

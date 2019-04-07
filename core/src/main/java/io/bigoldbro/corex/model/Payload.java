@@ -1,25 +1,24 @@
 package io.bigoldbro.corex.model;
 
-import io.bigoldbro.corex.exception.DecodeException;
-import io.bigoldbro.corex.json.Joable;
-import io.bigoldbro.corex.json.JsonArray;
-import io.bigoldbro.corex.json.JsonArrayImpl;
-import io.bigoldbro.corex.json.JsonObjectImpl;
+import io.bigoldbro.corex.json.*;
 
 /**
  * Created by Joshua on 2018/8/21
  */
-public class Payload {
+public class Payload implements Joable {
     private long id;
     private JsonArray routes;
     private int t;
-    private Joable body;
+    private JsonObject body;
+
+    public Payload() {
+    }
 
     private Payload(long id, JsonArray routes, int t, Joable body) {
         this.id = id;
         this.routes = routes;
         this.t = t;
-        this.body = body;
+        this.body = Json.toJsonObject(body);
     }
 
     public static Payload newPayload(ServerAuth serverAuth) {
@@ -60,57 +59,37 @@ public class Payload {
     }
 
     public ServerAuth getServerAuth() {
-        return (ServerAuth) body;
+        return Json.fromJsonObject(body, ServerAuth.class);
     }
 
     public Broadcast getBroadcast() {
-        return (Broadcast) body;
+        return Json.fromJsonObject(body, Broadcast.class);
     }
 
     public RpcRequest getRpcRequest() {
-        return (RpcRequest) body;
+        return Json.fromJsonObject(body, RpcRequest.class);
     }
 
     public RpcResponse getRpcResponse() {
-        return (RpcResponse) body;
+        return Json.fromJsonObject(body, RpcResponse.class);
     }
 
     public long getId() {
         return id;
     }
 
-    public void readFrom(JsonObjectImpl jo) throws Exception {
+    public void readFrom(JsonObject jo) {
         id = jo.getLong("id");
         routes = jo.getJsonArray("rs");
         t = jo.getInteger("t");
-        JsonObjectImpl bodyJo = jo.getJsonObject("b");
-
-        Joable body;
-        switch (t) {
-            case ServerAuth.T:
-                body = ServerAuth.fromJo(bodyJo);
-                break;
-            case Broadcast.T:
-                body = Broadcast.fromJo(bodyJo);
-                break;
-            case RpcRequest.T:
-                body = RpcRequest.fromJo(bodyJo);
-                break;
-            case RpcResponse.T:
-                body = RpcResponse.fromJo(bodyJo);
-                break;
-            default:
-                throw new DecodeException("未知Payload类型:" + t);
-        }
-        return new Payload(id, routes, t, body);
+        body = jo.getJsonObject("b");
     }
 
     @Override
-    public JsonObjectImpl toJo() {
-        return new JsonObjectImpl()
-                .put("id", id)
+    public void writeTo(JsonObject jo) {
+        jo.put("id", id)
                 .put("rs", routes)
                 .put("t", t)
-                .put("b", body.toJo());
+                .put("b", body);
     }
 }

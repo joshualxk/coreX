@@ -16,10 +16,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Base64;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -132,6 +129,28 @@ public class Json {
         }
     }
 
+    public static JsonObject toJsonObject(Joable joable) {
+        JsonObjectImpl jsonObject = new JsonObjectImpl();
+        joable.writeTo(jsonObject);
+        return jsonObject;
+    }
+
+    public static <T extends Joable> T fromJsonObject(JsonObject jsonObject, Class<T> clz) {
+        try {
+            T t = clz.newInstance();
+            t.readFrom(jsonObject);
+            return t;
+        } catch (Exception e) {
+            throw new DecodeException();
+        }
+    }
+
+    public static JsonObject wrap(Object val) {
+        Objects.requireNonNull(val);
+        val = checkAndCopy(val, false);
+        return new JsonObjectImpl().put("p1", val);
+    }
+
     @SuppressWarnings("unchecked")
     static Object checkAndCopy(Object val, boolean copy) {
         if (val == null) {
@@ -171,9 +190,7 @@ public class Json {
         } else if (val instanceof Instant) {
             val = ISO_INSTANT.format((Instant) val);
         } else if (val instanceof Joable) {
-            JsonObject jo = new JsonObjectImpl();
-            ((Joable) val).writeTo(jo);
-            val = jo;
+            val = toJsonObject((Joable) val);
         } else {
             throw new IllegalStateException("Illegal type in JsonObjectImpl: " + val.getClass());
         }

@@ -1,7 +1,7 @@
 package io.bigoldbro.corex.rpc;
 
 import io.bigoldbro.corex.annotation.Module;
-import io.bigoldbro.corex.json.JsonObjectImpl;
+import io.bigoldbro.corex.json.JsonObject;
 import io.bigoldbro.corex.model.Auth;
 import io.bigoldbro.corex.model.Broadcast;
 import io.bigoldbro.corex.model.Push;
@@ -32,7 +32,7 @@ public class ModuleParams {
 
     public void handleInternalBroadcast(Broadcast broadcast) throws Exception {
         Push push = broadcast.getPush();
-        JsonObjectImpl body = push.getBody();
+        JsonObject body = push.getBody();
         RpcHandler rpcHandler = getHandler(broadcast.getPush().getTopic());
         if (rpcHandler != null) {
             rpcHandler.handle(Auth.internalAuth(), body);

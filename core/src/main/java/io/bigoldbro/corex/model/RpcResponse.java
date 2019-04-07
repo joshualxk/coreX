@@ -31,7 +31,7 @@ public class RpcResponse implements Joable {
         return new RpcResponse(id, code, message, timestamp, body);
     }
 
-    public static RpcResponse newSuccessRpcResponse(int id, JsonObjectImpl body) {
+    public static RpcResponse newSuccessRpcResponse(int id, JsonObject body) {
         return newRpcResponse(id, 0, "", CoreXUtil.sysTime(), body);
     }
 

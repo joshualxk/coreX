@@ -1,11 +1,10 @@
 package io.bigoldbro.corex.service;
 
 import io.bigoldbro.corex.Future;
-import io.bigoldbro.corex.json.JsonArrayImpl;
-import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.define.CacheDefine;
 import io.bigoldbro.corex.impl.GameRoute;
 import io.bigoldbro.corex.impl.ServerInfo;
+import io.bigoldbro.corex.json.*;
 import io.bigoldbro.corex.module.CacheModule;
 
 import java.util.List;
@@ -46,7 +45,7 @@ public class CacheService extends SimpleModuleService implements CacheModule {
 
         JsonArrayImpl ja = new JsonArrayImpl();
         for (ServerInfo si : list) {
-            ja.add(si.toJo());
+            ja.add(si);
         }
 
         long updateTime = System.currentTimeMillis();
@@ -64,7 +63,7 @@ public class CacheService extends SimpleModuleService implements CacheModule {
 
         JsonArrayImpl ja = new JsonArrayImpl();
         for (GameRoute si : list) {
-            ja.add(si.toJo());
+            ja.add(si);
         }
 
         long updateTime = System.currentTimeMillis();
@@ -78,29 +77,37 @@ public class CacheService extends SimpleModuleService implements CacheModule {
     }
 
     @SuppressWarnings("unchecked")
-    public static List<ServerInfo> parseServerInfos(JsonObjectImpl jo, Predicate<ServerInfo> predicate) {
-        JsonArrayImpl ja = jo.getJsonObject("cache").getJsonArray("body");
-        return ((List<JsonObjectImpl>) ja.getList()).stream().map(ServerInfo::fromJo)
-                .filter(predicate).collect(Collectors.toList());
+    public static List<ServerInfo> parseServerInfos(JsonObject jo, Predicate<ServerInfo> predicate) {
+        JsonArray ja = jo.getJsonObject("cache").getJsonArray("body");
+        return ((List<JsonObject>) ja.getList()).stream().map(v -> {
+            try {
+                return Json.fromJsonObject(v, ServerInfo.class);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }).filter(predicate).collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")
-    public static List<GameRoute> parseGameRoutes(JsonObjectImpl jo) {
-        JsonArrayImpl ja = jo.getJsonObject("cache").getJsonArray("body");
-        return ((List<JsonObjectImpl>) ja.getList()).stream().map(GameRoute::fromJo).collect(Collectors.toList());
+    public static List<GameRoute> parseGameRoutes(JsonObject jo) {
+        JsonArray ja = jo.getJsonObject("cache").getJsonArray("body");
+        return ((List<JsonObjectImpl>) ja.getList()).stream().map(v -> {
+            try {
+                return Json.fromJsonObject(v, GameRoute.class);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }).collect(Collectors.toList());
     }
 
     @Override
-    public JoHolder updateCache() {
-        updateCache0();
-        return JoHolder.newSync();
+    public void updateCache() {
     }
 
     @Override
-    public JoHolder getCache(String name) {
-        JoHolder ret = JoHolder.newSync();
-        ret.jo().put("cache", caches.get(name));
-        return ret;
+    public void getCache(String name) {
     }
 
 }

@@ -1,8 +1,9 @@
 package io.bigoldbro.corex.rpc;
 
-import io.bigoldbro.corex.json.JsonArrayImpl;
-import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.exception.CoreException;
+import io.bigoldbro.corex.json.JsonArrayImpl;
+import io.bigoldbro.corex.json.JsonObject;
+import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.model.Auth;
 import io.bigoldbro.corex.rpc.MethodParamDetail.ParamDetail;
 
@@ -114,7 +115,8 @@ class ClientRpcHandler implements RpcHandler {
     }
 
     @Override
-    public JoHolder handle(Auth auth, JsonObjectImpl params) throws Exception {
+    public <T> Callback<T> handle(Auth auth, JsonObject params) throws Exception {
         throw new UnsupportedOperationException();
     }
+
 }

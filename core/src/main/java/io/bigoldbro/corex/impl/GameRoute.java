@@ -1,6 +1,7 @@
 package io.bigoldbro.corex.impl;
 
-import io.bigoldbro.corex.json.JsonObjectImpl;
+import io.bigoldbro.corex.json.Joable;
+import io.bigoldbro.corex.json.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,21 +104,18 @@ public class GameRoute implements Joable {
                 '}';
     }
 
-    public static GameRoute fromJo(JsonObjectImpl jo) {
-        GameRoute gameRoute = new GameRoute();
-        gameRoute.setId(jo.getInteger("id"));
-        gameRoute.setModule(jo.getString("m"));
-        gameRoute.setVersion(jo.getString("v"));
-        gameRoute.setServerId1(jo.getInteger("sId1"));
-        gameRoute.setServerId2(jo.getInteger("sId2"));
-        gameRoute.setServerId3(jo.getInteger("sId3"));
-        return gameRoute;
+    public void readFrom(JsonObject jo) {
+        setId(jo.getInteger("id"));
+        setModule(jo.getString("m"));
+        setVersion(jo.getString("v"));
+        setServerId1(jo.getInteger("sId1"));
+        setServerId2(jo.getInteger("sId2"));
+        setServerId3(jo.getInteger("sId3"));
     }
 
     @Override
-    public JsonObjectImpl toJo() {
-        return new JsonObjectImpl()
-                .put("id", id)
+    public void writeTo(JsonObject jo) {
+        jo.put("id", id)
                 .put("m", module)
                 .put("v", version)
                 .put("sId1", serverId1)

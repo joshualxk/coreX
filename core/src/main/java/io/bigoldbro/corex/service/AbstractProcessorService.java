@@ -7,6 +7,7 @@ import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.exception.BizException;
 import io.bigoldbro.corex.exception.CoreException;
 import io.bigoldbro.corex.impl.SyncCallback;
+import io.bigoldbro.corex.json.Json;
 import io.bigoldbro.corex.json.JsonObject;
 import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.model.*;
@@ -93,20 +94,20 @@ public abstract class AbstractProcessorService implements Service {
                 }
             } else if (ret instanceof SyncCallback) {
                 Object body = ret.sync();
-                RpcResponse rpcResponse = RpcResponse.newSuccessRpcResponse(request.getId(), ret.jo());
+                RpcResponse rpcResponse = RpcResponse.newSuccessRpcResponse(request.getId(), Json.wrap(body));
                 Payload b = Payload.newPayload(payload.getId(), rpcResponse);
                 ar = Future.succeededFuture(b);
 
             } else {
-                AsyncJoHolder futureJo = (AsyncJoHolder) ret;
+                AsyncCallback<Object> asyncCallback = (AsyncCallback<Object>) ret;
                 int requestId = request.getId();
                 long payloadId = payload.getId();
 
                 if (msg.needReply()) {
-                    futureJo.setHandler(ar2 -> {
+                    asyncCallback.setHandler(ar2 -> {
                         if (ar2.succeeded()) {
-                            JoHolder ret2 = ar2.result();
-                            RpcResponse rpcResponse = RpcResponse.newSuccessRpcResponse(requestId, ret2.jo());
+                            Object body = ar2.result();
+                            RpcResponse rpcResponse = RpcResponse.newSuccessRpcResponse(requestId, Json.wrap(body));
                             Payload b = Payload.newPayload(payloadId, rpcResponse);
                             msg.reply(Future.succeededFuture(b));
                         } else {

@@ -1,8 +1,8 @@
 package io.bigoldbro.corex.rpc;
 
 import io.bigoldbro.corex.annotation.Param;
-import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.exception.CoreException;
+import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.rpc.MethodParamDetail.ParamDetail;
 import io.bigoldbro.corex.rpc.MethodParamDetail.ParamType;
 import io.netty.util.internal.StringUtil;
@@ -68,7 +68,7 @@ public class ParamParser {
         Class<?> clz = method.getReturnType();
         if (clz == Void.class || clz == void.class) {
             isVoidType = true;
-        } else if (clz == JoHolder.class) {
+        } else if (clz == Callback.class) {
             isVoidType = false;
         } else {
             throw new CoreException("不正确的返回参数类型:" + clz.getName());

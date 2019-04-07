@@ -1,6 +1,7 @@
 package io.bigoldbro.corex.rpc;
 
 import io.bigoldbro.corex.AsyncResult;
+import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.CoreX;
 import io.bigoldbro.corex.Handler;
 import io.bigoldbro.corex.annotation.Api;
@@ -9,13 +10,16 @@ import io.bigoldbro.corex.annotation.Notice;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.exception.CoreException;
+import io.bigoldbro.corex.impl.CallbackImpl;
+import io.bigoldbro.corex.impl.FailedCallback;
 import io.bigoldbro.corex.json.JsonObjectImpl;
+import io.bigoldbro.corex.model.Broadcast;
 import io.bigoldbro.corex.model.Payload;
 import io.bigoldbro.corex.model.RpcRequest;
 import io.bigoldbro.corex.model.RpcResponse;
+import io.bigoldbro.corex.module.BroadcastModule;
 import io.bigoldbro.corex.utils.CoreXUtil;
 import io.bigoldbro.corex.utils.PackageUtil;
-import io.bigoldbro.corex.module.BroadcastModule;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -99,7 +103,7 @@ public class RpcClient {
             return invoke0(proxy, method, args);
         }
 
-        private JoHolder invoke0(Object proxy, Method method, Object[] args) throws Throwable {
+        private Callback invoke0(Object proxy, Method method, Object[] args) throws Throwable {
             Api api = method.getAnnotation(Api.class);
             if (api == null) {
                 throw new CoreException("不支持的方法:" + method.getName());
@@ -120,19 +124,18 @@ public class RpcClient {
 
                 RpcRequest rpcRequest = RpcRequest.internalRpcRequest(1, moduleParams.module().address(), api.value(), moduleParams.module().version(), jo);
 
-                JoHolder joHolder = null;
+                // TODO
+                Callback callback = new CallbackImpl();
                 Handler<AsyncResult<Payload>> replyHandler = null;
 
                 if (!rpcHandler.isVoidType()) {
-                    AsyncJoHolder asyncJoHolder = JoHolder.newAsync();
-                    replyHandler = newPayloadHandler(asyncJoHolder);
-                    joHolder = asyncJoHolder;
+                    replyHandler = newPayloadHandler(callback);
                 }
                 coreX.sendMessage(moduleParams.module().address(), rpcRequest, replyHandler);
-                return joHolder;
+                return callback;
             } catch (Throwable t) {
                 if (isVoidType) throw t;
-                return JoHolder.newFailedAsync(t);
+                return new FailedCallback(t);
             }
         }
 
@@ -161,14 +164,14 @@ public class RpcClient {
 
             JsonObjectImpl jo = rpcHandler.convert(args);
 
-            io.bigoldbro.corex.model.Broadcast b = io.bigoldbro.corex.model.Broadcast.newInternalBroadcast(notice.role(), notice.topic(), jo);
+            Broadcast b = Broadcast.newInternalBroadcast(notice.role(), notice.topic(), jo);
 
             coreX.broadcastMessage(b);
             return null;
         }
     }
 
-    private static Handler<AsyncResult<Payload>> newPayloadHandler(AsyncJoHolder asyncJoHolder) {
+    private static Handler<AsyncResult<Payload>> newPayloadHandler(Callback<Object> callback) {
         return ar -> {
             if (ar.succeeded()) {
 
@@ -176,16 +179,16 @@ public class RpcClient {
                 if (payload.hasRpcResponse()) {
                     RpcResponse rpcResponse = payload.getRpcResponse();
                     if (CoreXUtil.isSuccessResponse(rpcResponse)) {
-                        asyncJoHolder.complete(JoHolder.newSync(rpcResponse.getBody()));
+                        callback.complete(rpcResponse.getBody());
                     } else {
-                        asyncJoHolder.fail(ExceptionDefine.newException(rpcResponse.getCode(), rpcResponse.getMessage()));
+                        callback.fail(ExceptionDefine.newException(rpcResponse.getCode(), rpcResponse.getMessage()));
                     }
 
                 } else {
-                    asyncJoHolder.fail(new CoreException("payload中不包含response"));
+                    callback.fail(new CoreException("payload中不包含response"));
                 }
             } else {
-                asyncJoHolder.fail(ar.cause());
+                callback.fail(ar.cause());
             }
         };
     }

@@ -1,6 +1,5 @@
 package io.bigoldbro.corex.module;
 
-import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.annotation.Api;
 import io.bigoldbro.corex.annotation.BlockControl;
 import io.bigoldbro.corex.annotation.Module;

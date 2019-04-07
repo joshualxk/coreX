@@ -3,21 +3,20 @@ package io.bigoldbro.corex.impl;
 import io.bigoldbro.corex.AsyncResult;
 import io.bigoldbro.corex.Future;
 import io.bigoldbro.corex.Handler;
-import io.bigoldbro.corex.exception.NoStackTraceThrowable;
 
 /**
  * Created by Joshua on 2018/2/26.
  */
-public class FailedFuture<T> implements Future<T> {
+public class SucceededFuture<T> implements Future<T> {
 
-    private final Throwable cause;
+    private final T result;
 
-    public FailedFuture(Throwable t) {
-        cause = t != null ? t : new NoStackTraceThrowable(null);
+    public SucceededFuture(T result) {
+        this.result = result;
     }
 
-    public FailedFuture(String failureMessage) {
-        this(new NoStackTraceThrowable(failureMessage));
+    public SucceededFuture() {
+        this.result = null;
     }
 
     @Override
@@ -32,23 +31,28 @@ public class FailedFuture<T> implements Future<T> {
     }
 
     @Override
+    public T sync() {
+        return result;
+    }
+
+    @Override
     public void complete(T result) {
-        throw new IllegalStateException("Result is already complete: failed");
+        throw new IllegalStateException("Result is already complete: succeeded");
     }
 
     @Override
     public void complete() {
-        throw new IllegalStateException("Result is already complete: failed");
+        throw new IllegalStateException("Result is already complete: succeeded");
     }
 
     @Override
     public void fail(Throwable cause) {
-        throw new IllegalStateException("Result is already complete: failed");
+        throw new IllegalStateException("Result is already complete: succeeded");
     }
 
     @Override
     public void fail(String failureMessage) {
-        throw new IllegalStateException("Result is already complete: failed");
+        throw new IllegalStateException("Result is already complete: succeeded");
     }
 
     @Override
@@ -73,31 +77,31 @@ public class FailedFuture<T> implements Future<T> {
 
     @Override
     public T result() {
-        return null;
+        return result;
     }
 
     @Override
     public Throwable cause() {
-        return cause;
+        return null;
     }
 
     @Override
     public boolean succeeded() {
-        return false;
-    }
-
-    @Override
-    public boolean failed() {
         return true;
     }
 
     @Override
+    public boolean failed() {
+        return false;
+    }
+
+    @Override
     public void handle(AsyncResult<T> asyncResult) {
-        throw new IllegalStateException("Result is already complete: failed");
+        throw new IllegalStateException("Result is already complete: succeeded");
     }
 
     @Override
     public String toString() {
-        return "Future{cause=" + cause.getMessage() + "}";
+        return "Future{result=" + result + "}";
     }
 }

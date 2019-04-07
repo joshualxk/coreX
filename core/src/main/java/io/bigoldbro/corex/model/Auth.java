@@ -1,22 +1,23 @@
 package io.bigoldbro.corex.model;
 
-import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.define.ConstDefine;
+import io.bigoldbro.corex.json.Joable;
+import io.bigoldbro.corex.json.JsonObject;
 
 /**
  * Created by Joshua on 2018/8/22
  */
 public class Auth implements Joable {
 
-    private static final Auth INTERNAL_AUTH = new Auth(ConstDefine.AUTH_TYPE_INTERNAL, "");
-    private static final Auth ADMIN_AUTH = new Auth(ConstDefine.AUTH_TYPE_ADMIN, "");
-
-    private final int type;
-    private final String token;
+    private int type;
+    private String token;
 
     private Auth(int type, String token) {
         this.type = type;
         this.token = token;
+    }
+
+    public Auth() {
     }
 
     public static Auth newAuth(int type, String token) {
@@ -24,11 +25,11 @@ public class Auth implements Joable {
     }
 
     public static Auth internalAuth() {
-        return INTERNAL_AUTH;
+        return new Auth(ConstDefine.AUTH_TYPE_INTERNAL, "");
     }
 
     public static Auth adminAuth() {
-        return ADMIN_AUTH;
+        return new Auth(ConstDefine.AUTH_TYPE_ADMIN, "");
     }
 
     public int getType() {
@@ -39,16 +40,14 @@ public class Auth implements Joable {
         return token;
     }
 
-    public static Auth fromJo(JsonObjectImpl jo) throws Exception {
-        int type = jo.getInteger("t");
-        String token = jo.getString("to");
-        return newAuth(type, token);
+    public void readFrom(JsonObject jo) {
+        type = jo.getInteger("t");
+        token = jo.getString("to");
     }
 
     @Override
-    public JsonObjectImpl toJo() {
-        return new JsonObjectImpl()
-                .put("t", type)
+    public void writeTo(JsonObject jo) {
+        jo.put("t", type)
                 .put("to", token);
     }
 }
