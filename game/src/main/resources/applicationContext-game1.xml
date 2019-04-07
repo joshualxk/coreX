@@ -38,7 +38,7 @@
 
     <bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
         <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
-        <property name="basePackage" value="corex.dao"/>
+        <property name="basePackage" value="io.bigoldbro.corex.dao"/>
     </bean>
 
     <bean id="txManager"
@@ -49,21 +49,21 @@
     <tx:annotation-driven transaction-manager="txManager"
                           proxy-target-class="true"/>
 
-    <bean id="coreXConfig" class="corex.core.CoreXConfig">
-        <property name="id" value="${corex.id}"/>
-        <property name="role" value="${corex.role}"/>
-        <property name="harborPort" value="${corex.harbor.port}"/>
+    <bean id="coreXConfig" class="io.bigoldbro.corex.CoreXConfig">
+        <property name="id" value="${io.bigoldbro.corex.id}"/>
+        <property name="role" value="${io.bigoldbro.corex.role}"/>
+        <property name="harborPort" value="${io.bigoldbro.corex.harbor.port}"/>
     </bean>
 
-    <bean id="dashboardService" class="corex.core.service.DashboardService">
+    <bean id="dashboardService" class="io.bigoldbro.corex.service.DashboardService">
     </bean>
-    <bean id="logService" class="corex.core.service.LogService">
+    <bean id="logService" class="io.bigoldbro.corex.service.LogService">
     </bean>
-    <bean id="harborServerService" class="corex.core.service.HarborServerService">
+    <bean id="harborServerService" class="io.bigoldbro.corex.service.HarborServerService">
     </bean>
-    <bean id="harborClientService" class="corex.core.service.HarborClientService">
+    <bean id="harborClientService" class="io.bigoldbro.corex.service.HarborClientService">
     </bean>
-    <bean id="cacheService" class="corex.core.service.CacheService">
+    <bean id="cacheService" class="io.bigoldbro.corex.service.CacheService">
     </bean>
 
 </beans>

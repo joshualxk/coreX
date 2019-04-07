@@ -3,36 +3,36 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>com.pchill</groupId>
-        <artifactId>corex</artifactId>
+        <groupId>io.bigoldbro</groupId>
+        <artifactId>io.bigoldbro.corex</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>corex-all</artifactId>
+    <artifactId>io.bigoldbro.corex-all</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>corex-core</artifactId>
+            <artifactId>io.bigoldbro.corex-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>corex-game</artifactId>
+            <artifactId>io.bigoldbro.corex-game</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>corex-gateway</artifactId>
+            <artifactId>io.bigoldbro.corex-gateway</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>corex-login</artifactId>
+            <artifactId>io.bigoldbro.corex-login</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
@@ -49,7 +49,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <finalName>corex-all</finalName>
+                            <finalName>io.bigoldbro.corex-all</finalName>
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
@@ -57,15 +57,15 @@
                                 </transformer>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>corex.all.StartupAll</mainClass>
+                                    <mainClass>io.bigoldbro.corex.all.StartupAll</mainClass>
                                 </transformer>
                             </transformers>
 
                             <filters>
                                 <filter>
-                                    <artifact>corex:*</artifact>
+                                    <artifact>io.bigoldbro.corex:*</artifact>
                                     <excludes>
-                                        <exclude>corex.properties</exclude>
+                                        <exclude>io.bigoldbro.corex.properties</exclude>
                                         <exclude>log4j2.xml</exclude>
                                     </excludes>
                                 </filter>

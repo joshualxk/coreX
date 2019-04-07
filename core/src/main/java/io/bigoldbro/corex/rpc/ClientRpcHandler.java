@@ -1,0 +1,120 @@
+package io.bigoldbro.corex.rpc;
+
+import io.bigoldbro.corex.json.JsonArrayImpl;
+import io.bigoldbro.corex.json.JsonObjectImpl;
+import io.bigoldbro.corex.exception.CoreException;
+import io.bigoldbro.corex.model.Auth;
+import io.bigoldbro.corex.rpc.MethodParamDetail.ParamDetail;
+
+import java.util.List;
+
+/**
+ * Created by Joshua on 2018/3/8.
+ */
+class ClientRpcHandler implements RpcHandler {
+
+    private final MethodParamDetail methodParamDetail;
+
+    public ClientRpcHandler(MethodParamDetail methodParamDetail) {
+        this.methodParamDetail = methodParamDetail;
+    }
+
+    @Override
+    public JsonObjectImpl convert(Object[] args) throws Exception {
+        if ((args == null ? 0 : args.length) != methodParamDetail.params.length) {
+            throw new CoreException("参数数量不一致");
+        }
+
+        JsonObjectImpl jo = new JsonObjectImpl();
+        int i = 0;
+        for (ParamDetail paramDetail : methodParamDetail.params) {
+            Object arg = args[i];
+            if (arg == null) {
+                throw new CoreException("参数不能为空, index:" + i);
+            }
+            switch (paramDetail.type) {
+                case LIST:
+                    parseList(paramDetail, jo, arg);
+                    break;
+                case JO:
+                    parseJo(paramDetail, jo, arg);
+                    break;
+                case ARRAY:
+                    break;
+                default:
+                    parseValue(paramDetail, jo, arg);
+                    break;
+            }
+            ++i;
+        }
+        return jo;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void parseList(ParamDetail paramDetail, JsonObjectImpl jo, Object obj) {
+        JsonArrayImpl ja;
+        switch (paramDetail.parameterizedType) {
+            case BOOLEAN:
+                ja = new JsonArrayImpl((List<Boolean>) obj);
+                break;
+            case INT:
+                ja = new JsonArrayImpl((List<Integer>) obj);
+                break;
+            case LONG:
+                ja = new JsonArrayImpl((List<Long>) obj);
+                break;
+            case DOUBLE:
+                ja = new JsonArrayImpl((List<Double>) obj);
+                break;
+            case STRING:
+                ja = new JsonArrayImpl((List<String>) obj);
+                break;
+            case JO:
+            default:
+                throw new CoreException("未知List类型");
+        }
+        jo.put(paramDetail.param.value(), ja);
+
+    }
+
+    private static void parseJo(ParamDetail paramDetail, JsonObjectImpl jo, Object obj) {
+        jo.put(paramDetail.param.value(), (JsonObjectImpl) obj);
+    }
+
+    private static void parseValue(ParamDetail paramDetail, JsonObjectImpl jo, Object obj) {
+        switch (paramDetail.type) {
+            case BOOLEAN:
+                jo.put(paramDetail.param.value(), (Boolean) obj);
+                return;
+            case INT:
+                jo.put(paramDetail.param.value(), (Integer) obj);
+                return;
+            case LONG:
+                jo.put(paramDetail.param.value(), (Long) obj);
+                return;
+            case DOUBLE:
+                jo.put(paramDetail.param.value(), (Double) obj);
+                return;
+            case STRING:
+                jo.put(paramDetail.param.value(), (String) obj);
+                return;
+        }
+
+        throw new CoreException("未知类型");
+    }
+
+    @Override
+    public String name() {
+        return methodParamDetail.name();
+    }
+
+    @Override
+    public boolean isVoidType() {
+        return methodParamDetail.isVoidType;
+    }
+
+    @Override
+    public JoHolder handle(Auth auth, JsonObjectImpl params) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+}
