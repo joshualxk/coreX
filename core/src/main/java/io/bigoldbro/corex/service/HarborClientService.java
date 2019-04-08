@@ -119,28 +119,29 @@ public class HarborClientService extends SimpleModuleService implements HarborCl
         public void onServerInfoUpdate(long updateTime) {
             logger.debug("---------------------------> #onServerInfoUpdate# at {}.", updateTime);
 
-            coreX().asyncAgent(CacheModule.class).getCache(CacheDefine.SERVER_INFO).addListener(ar -> {
-                if (ar.succeeded()) {
-
-                    List<ServerInfo> list = CacheService.parseServerInfos(ar.result().jo(), HarborClientService.this::checkAddConnection);
-                    msgPostman.updateServerInfos(list);
-
-                    logger.debug("---------------------------> #onServerInfoUpdate# {} at {} success.", CacheDefine.SERVER_INFO, updateTime);
-                } else {
-                    logger.debug("---------------------------> #onServerInfoUpdate# {} at {} failed.", CacheDefine.SERVER_INFO, updateTime, ar.cause());
-                }
-            });
-
-            coreX().asyncAgent(CacheModule.class).getCache(CacheDefine.ROUTE_INFO).addListener(ar -> {
-                if (ar.succeeded()) {
-                    List<GameRoute> list = CacheService.parseGameRoutes(ar.result().jo());
-                    msgPostman.updateRoutes(list);
-
-                    logger.debug("---------------------------> #onServerInfoUpdate# {} at {} success.", CacheDefine.ROUTE_INFO, updateTime);
-                } else {
-                    logger.debug("---------------------------> #onServerInfoUpdate# {} at {} failed.", CacheDefine.ROUTE_INFO, updateTime, ar.cause());
-                }
-            });
+            // TODO fix me
+//            coreX().asyncAgent(CacheModule.class).getCache(CacheDefine.SERVER_INFO).addListener(ar -> {
+//                if (ar.succeeded()) {
+//
+//                    List<ServerInfo> list = CacheService.parseServerInfos(ar.result().jo(), HarborClientService.this::checkAddConnection);
+//                    msgPostman.updateServerInfos(list);
+//
+//                    logger.debug("---------------------------> #onServerInfoUpdate# {} at {} success.", CacheDefine.SERVER_INFO, updateTime);
+//                } else {
+//                    logger.debug("---------------------------> #onServerInfoUpdate# {} at {} failed.", CacheDefine.SERVER_INFO, updateTime, ar.cause());
+//                }
+//            });
+//
+//            coreX().asyncAgent(CacheModule.class).getCache(CacheDefine.ROUTE_INFO).addListener(ar -> {
+//                if (ar.succeeded()) {
+//                    List<GameRoute> list = CacheService.parseGameRoutes(ar.result().jo());
+//                    msgPostman.updateRoutes(list);
+//
+//                    logger.debug("---------------------------> #onServerInfoUpdate# {} at {} success.", CacheDefine.ROUTE_INFO, updateTime);
+//                } else {
+//                    logger.debug("---------------------------> #onServerInfoUpdate# {} at {} failed.", CacheDefine.ROUTE_INFO, updateTime, ar.cause());
+//                }
+//            });
         }
     }
 }

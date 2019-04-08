@@ -11,6 +11,10 @@ public class ClientPayload implements Joable {
     private int t;
     private JsonObject body;
 
+    public ClientPayload() {
+
+    }
+
     private ClientPayload(int t, Joable body) {
         this.t = t;
         this.body = Json.toJsonObject(body);

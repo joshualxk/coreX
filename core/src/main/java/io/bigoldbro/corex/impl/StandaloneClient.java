@@ -136,7 +136,7 @@ public class StandaloneClient {
 
             boolean isVoidType = rpcHandler.isVoidType();
 
-            JsonObjectImpl argsJo = rpcHandler.convert(args);
+            JsonObject argsJo = rpcHandler.convert(args);
 
             RpcRequest rpcRequest = RpcRequest.newAdminRpcRequest(1, moduleParams.module().address(), api.value(), moduleParams.module().version(), argsJo);
             Payload payload = Payload.newPayload(isVoidType ? 0 : 1, rpcRequest);

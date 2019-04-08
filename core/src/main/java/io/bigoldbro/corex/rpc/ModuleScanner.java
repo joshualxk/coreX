@@ -98,10 +98,10 @@ public abstract class ModuleScanner {
         }
     }
 
-    protected static void checkValidType(Api api, MethodParamDetail methodParamDetail) {
-        if (methodParamDetail.isVoidType &&
+    protected static void checkValidType(Api api, MethodDetail methodDetail) {
+        if (methodDetail.returnDetail.isVoid &&
                 (api.type() == ConstDefine.AUTH_TYPE_NON || api.type() == ConstDefine.AUTH_TYPE_CLIENT)) {
-            throw new CoreException("来自玩家的调用不能返回void:" + methodParamDetail.name());
+            throw new CoreException("来自玩家的调用不能返回void:" + methodDetail.name());
         }
     }
 

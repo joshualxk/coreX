@@ -8,7 +8,7 @@ import io.bigoldbro.corex.json.JsonArray;
 import io.bigoldbro.corex.json.JsonObject;
 import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.model.Auth;
-import io.bigoldbro.corex.rpc.MethodParamDetail.ParamDetail;
+import io.bigoldbro.corex.rpc.MethodDetail.ParamDetail;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
@@ -19,12 +19,12 @@ import java.util.List;
  */
 public class ServerRpcHandler implements RpcHandler {
 
-    private final MethodParamDetail methodParamDetail;
+    private final MethodDetail methodDetail;
     private final Object invoker;
     private final int requireType;
 
-    public ServerRpcHandler(MethodParamDetail methodParamDetail, Object invoker, int requireType) {
-        this.methodParamDetail = methodParamDetail;
+    public ServerRpcHandler(MethodDetail methodDetail, Object invoker, int requireType) {
+        this.methodDetail = methodDetail;
         this.invoker = invoker;
         this.requireType = requireType;
     }
@@ -54,10 +54,10 @@ public class ServerRpcHandler implements RpcHandler {
             }
         }
 
-        Object ret = invoke(params, methodParamDetail);
+        Object ret = invoke(params, methodDetail);
 
         if (ret == null) {
-            if (!methodParamDetail.isVoidType) {
+            if (!methodDetail.returnDetail.isVoid) {
                 throw new CoreException("response is null");
             }
             return null;
@@ -72,22 +72,22 @@ public class ServerRpcHandler implements RpcHandler {
         throw new UnsupportedOperationException("convert");
     }
 
-    private Object invoke(JsonObject params, MethodParamDetail methodParamDetail) throws Exception {
+    private Object invoke(JsonObject params, MethodDetail methodDetail) throws Exception {
         Object[] objects;
-        if (methodParamDetail.params.length == 0) {
+        if (methodDetail.params.isEmpty()) {
             objects = null;
         } else {
-            objects = new Object[methodParamDetail.params.length];
+            objects = new Object[methodDetail.params.size()];
             int i = 0;
 
-            for (ParamDetail pd : methodParamDetail.params) {
+            for (ParamDetail pd : methodDetail.params) {
                 objects[i++] = getValue(params, pd);
             }
 
         }
 
         try {
-            return methodParamDetail.method.invoke(invoker, objects);
+            return methodDetail.method.invoke(invoker, objects);
         } catch (InvocationTargetException e) {
             Throwable cause = e.getCause();
             if (cause instanceof Exception) {
@@ -100,7 +100,7 @@ public class ServerRpcHandler implements RpcHandler {
     }
 
     private static List getListValue(JsonObject params, ParamDetail pd) {
-        JsonArray ja = params.getJsonArray(pd.param.value());
+        JsonArray ja = params.getJsonArray(pd.name);
 
         if (ja == null) {
             return Collections.EMPTY_LIST;
@@ -121,7 +121,7 @@ public class ServerRpcHandler implements RpcHandler {
     }
 
     private static JsonObject getJo(JsonObject params, ParamDetail pd) {
-        JsonObject jo = params.getJsonObject(pd.param.value());
+        JsonObject jo = params.getJsonObject(pd.name);
         if (jo == null) {
             jo = new JsonObjectImpl();
         }
@@ -130,8 +130,8 @@ public class ServerRpcHandler implements RpcHandler {
     }
 
     private static Object getValue(JsonObject params, ParamDetail pd) {
-        if (!params.containsKey(pd.param.value())) {
-            if (!pd.param.optional()) {
+        if (!params.containsKey(pd.name)) {
+            if (!pd.optional) {
                 throw ExceptionDefine.PARAM_ERR.build();
             }
         }
@@ -145,15 +145,15 @@ public class ServerRpcHandler implements RpcHandler {
                 case ARRAY:
                     break;
                 case BOOLEAN:
-                    return params.getBoolean(pd.param.value(), false);
+                    return params.getBoolean(pd.name, false);
                 case INT:
-                    return params.getInteger(pd.param.value(), 0);
+                    return params.getInteger(pd.name, 0);
                 case LONG:
-                    return params.getLong(pd.param.value(), 0L);
+                    return params.getLong(pd.name, 0L);
                 case DOUBLE:
-                    return params.getDouble(pd.param.value(), 0D);
+                    return params.getDouble(pd.name, 0D);
                 case STRING:
-                    return params.getString(pd.param.value(), "");
+                    return params.getString(pd.name, "");
                 default:
                     // do nothing
                     break;
@@ -167,11 +167,11 @@ public class ServerRpcHandler implements RpcHandler {
 
     @Override
     public String name() {
-        return methodParamDetail.method.getDeclaringClass().getName() + "." + methodParamDetail.method.getName();
+        return methodDetail.method.getDeclaringClass().getName() + "." + methodDetail.method.getName();
     }
 
     @Override
     public boolean isVoidType() {
-        return methodParamDetail.isVoidType;
+        return methodDetail.returnDetail.isVoid;
     }
 }

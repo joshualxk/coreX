@@ -10,4 +10,9 @@ public class FailedCallback<T> extends FailedFuture<T> implements Callback<T> {
     public FailedCallback(Throwable t) {
         super(t);
     }
+
+    @Override
+    public Callback<T> sync() {
+        return this;
+    }
 }

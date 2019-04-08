@@ -1,5 +1,7 @@
 package io.bigoldbro.corex.game;
 
+import io.bigoldbro.corex.json.Joable;
+
 /**
  * Created by Joshua on 2018/3/23.
  */

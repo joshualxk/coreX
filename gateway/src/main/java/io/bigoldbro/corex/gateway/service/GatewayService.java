@@ -1,22 +1,23 @@
 package io.bigoldbro.corex.gateway.service;
 
 import io.bigoldbro.corex.*;
-import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.define.ServiceNameDefine;
 import io.bigoldbro.corex.exception.BizEx;
 import io.bigoldbro.corex.exception.BizException;
-import io.bigoldbro.corex.impl.SessionManagerImpl;
 import io.bigoldbro.corex.gateway.handler.GatewayBridgeHandler;
+import io.bigoldbro.corex.gateway.handler.GatewayHttpHandler;
+import io.bigoldbro.corex.impl.SessionManagerImpl;
+import io.bigoldbro.corex.json.JsonObject;
+import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.model.ClientPayload;
 import io.bigoldbro.corex.model.Payload;
 import io.bigoldbro.corex.model.RpcRequest;
 import io.bigoldbro.corex.model.RpcResponse;
-import io.bigoldbro.corex.service.SimpleModuleService;
-import io.bigoldbro.corex.utils.CoreXUtil;
-import io.bigoldbro.corex.gateway.handler.GatewayHttpHandler;
 import io.bigoldbro.corex.module.GatewayModule;
 import io.bigoldbro.corex.module.LoginModule;
+import io.bigoldbro.corex.service.SimpleModuleService;
+import io.bigoldbro.corex.utils.CoreXUtil;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -138,7 +139,7 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
         }
     }
 
-    private Handler<AsyncResult<Payload>> resultHandler(Connection conn, int requestId) {
+    private static Handler<AsyncResult<Payload>> resultHandler(Connection conn, int requestId) {
 
         return new OnlySuccessHandler<Payload>(conn, requestId) {
             @Override
@@ -167,10 +168,10 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
         String token = request.getBody().getStringParam("to");
 
         coreX().asyncAgent(LoginModule.class).authorize(token)
-                .addListener(new OnlySuccessHandler<JoHolder>(conn, request.getId()) {
+                .setHandler(new OnlySuccessHandler<JsonObject>(conn, request.getId()) {
                     @Override
-                    public void onSuccess(JoHolder joHolder) {
-                        String userId = joHolder.jo().getString("userId");
+                    public void onSuccess(JsonObject jo) {
+                        String userId = jo.getString("userId");
 
                         if (sessionManager.hasLogin(conn)) {
                             sendResponse(conn, request.getId(), ExceptionDefine.ALREADY_LOGIN);
@@ -202,7 +203,7 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
     }
 
     private void handleRegister(Connection conn, RpcRequest request) throws Exception {
-        JsonObjectImpl jo = request.getBody();
+        JsonObject jo = request.getBody();
         String channel = jo.getString("register");
         if (StringUtil.isNullOrEmpty(channel) || channel.length() > 50) {
             throw new IllegalArgumentException("channel长度不合法");
@@ -227,14 +228,13 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
     }
 
     @Override
-    public JoHolder info() {
-        JoHolder ret = super.info();
-        JsonObjectImpl jo = ret.jo();
-        jo.put("port", port);
+    public Callback<JsonObject> info() {
+        Callback<JsonObject> ret = super.info();
+        ret.result().put("port", port);
         return ret;
     }
 
-    private abstract class OnlySuccessHandler<T> implements Handler<AsyncResult<T>> {
+    private static abstract class OnlySuccessHandler<T> implements Handler<AsyncResult<T>> {
 
         private final Connection conn;
         private final int requestId;
@@ -254,7 +254,6 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
                 } catch (BizException e) {
                     sendResponse(conn, requestId, e);
                 } catch (Exception e) {
-                    logger.warn("error.", e);
                     sendResponse(conn, requestId, ExceptionDefine.SYSTEM_ERR);
                 }
             } else {

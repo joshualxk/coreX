@@ -30,11 +30,13 @@ public class JsonCodec implements Codec {
     @Override
     public ClientPayload readClientPayload(InputStream is) throws Exception {
         JsonObjectImpl jo = new JsonObjectImpl(is);
-        return ClientPayload.fromJo(jo);
+        ClientPayload clientPayload = new ClientPayload();
+        clientPayload.readFrom(jo);
+        return clientPayload;
     }
 
     @Override
     public void writeClientPayload(OutputStream os, ClientPayload payload) throws Exception {
-        payload.toJo().encode(os);
+        Json.toJsonObject(payload).encode(os);
     }
 }

@@ -12,7 +12,7 @@ import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.exception.CoreException;
 import io.bigoldbro.corex.impl.CallbackImpl;
 import io.bigoldbro.corex.impl.FailedCallback;
-import io.bigoldbro.corex.json.JsonObjectImpl;
+import io.bigoldbro.corex.json.JsonObject;
 import io.bigoldbro.corex.model.Broadcast;
 import io.bigoldbro.corex.model.Payload;
 import io.bigoldbro.corex.model.RpcRequest;
@@ -120,7 +120,7 @@ public class RpcClient {
 
             boolean isVoidType = rpcHandler.isVoidType();
             try {
-                JsonObjectImpl jo = rpcHandler.convert(args);
+                JsonObject jo = rpcHandler.convert(args);
 
                 RpcRequest rpcRequest = RpcRequest.internalRpcRequest(1, moduleParams.module().address(), api.value(), moduleParams.module().version(), jo);
 
@@ -162,7 +162,7 @@ public class RpcClient {
                 throw new CoreException("找不到方法:" + method.getName());
             }
 
-            JsonObjectImpl jo = rpcHandler.convert(args);
+            JsonObject jo = rpcHandler.convert(args);
 
             Broadcast b = Broadcast.newInternalBroadcast(notice.role(), notice.topic(), jo);
 

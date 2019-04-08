@@ -1,11 +1,12 @@
 package io.bigoldbro.corex.game.impl;
 
+import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.Context;
 import io.bigoldbro.corex.ContextAware;
 import io.bigoldbro.corex.annotation.Api;
 import io.bigoldbro.corex.annotation.Module;
 import io.bigoldbro.corex.annotation.Notice;
-import io.bigoldbro.corex.json.JsonObjectImpl;
+import io.bigoldbro.corex.json.JsonObject;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.model.Auth;
@@ -265,12 +266,12 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
         }
 
         @Override
-        public JoHolder handle(Auth auth, JsonObjectImpl params) throws Exception {
+        public Callback<Object> handle(Auth auth, JsonObject params) throws Exception {
             return runWrappedTask(() -> rpcHandler.handle(auth, params), auth);
         }
 
         @Override
-        public JsonObjectImpl convert(Object[] args) throws Exception {
+        public JsonObject convert(Object[] args) throws Exception {
             return rpcHandler.convert(args);
         }
     }

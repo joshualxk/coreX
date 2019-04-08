@@ -28,15 +28,15 @@ public class ServerModuleScanner extends ModuleScanner {
 
     @Override
     protected RpcHandler newApiHandler(Api api, Method m, Object invoker) {
-        MethodParamDetail methodParamDetail = new ParamParser().parseMethodParamDetail(m);
-        checkValidType(api, methodParamDetail);
-        return new ServerRpcHandler(methodParamDetail, invoker, api.type());
+        MethodDetail methodDetail = new ParamParser().parseMethodDetail(m);
+        checkValidType(api, methodDetail);
+        return new ServerRpcHandler(methodDetail, invoker, api.type());
     }
 
     @Override
     protected RpcHandler newBroadcastHandler(Notice notice, Method m, Object invoker) {
-        MethodParamDetail methodParamDetail = new ParamParser().parseMethodParamDetail(m);
-        return new ServerRpcHandler(methodParamDetail, invoker, ConstDefine.AUTH_TYPE_INTERNAL);
+        MethodDetail methodDetail = new ParamParser().parseMethodDetail(m);
+        return new ServerRpcHandler(methodDetail, invoker, ConstDefine.AUTH_TYPE_INTERNAL);
     }
 
 }

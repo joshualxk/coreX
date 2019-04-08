@@ -36,15 +36,15 @@ public class RpcRequest implements Joable {
         return this;
     }
 
-    private static RpcRequest newRpcRequest(int id, int type, Method method, Auth auth, long timestamp, JsonObjectImpl body) {
+    private static RpcRequest newRpcRequest(int id, int type, Method method, Auth auth, long timestamp, JsonObject body) {
         return new RpcRequest(id, type, method, auth, timestamp, body);
     }
 
-    public static RpcRequest internalRpcRequest(int id, String module, String api, String version, JsonObjectImpl body) {
+    public static RpcRequest internalRpcRequest(int id, String module, String api, String version, JsonObject body) {
         return newRpcRequest(id, 0, Method.newMethod(module, api, version), Auth.internalAuth(), CoreXUtil.sysTime(), body);
     }
 
-    public static RpcRequest newAdminRpcRequest(int id, String module, String api, String version, JsonObjectImpl body) {
+    public static RpcRequest newAdminRpcRequest(int id, String module, String api, String version, JsonObject body) {
         return newRpcRequest(id, 0, Method.newMethod(module, api, version), Auth.adminAuth(), CoreXUtil.sysTime(), body);
     }
 

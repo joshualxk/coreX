@@ -19,15 +19,15 @@ class ClientModuleScanner extends ModuleScanner {
 
     @Override
     protected RpcHandler newApiHandler(Api api, Method m, Object invoker) {
-        MethodParamDetail methodParamDetail = new ParamParser().parseMethodParamDetail(m);
-        checkValidType(api, methodParamDetail);
-        return new ClientRpcHandler(methodParamDetail);
+        MethodDetail methodDetail = new ParamParser().parseMethodDetail(m);
+        checkValidType(api, methodDetail);
+        return new ClientRpcHandler(methodDetail);
     }
 
     @Override
     protected RpcHandler newBroadcastHandler(Notice notice, Method m, Object invoker) {
-        MethodParamDetail methodParamDetail = new ParamParser().parseMethodParamDetail(m);
-        return new ClientRpcHandler(methodParamDetail);
+        MethodDetail methodDetail = new ParamParser().parseMethodDetail(m);
+        return new ClientRpcHandler(methodDetail);
     }
 
 }

@@ -2,7 +2,6 @@ package io.bigoldbro.corex.rpc;
 
 import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.json.JsonObject;
-import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.model.Auth;
 
 /**
@@ -17,5 +16,5 @@ public interface RpcHandler {
     Callback<Object> handle(Auth auth, JsonObject params) throws Exception;
 
     // 转换参数
-    JsonObjectImpl convert(Object[] args) throws Exception;
+    JsonObject convert(Object[] args) throws Exception;
 }

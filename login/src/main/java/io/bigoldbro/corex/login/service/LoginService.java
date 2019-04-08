@@ -1,5 +1,9 @@
 package io.bigoldbro.corex.login.service;
 
+import io.bigoldbro.corex.Callback;
+import io.bigoldbro.corex.impl.SucceededCallback;
+import io.bigoldbro.corex.json.JsonObject;
+import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.service.SimpleModuleService;
 import io.bigoldbro.corex.module.LoginModule;
 
@@ -11,34 +15,14 @@ import java.util.List;
 public class LoginService extends SimpleModuleService implements LoginModule {
 
     @Override
-    public JoHolder authorize(String token) {
-        JoHolder ret = JoHolder.newSync();
-        ret.jo().put("userId", token);
-        return ret;
+    public Callback<JsonObject> authorize(String token) {
+        JsonObject jsonObject = new JsonObjectImpl();
+        jsonObject.put("userId", "token" + token);
+        return new SucceededCallback<>(jsonObject);
     }
 
     @Override
-    public JoHolder getUser(String userId) {
-        return JoHolder.newSync();
-    }
-
-    @Override
-    public JoHolder pay(String userId, String tradeNo, List<Integer> types, List<Integer> amounts, boolean income, String itemEvent, String comments) {
-        return JoHolder.newSync();
-    }
-
-    @Override
-    public JoHolder pushAppMsg(List<String> userIds, String title, String info, String url) {
-        System.out.println("userIds " + userIds);
-        System.out.println("title " + title);
-        System.out.println("info " + info);
-        System.out.println("url " + url);
-        return JoHolder.newSync();
-    }
-
-    @Override
-    public JoHolder queryUserAgent(String userId) {
-        return JoHolder.newSync();
+    public void getUser(String userId) {
     }
 
 }
