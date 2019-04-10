@@ -15,6 +15,9 @@ import io.bigoldbro.corex.rpc.RpcHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by Joshua on 2018/2/26.
  */
@@ -92,13 +95,7 @@ public abstract class AbstractProcessorService implements Service {
                 if (msg.needReply()) {
                     throw new CoreException("方法返回值不能为空, method:" + request.getMethod());
                 }
-            } else if (ret instanceof SucceededCallback) {
-                Object body = ret.sync();
-                RpcResponse rpcResponse = RpcResponse.newSuccessRpcResponse(request.getId(), Json.wrap(body));
-                Payload b = Payload.newPayload(payload.getId(), rpcResponse);
-                ar = Future.succeededFuture(b);
-
-            } else {
+            } else if (ret instanceof Callback) {
                 int requestId = request.getId();
                 long payloadId = payload.getId();
 
@@ -116,6 +113,11 @@ public abstract class AbstractProcessorService implements Service {
                 }
 
                 return;
+            } else {
+                Object body = ret.sync();
+                RpcResponse rpcResponse = RpcResponse.newSuccessRpcResponse(request.getId(), Json.wrap(body));
+                Payload b = Payload.newPayload(payload.getId(), rpcResponse);
+                ar = Future.succeededFuture(b);
             }
 
         } catch (BizException e) {
@@ -131,12 +133,12 @@ public abstract class AbstractProcessorService implements Service {
     }
 
     @Override
-    public Callback<JsonObject> info() {
-        JsonObject jo = new JsonObjectImpl();
-        jo.put("clz", getClass().getName());
-        jo.put("addr", name());
-        jo.put("bc", bc().toString());
-        return new SucceededCallback<>(jo);
+    public Map<String, Object> info() {
+        Map<String, Object> m = new HashMap<>();
+        m.put("clz", getClass().getName());
+        m.put("addr", name());
+        m.put("bc", bc().toString());
+        return m;
     }
 
     private static String rpcHandlerName(RpcHandler rpcHandler) {

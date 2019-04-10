@@ -4,6 +4,7 @@ import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.exception.CoreException;
+import io.bigoldbro.corex.json.Json;
 import io.bigoldbro.corex.json.JsonArray;
 import io.bigoldbro.corex.json.JsonObject;
 import io.bigoldbro.corex.json.JsonObjectImpl;
@@ -11,6 +12,7 @@ import io.bigoldbro.corex.model.Auth;
 import io.bigoldbro.corex.rpc.MethodDetail.ParamDetail;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -106,27 +108,45 @@ public class ServerRpcHandler implements RpcHandler {
             return Collections.EMPTY_LIST;
         }
 
+        List list = ja.getList();
+        List ret = new ArrayList(list.size());
+
         switch (pd.parameterizedType) {
             case BOOLEAN:
-            case INT:
-            case LONG:
-            case DOUBLE:
-            case STRING:
-                return ja.getList();
-            case JO:
-            default:
+                for (Object b : list) {
+                    ret.add(Json.toBoolean(b));
+                }
                 break;
+            case INT:
+                for (Object b : list) {
+                    ret.add(Json.toInteger(b));
+                }
+                break;
+            case LONG:
+                for (Object b : list) {
+                    ret.add(Json.toLong(b));
+                }
+                break;
+            case DOUBLE:
+                for (Object b : list) {
+                    ret.add(Json.toDouble(b));
+                }
+                break;
+            case STRING:
+                for (Object b : list) {
+                    ret.add(Json.toString(b));
+                }
+                break;
+            case JOABLE:
+                for (Object b : list) {
+                    ret.add(Json.toJoable(b, pd.joClz));
+                }
+                break;
+            default:
+                throw new CoreException("List参数类型不合法:" + pd.parameterizedType);
         }
-        throw new CoreException("List参数类型不合法:" + pd.parameterizedType);
-    }
 
-    private static JsonObject getJo(JsonObject params, ParamDetail pd) {
-        JsonObject jo = params.getJsonObject(pd.name);
-        if (jo == null) {
-            jo = new JsonObjectImpl();
-        }
-
-        return jo;
+        return ret;
     }
 
     private static Object getValue(JsonObject params, ParamDetail pd) {
@@ -140,8 +160,6 @@ public class ServerRpcHandler implements RpcHandler {
             switch (pd.type) {
                 case LIST:
                     return getListValue(params, pd);
-                case JO:
-                    return getJo(params, pd);
                 case ARRAY:
                     break;
                 case BOOLEAN:

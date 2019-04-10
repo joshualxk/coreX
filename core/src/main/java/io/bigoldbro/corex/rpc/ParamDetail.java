@@ -1,6 +1,6 @@
 package io.bigoldbro.corex.rpc;
 
-import java.util.Objects;
+import com.google.protobuf.GeneratedMessageV3;
 
 /**
  * Created by Joshua on 2019-04-10.
@@ -8,18 +8,18 @@ import java.util.Objects;
 public class ParamDetail {
     public final ParamType type;
     public final ParamType genericType;
-    public final Class<?> joClz;
+    public final Class<? extends GeneratedMessageV3> msgClz;
 
-    private ParamDetail(ParamType type, ParamType genericType, Class<?> joClz) {
+    private ParamDetail(ParamType type, ParamType genericType, Class<? extends GeneratedMessageV3> joClz) {
         this.type = type;
         this.genericType = genericType;
-        this.joClz = joClz;
+        this.msgClz = joClz;
     }
 
     static class ParamDetailBuilder {
         private ParamType type;
         private ParamType genericType = ParamType.UNSUPPORTED;
-        private Class<?> joClz;
+        private Class<? extends GeneratedMessageV3> msgClz;
 
         public void setType(ParamType type) {
             this.type = type;
@@ -29,12 +29,13 @@ public class ParamDetail {
             this.genericType = genericType;
         }
 
-        public void setJoClz(Class<?> joClz) {
-            this.joClz = joClz;
+        public void setMsgClz(Class<? extends GeneratedMessageV3> msgClz) {
+            this.msgClz = msgClz;
         }
 
         public ParamDetail build() {
-            return new ParamDetail(type, genericType, joClz);
+            // TODO check params
+            return new ParamDetail(type, genericType, msgClz);
         }
     }
 }

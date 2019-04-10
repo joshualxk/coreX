@@ -1,8 +1,8 @@
 package io.bigoldbro.corex.rpc;
 
 import io.bigoldbro.corex.annotation.Api;
-import io.bigoldbro.corex.annotation.Notice;
 import io.bigoldbro.corex.annotation.Module;
+import io.bigoldbro.corex.annotation.Notice;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ServiceNameDefine;
 import io.bigoldbro.corex.exception.CoreException;
@@ -75,7 +75,7 @@ public abstract class ModuleScanner {
 
     }
 
-    public static void validateModule(Module module) {
+    private static void validateModule(Module module) {
         if (!ServiceNameDefine.isValidName(module.address())) {
             throw new CoreException("模块地址不合法");
         }
@@ -85,7 +85,7 @@ public abstract class ModuleScanner {
         }
     }
 
-    public void validateApi(Api api) {
+    private void validateApi(Api api) {
         if (api.type() != ConstDefine.AUTH_TYPE_NON
                 && api.type() != ConstDefine.AUTH_TYPE_CLIENT
                 && api.type() != ConstDefine.AUTH_TYPE_ADMIN

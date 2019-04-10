@@ -13,13 +13,12 @@
         <module>gateway</module>
         <module>game</module>
         <module>login</module>
-        <module>basic</module>
         <module>all</module>
     </modules>
 
     <properties>
+        <protobuf.version>3.7.0</protobuf.version>
         <netty.version>4.1.28.Final</netty.version>
-        <spring.version>4.3.18.RELEASE</spring.version>
         <jackson.version>2.9.6</jackson.version>
         <junit.version>4.12</junit.version>
         <HikariCP.version>3.2.0</HikariCP.version>

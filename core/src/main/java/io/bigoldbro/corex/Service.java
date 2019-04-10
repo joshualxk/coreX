@@ -2,7 +2,8 @@ package io.bigoldbro.corex;
 
 
 import io.bigoldbro.corex.annotation.BlockControl;
-import io.bigoldbro.corex.json.JsonObject;
+
+import java.util.Map;
 
 /**
  * Created by Joshua on 2018/2/26.
@@ -21,6 +22,6 @@ public interface Service extends ContextAware {
 
     void handleMsg(Msg msg);
 
-    Callback<JsonObject> info();
+    Map<String, Object> info();
 
 }

@@ -1,5 +1,7 @@
 package io.bigoldbro.corex.rpc;
 
+import io.bigoldbro.corex.json.Joable;
+
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -27,9 +29,9 @@ public class MethodDetail {
         public final boolean optional;
         public final ParamType type;
         public final ParamType parameterizedType;
-        public final Class<?> joClz;
+        public final Class<? extends > joClz;
 
-        public ParamDetail(String name, boolean optional, ParamType type, ParamType parameterizedType, Class<?> joClz) {
+        public ParamDetail(String name, boolean optional, ParamType type, ParamType parameterizedType, Class<? extends Joable> joClz) {
             this.name = name;
             this.optional = optional;
             this.type = type;

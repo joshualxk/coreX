@@ -1,11 +1,9 @@
 package io.bigoldbro.corex.rpc;
 
+import com.google.protobuf.GeneratedMessageV3;
 import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.annotation.Param;
 import io.bigoldbro.corex.exception.CoreException;
-import io.bigoldbro.corex.json.Joable;
-import io.bigoldbro.corex.json.JsonArray;
-import io.bigoldbro.corex.json.JsonObject;
 import io.bigoldbro.corex.rpc.MethodDetail.ParamDetail;
 import io.netty.util.internal.StringUtil;
 
@@ -50,7 +48,7 @@ public class ParamParser {
 
             ParamType type = UNSUPPORTED;
             ParamType parameterizedType = UNSUPPORTED;
-            Class<?> joClz = null;
+            Class<? extends GeneratedMessageV3> msgClz = null;
 
             if (clz == boolean.class || clz == Boolean.class) {
                 type = BOOLEAN;
@@ -62,20 +60,16 @@ public class ParamParser {
                 type = STRING;
             } else if (clz == double.class || clz == Double.class) {
                 type = DOUBLE;
-            } else if (clz.isAssignableFrom(Joable.class)) {
-                type = JOABLE;
-                joClz = clz;
-            } else if (clz.isAssignableFrom(JsonObject.class)) {
-                type = JO;
-            } else if (clz.isAssignableFrom(JsonArray.class)) {
-                type = JA;
+            } else if (clz.isAssignableFrom(GeneratedMessageV3.class)) {
+                type = PROTO;
+                msgClz = (Class<? extends GeneratedMessageV3>) clz;
             } else if (clz == List.class) {
                 type = LIST;
                 Class parameterizedClz = resolveClass(p.getParameterizedType());
                 parameterizedType = parseParamType(parameterizedClz);
 
-                if (parameterizedType == JOABLE) {
-                    joClz = parameterizedClz;
+                if (parameterizedType == PROTO) {
+                    msgClz = parameterizedClz;
                 }
             } else if (clz.isArray()) {
                 type = ARRAY;
@@ -84,8 +78,8 @@ public class ParamParser {
 
                 if (componentClz.isPrimitive()) {
                     type = RAW_ARRAY;
-                } else if (parameterizedType == JOABLE) {
-                    joClz = componentClz;
+                } else if (parameterizedType == PROTO) {
+                    msgClz = componentClz;
                 }
             }
 
@@ -93,7 +87,7 @@ public class ParamParser {
                 throw new CoreException("不支持的参数类型:" + clz.getName());
             }
 
-            list.add(new ParamDetail(argName, optional, type, parameterizedType, joClz));
+            list.add(new ParamDetail(argName, optional, type, parameterizedType, msgClz));
         }
 
         ReturnDetail returnDetail;
@@ -133,18 +127,22 @@ public class ParamParser {
         ParamType type = UNSUPPORTED;
         if (clz == Boolean.class || clz == boolean.class) {
             type = BOOLEAN;
+        } else if (clz == Byte.class || clz == byte.class) {
+            type = BYTE;
+        } else if (clz == Short.class || clz == short.class) {
+            type = SHORT;
         } else if (clz == Integer.class || clz == int.class) {
             type = INT;
         } else if (clz == Long.class || clz == long.class) {
             type = LONG;
+        } else if (clz == Float.class || clz == float.class) {
+            type = FLOAT;
         } else if (clz == Double.class || clz == double.class) {
             type = DOUBLE;
         } else if (clz == String.class) {
             type = STRING;
-        } else if (clz.isAssignableFrom(JsonObject.class)) {
-            type = JO;
-        } else if (clz.isAssignableFrom(Joable.class)) {
-            type = JOABLE;
+        } else if (clz.isAssignableFrom(GeneratedMessageV3.class)) {
+            type = PROTO;
         }
 
         if (type == UNSUPPORTED) {

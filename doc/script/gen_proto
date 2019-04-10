@@ -1,0 +1,1 @@
+protoc -I=doc/proto --java_out=core/src/main/proto doc/proto/base.proto

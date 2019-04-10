@@ -3,6 +3,7 @@ package io.bigoldbro.corex.impl;
 import io.bigoldbro.corex.*;
 import io.bigoldbro.corex.exception.CoreException;
 import io.netty.channel.EventLoop;
+import io.netty.handler.codec.protobuf.ProtobufDecoder;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;

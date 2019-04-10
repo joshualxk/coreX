@@ -6,15 +6,15 @@ package io.bigoldbro.corex.rpc;
 public enum ParamType {
     UNSUPPORTED,
     BOOLEAN,
+    SHORT,
     INT,
     LONG,
+    FLOAT,
     DOUBLE,
     STRING,
-    JO,
-    JOABLE,
+    PROTO,
 
-    RAW_ARRAY, // 原始类型
-    ARRAY,
+    RAW_ARRAY, // 原始类型 e.g. boolean[] short[]
+    ARRAY,     // 非原始类型 e.g Boolean[] Short[]
     LIST,
-    JA,
 }

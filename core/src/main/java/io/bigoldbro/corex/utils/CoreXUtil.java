@@ -9,6 +9,7 @@ import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.model.Push;
 import io.bigoldbro.corex.model.RpcRequest;
 import io.bigoldbro.corex.model.RpcResponse;
+import io.bigoldbro.corex.proto.Base;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
@@ -20,6 +21,9 @@ import java.util.concurrent.CompletableFuture;
  * Created by Joshua on 2018/2/24.
  */
 public final class CoreXUtil {
+
+    private static Base.Auth internalAuth = Base.Auth.newBuilder()
+            .setType(ConstDefine.AUTH_TYPE_INTERNAL).build();
 
     public static void initPipeline(ChannelPipeline p) {
         p.addLast(new LengthFieldBasedFrameDecoder(1024 * 1024, 0, 4, 0, 4));
@@ -70,6 +74,10 @@ public final class CoreXUtil {
         handler.handle(fut);
 
         future.get();
+    }
+
+    public static Base.Auth internalAuth() {
+        return internalAuth;
     }
 
     public static Push kickMessage(int code, String msg) {

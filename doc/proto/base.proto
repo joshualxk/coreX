@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package io.bigoldbro.corex.proto;
+
+option java_package = "io.bigoldbro.corex.proto";
+option java_outer_classname = "Base";
+option java_multiple_files = false;
+
+message Body {
+    repeated bytes fields = 1;
+}
+
+message ClientRequest {
+    int32 id = 1;
+    int32 type = 2;
+    Method method = 3;
+    int64 timestamp = 4;
+    Body body = 5;
+}
+
+message Method {
+    string module = 1;
+    string api = 2;
+    string version = 3;
+}
+
+message Response {
+    int32 id = 1;
+    int32 code = 2;
+    string msg = 3;
+    int64 timestamp = 4;
+    Body body = 5;
+}
+
+message Push {
+    string topic = 1;
+    int64 timestamp = 2;
+    Body body = 3;
+}
+
+message ClientPayload {
+    oneof body {
+        ClientRequest request = 1;
+        Response response = 2;
+        Push push = 3;
+    }
+}
+
+// secret
+message Auth {
+    int32 type = 1;
+    string token = 2;
+}
+
+message Request {
+    int32 id = 1;
+    int32 type = 2;
+    Method method = 3;
+    Auth auth = 4;
+    int64 timestamp = 5;
+    Body body = 6;
+}
+
+message Broadcast {
+    bool internal = 1;
+    int32 role = 2;
+    repeated string channels = 3;
+    repeated string userIds = 4;
+    Push push = 5;
+}
+
+message Ping {
+    int32 serverId = 1;
+    int32 role = 2;
+    int64 startTime = 3;
+    int64 timestamp = 4;
+}
+
+message Payload {
+    int64 id = 1;
+    repeated string routes = 2;
+    oneof body {
+        Request rpcRequest = 3;
+        Response rpcResponse = 4;
+        Broadcast broadcast = 5;
+        Ping ping = 6;
+    }
+}

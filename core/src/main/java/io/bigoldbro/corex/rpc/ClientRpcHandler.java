@@ -2,12 +2,11 @@ package io.bigoldbro.corex.rpc;
 
 import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.exception.CoreException;
-import io.bigoldbro.corex.json.JsonArrayImpl;
-import io.bigoldbro.corex.json.JsonObject;
-import io.bigoldbro.corex.json.JsonObjectImpl;
+import io.bigoldbro.corex.json.*;
 import io.bigoldbro.corex.model.Auth;
 import io.bigoldbro.corex.rpc.MethodDetail.ParamDetail;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,10 +37,8 @@ class ClientRpcHandler implements RpcHandler {
                 case LIST:
                     parseList(paramDetail, jo, arg);
                     break;
-                case JO:
-                    parseJo(paramDetail, jo, arg);
-                    break;
                 case ARRAY:
+                    parseArray(paramDetail, jo, arg);
                     break;
                 default:
                     parseValue(paramDetail, jo, arg);
@@ -53,25 +50,26 @@ class ClientRpcHandler implements RpcHandler {
     }
 
     @SuppressWarnings("unchecked")
-    private static void parseList(ParamDetail paramDetail, JsonObjectImpl jo, Object obj) {
-        JsonArrayImpl ja;
+    private static void parseList(ParamDetail paramDetail, JsonObject jo, Object obj) {
+        JsonArray ja;
         switch (paramDetail.parameterizedType) {
             case BOOLEAN:
-                ja = new JsonArrayImpl((List<Boolean>) obj);
-                break;
             case INT:
-                ja = new JsonArrayImpl((List<Integer>) obj);
-                break;
             case LONG:
-                ja = new JsonArrayImpl((List<Long>) obj);
-                break;
             case DOUBLE:
-                ja = new JsonArrayImpl((List<Double>) obj);
-                break;
             case STRING:
-                ja = new JsonArrayImpl((List<String>) obj);
+                ja = new JsonArrayImpl((List) obj);
                 break;
-            case JO:
+            case JOABLE:
+                List<Joable> joableList = (List<Joable>) obj;
+                List list = new ArrayList(joableList.size());
+                for (Joable joable : joableList) {
+                    if (joable != null) {
+                        list.add(Json.toJsonObject(joable));
+                    }
+                }
+                ja = new JsonArrayImpl(list);
+                break;
             default:
                 throw new CoreException("未知List类型");
         }
@@ -79,8 +77,31 @@ class ClientRpcHandler implements RpcHandler {
 
     }
 
-    private static void parseJo(ParamDetail paramDetail, JsonObject jo, Object obj) {
-        jo.put(paramDetail.name, (JsonObject) obj);
+    @SuppressWarnings("unchecked")
+    private static void parseArray(ParamDetail paramDetail, JsonObject jo, Object obj) {
+        JsonArray ja;
+        switch (paramDetail.parameterizedType) {
+            case BOOLEAN:
+            case INT:
+            case LONG:
+            case DOUBLE:
+            case STRING:
+                ja = new JsonArrayImpl((List) obj);
+                break;
+            case JOABLE:
+                List<Joable> joableList = (List<Joable>) obj;
+                List list = new ArrayList(joableList.size());
+                for (Joable joable : joableList) {
+                    if (joable != null) {
+                        list.add(Json.toJsonObject(joable));
+                    }
+                }
+                ja = new JsonArrayImpl(list);
+                break;
+            default:
+                throw new CoreException("未知List类型");
+        }
+        jo.put(paramDetail.name, ja);
     }
 
     private static void parseValue(ParamDetail paramDetail, JsonObjectImpl jo, Object obj) {
