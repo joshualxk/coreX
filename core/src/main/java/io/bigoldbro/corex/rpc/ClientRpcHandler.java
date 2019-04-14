@@ -1,11 +1,14 @@
 package io.bigoldbro.corex.rpc;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.GeneratedMessageV3;
 import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.exception.CoreException;
 import io.bigoldbro.corex.json.*;
-import io.bigoldbro.corex.model.Auth;
+import io.bigoldbro.corex.proto.Base;
 import io.bigoldbro.corex.rpc.MethodDetail.ParamDetail;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,12 +24,12 @@ class ClientRpcHandler implements RpcHandler {
     }
 
     @Override
-    public JsonObjectImpl convert(Object[] args) throws Exception {
+    public Base.Body convert(Object[] args) throws Exception {
         if ((args == null ? 0 : args.length) != methodDetail.params.size()) {
             throw new CoreException("参数数量不一致");
         }
 
-        JsonObjectImpl jo = new JsonObjectImpl();
+        Base.Body.Builder builder = Base.Body.newBuilder();
         int i = 0;
         for (ParamDetail paramDetail : methodDetail.params) {
             Object arg = args[i];
@@ -35,7 +38,7 @@ class ClientRpcHandler implements RpcHandler {
             }
             switch (paramDetail.type) {
                 case LIST:
-                    parseList(paramDetail, jo, arg);
+                    parseList(paramDetail, arg);
                     break;
                 case ARRAY:
                     parseArray(paramDetail, jo, arg);
@@ -50,7 +53,7 @@ class ClientRpcHandler implements RpcHandler {
     }
 
     @SuppressWarnings("unchecked")
-    private static void parseList(ParamDetail paramDetail, JsonObject jo, Object obj) {
+    private static ByteString parseList(ParamDetail paramDetail, Object obj) {
         JsonArray ja;
         switch (paramDetail.parameterizedType) {
             case BOOLEAN:
@@ -104,26 +107,41 @@ class ClientRpcHandler implements RpcHandler {
         jo.put(paramDetail.name, ja);
     }
 
-    private static void parseValue(ParamDetail paramDetail, JsonObjectImpl jo, Object obj) {
-        switch (paramDetail.type) {
-            case BOOLEAN:
-                jo.put(paramDetail.name, (Boolean) obj);
-                return;
-            case INT:
-                jo.put(paramDetail.name, (Integer) obj);
-                return;
-            case LONG:
-                jo.put(paramDetail.name, (Long) obj);
-                return;
-            case DOUBLE:
-                jo.put(paramDetail.name, (Double) obj);
-                return;
-            case STRING:
-                jo.put(paramDetail.name, (String) obj);
-                return;
+    private static ByteString parseValue(ParamDetail paramDetail, Object obj) {
+        if (paramDetail.type == ParamType.STRING) {
+            return ByteString.copyFromUtf8((String) obj);
+        } else if (paramDetail.type == ParamType.PROTO) {
+            GeneratedMessageV3 msg = (GeneratedMessageV3) obj;
+            return msg.toByteString();
         }
 
-        throw new CoreException("未知类型");
+        ByteBuffer byteBuffer = ByteBuffer.allocate(8);
+        switch (paramDetail.type) {
+            case BOOLEAN:
+                byteBuffer.put((byte) ((Boolean) obj ? 1 : 0));
+                break;
+            case SHORT:
+                byteBuffer.putShort((short) obj);
+                break;
+            case INT:
+                byteBuffer.putInt((int) obj);
+                break;
+            case LONG:
+                byteBuffer.putLong((long) obj);
+                break;
+            case FLOAT:
+                byteBuffer.putFloat((float) obj);
+                break;
+            case DOUBLE:
+                byteBuffer.putDouble((double) obj);
+                break;
+            default:
+                throw new CoreException("未知类型");
+        }
+
+        byteBuffer.flip();
+        return ByteString.copyFrom(byteBuffer);
+
     }
 
     @Override
@@ -137,7 +155,7 @@ class ClientRpcHandler implements RpcHandler {
     }
 
     @Override
-    public Callback<Object> handle(Auth auth, JsonObject params) throws Exception {
+    public Callback<Base.Body> handle(Base.Auth auth, Base.Body params) throws Exception {
         throw new UnsupportedOperationException();
     }
 

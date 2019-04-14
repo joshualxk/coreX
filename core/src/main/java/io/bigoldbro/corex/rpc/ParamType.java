@@ -5,6 +5,7 @@ package io.bigoldbro.corex.rpc;
  */
 public enum ParamType {
     UNSUPPORTED,
+
     BOOLEAN,
     SHORT,
     INT,

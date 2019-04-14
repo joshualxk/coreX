@@ -10,15 +10,16 @@ public class ParamDetail {
     public final ParamType genericType;
     public final Class<? extends GeneratedMessageV3> msgClz;
 
-    private ParamDetail(ParamType type, ParamType genericType, Class<? extends GeneratedMessageV3> joClz) {
+    private ParamDetail(ParamType type, ParamType genericType, Class<? extends GeneratedMessageV3> msgClz) {
         this.type = type;
         this.genericType = genericType;
-        this.msgClz = joClz;
+        this.msgClz = msgClz;
     }
 
     static class ParamDetailBuilder {
         private ParamType type;
         private ParamType genericType = ParamType.UNSUPPORTED;
+
         private Class<? extends GeneratedMessageV3> msgClz;
 
         public void setType(ParamType type) {

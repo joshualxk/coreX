@@ -1,8 +1,7 @@
 package io.bigoldbro.corex;
 
-import io.bigoldbro.corex.model.Broadcast;
-import io.bigoldbro.corex.model.Payload;
 import io.bigoldbro.corex.module.BroadcastModule;
+import io.bigoldbro.corex.proto.Base;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.EventLoopGroup;
@@ -32,9 +31,9 @@ public interface CoreX extends MsgHandler {
 
     void stopService(String name, Handler<AsyncResult<Void>> resultHandler);
 
-    void sendMessage(String address, Object msg, Handler<AsyncResult<Payload>> replyHandler);
+    void sendMessage(String address, Object msg, Handler<AsyncResult<Base.Payload>> replyHandler);
 
-    void broadcastMessage(Broadcast broadcast);
+    void broadcastMessage(Base.Broadcast broadcast);
 
     void createNetServer(int port, ChannelHandler channelHandler, Handler<AsyncResult<Void>> resultHandler);
 
@@ -50,8 +49,8 @@ public interface CoreX extends MsgHandler {
 
     BroadcastModule broadcast();
 
-    int subscribeBroadcast(Handler<Broadcast> internal, Handler<Broadcast> external);
+    int subscribeBroadcast(Handler<Base.Broadcast> internal, Handler<Base.Broadcast> external);
 
-    void onBroadcast(Broadcast broadcast);
+    void onBroadcast(Base.Broadcast broadcast);
 
 }

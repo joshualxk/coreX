@@ -139,7 +139,7 @@ public class ServerRpcHandler implements RpcHandler {
                 break;
             case JOABLE:
                 for (Object b : list) {
-                    ret.add(Json.toJoable(b, pd.joClz));
+                    ret.add(Json.toJoable(b, pd.msgClz));
                 }
                 break;
             default:
