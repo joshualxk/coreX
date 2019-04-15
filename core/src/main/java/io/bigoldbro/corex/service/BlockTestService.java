@@ -1,11 +1,9 @@
 package io.bigoldbro.corex.service;
 
-import io.bigoldbro.corex.Callback;
-import io.bigoldbro.corex.impl.SucceededCallback;
-import io.bigoldbro.corex.json.JsonObject;
-import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.module.BlockTestModule;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -14,19 +12,19 @@ import java.util.concurrent.TimeUnit;
 public class BlockTestService extends SimpleModuleService implements BlockTestModule {
 
     @Override
-    public Callback<JsonObject> block(int seconds) {
-        JsonObject jo = new JsonObjectImpl();
-        jo.put("thread", Thread.currentThread().getName());
-        jo.put("startTime", System.currentTimeMillis());
+    public Map<String, String> block(int seconds) {
+        Map<String, String> map = new HashMap<>();
+        map.put("thread", Thread.currentThread().getName());
+        map.put("startTime", String.valueOf(System.currentTimeMillis()));
 
         try {
             TimeUnit.SECONDS.sleep(seconds);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        jo.put("endTime", System.currentTimeMillis());
+        map.put("endTime", String.valueOf(System.currentTimeMillis()));
 
-        return new SucceededCallback<>(jo);
+        return map;
     }
 
 }

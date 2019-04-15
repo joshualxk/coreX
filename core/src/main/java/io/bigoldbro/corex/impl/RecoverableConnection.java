@@ -48,7 +48,8 @@ class RecoverableConnection extends AbstractConnection {
     @Override
     public void write(Object msg) {
         if (!isOpen()) {
-            throw new IllegalStateException("连接未创建");
+            logger.debug("丢弃消息 {}", msg);
+            return;
         }
         channel.writeAndFlush(msg);
     }

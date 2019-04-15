@@ -10,12 +10,12 @@ import java.util.Objects;
 /**
  * Created by Joshua on 2018/2/27.
  */
-public class ModuleParams {
+public class ModuleInfo {
 
     private final Module module;
     private final Map<String, RpcHandler> apiHandlers;
 
-    public ModuleParams(Module module, Map<String, RpcHandler> apiHandlers) {
+    public ModuleInfo(Module module, Map<String, RpcHandler> apiHandlers) {
         this.module = module;
         this.apiHandlers = Objects.requireNonNull(apiHandlers, "apiHandlers");
     }
@@ -42,7 +42,7 @@ public class ModuleParams {
 
     @Override
     public String toString() {
-        return "ModuleParams{" +
+        return "ModuleInfo{" +
                 "module=" + module +
                 ", apiHandlers=" + apiHandlers +
                 '}';

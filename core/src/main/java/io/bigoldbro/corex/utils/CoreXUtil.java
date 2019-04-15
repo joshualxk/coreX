@@ -4,11 +4,9 @@ import io.bigoldbro.corex.Future;
 import io.bigoldbro.corex.Handler;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.TopicDefine;
+import io.bigoldbro.corex.exception.BizEx;
 import io.bigoldbro.corex.impl.handler.PayloadCodecHandler;
-import io.bigoldbro.corex.json.JsonObjectImpl;
-import io.bigoldbro.corex.model.Push;
-import io.bigoldbro.corex.model.RpcRequest;
-import io.bigoldbro.corex.model.RpcResponse;
+import io.bigoldbro.corex.model.ErrorMsg;
 import io.bigoldbro.corex.proto.Base;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
@@ -64,7 +62,7 @@ public final class CoreXUtil {
     public static <T> void sync(Handler<Future<T>> handler) throws Exception {
         CompletableFuture<T> future = new CompletableFuture<>();
         Future<T> fut = Future.future();
-        fut.setHandler(ar -> {
+        fut.addHandler(ar -> {
             if (ar.succeeded()) {
                 future.complete(ar.result());
             } else {
@@ -80,30 +78,76 @@ public final class CoreXUtil {
         return internalAuth;
     }
 
-    public static Push kickMessage(int code, String msg) {
-        JsonObjectImpl jo = new JsonObjectImpl();
-        jo.put("code", code);
-        jo.put("msg", msg);
-        return Push.newPush(TopicDefine.KICK, sysTime(), jo);
+    public static Base.Push kickMessage(int code, String msg) {
+        return Base.Push.newBuilder()
+                .setTopic(TopicDefine.KICK)
+                .setTimestamp(sysTime())
+                .setBody(new ErrorMsg(code, msg).toBody())
+                .build();
+    }
+
+    public static Base.Response successResponse(int id) {
+        return Base.Response.newBuilder()
+                .setId(id)
+                .setTimestamp(sysTime())
+                .build();
+    }
+
+    public static Base.Response failedResponse(int id, BizEx bizEx) {
+        return Base.Response.newBuilder()
+                .setId(id)
+                .setCode(bizEx.getCode())
+                .setMsg(bizEx.getMessage())
+                .setTimestamp(sysTime())
+                .build();
+    }
+
+    public static Base.Response newResponse(int id, Base.Body body) {
+        return Base.Response.newBuilder()
+                .setId(id)
+                .setTimestamp(sysTime())
+                .setBody(body)
+                .build();
+    }
+
+    public static Base.Method newMethod(String module, String api, String version) {
+        return Base.Method.newBuilder()
+                .setModule(module)
+                .setApi(api)
+                .setVersion(version)
+                .build();
+    }
+
+    public static Base.Request newRequest(int id, Base.Auth auth, Base.Method method, Base.Body body) {
+        return Base.Request.newBuilder()
+                .setId(id)
+                .setAuth(auth)
+                .setMethod(method)
+                .setBody(body)
+                .setTimestamp(sysTime())
+                .build();
+    }
+
+    public static Base.Payload newPayload(long id, Base.Response response) {
+        return Base.Payload.newBuilder()
+                .setId(id)
+                .setResponse(response)
+                .build();
     }
 
     public static boolean needReply(long id) {
         return id != 0;
     }
 
-    public static boolean isSuccessResponse(RpcResponse rpcResponse) {
+    public static boolean isSuccessResponse(Base.Response rpcResponse) {
         return rpcResponse.getCode() == 0;
-    }
-
-    public static boolean validateRpcRequest(RpcRequest request) {
-        return request.getAuth().getType() == ConstDefine.AUTH_TYPE_NON;
     }
 
     public static boolean isRole(int target, int role) {
         return (target & role) != 0;
     }
 
-    public static Long sysTime() {
+    public static long sysTime() {
         return System.currentTimeMillis();
     }
 

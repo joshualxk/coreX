@@ -4,7 +4,7 @@ import io.bigoldbro.corex.Context;
 import io.bigoldbro.corex.Handler;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ExceptionDefine;
-import io.bigoldbro.corex.json.JsonObjectImpl;
+import io.bigoldbro.corex.model.ServerInfo;
 import io.bigoldbro.corex.utils.CoreXUtil;
 import io.bigoldbro.corex.utils.RandomUtil;
 import org.slf4j.Logger;
@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-import static io.bigoldbro.corex.impl.ServerInfo.NON_SERVER_ID;
+import static io.bigoldbro.corex.model.ServerInfo.NON_SERVER_ID;
 
 /**
  * Created by Joshua on 2018/3/20.
@@ -104,7 +104,7 @@ public class MsgPostman {
         msgHandler = handler;
     }
 
-    public JsonObjectImpl info() {
+    public Map<String, String> info() {
         return recoverableConnectionManager.info();
     }
 

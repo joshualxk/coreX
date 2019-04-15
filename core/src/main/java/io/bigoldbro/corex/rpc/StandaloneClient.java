@@ -1,20 +1,17 @@
-package io.bigoldbro.corex.impl;
+package io.bigoldbro.corex.rpc;
 
-import io.bigoldbro.corex.Callback;
+import io.bigoldbro.corex.Future;
 import io.bigoldbro.corex.annotation.Api;
 import io.bigoldbro.corex.annotation.Module;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ExceptionDefine;
+import io.bigoldbro.corex.exception.BizException;
 import io.bigoldbro.corex.exception.CoreException;
+import io.bigoldbro.corex.impl.CoreXImpl;
+import io.bigoldbro.corex.impl.FailedFuture;
+import io.bigoldbro.corex.impl.FutureImpl;
 import io.bigoldbro.corex.impl.handler.InitialHandler;
-import io.bigoldbro.corex.json.JsonObject;
-import io.bigoldbro.corex.json.JsonObjectImpl;
-import io.bigoldbro.corex.model.Payload;
-import io.bigoldbro.corex.model.RpcRequest;
-import io.bigoldbro.corex.model.RpcResponse;
-import io.bigoldbro.corex.rpc.ModuleParams;
-import io.bigoldbro.corex.rpc.ModuleScanner;
-import io.bigoldbro.corex.rpc.RpcHandler;
+import io.bigoldbro.corex.proto.Base;
 import io.bigoldbro.corex.utils.CoreXUtil;
 import io.bigoldbro.corex.utils.PackageUtil;
 import io.netty.channel.*;
@@ -36,10 +33,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class StandaloneClient {
 
     private final EventLoopGroup worker;
-    private final Map<String, ModuleParams> modules = new HashMap<>();
+    private final Map<String, ModuleInfo> modules = new HashMap<>();
     private final long timeoutMillis;
     private final int serverId;
-    private final int role = ConstDefine.ROLE_ADMIN;
+    private final int role = ConstDefine.ROLE_CLIENT;
     private final long startTime = System.currentTimeMillis();
 
     private static class PrefixThreadFactory implements ThreadFactory {
@@ -70,17 +67,16 @@ public class StandaloneClient {
 
     private void init(String packageName) throws Exception {
 
-        ModuleScanner moduleScanner = ModuleScanner.clientModuleScanner();
         for (Class<?> clz : PackageUtil.getClassesForPackage(packageName)) {
             Module module = clz.getAnnotation(Module.class);
             if (module == null) {
                 continue;
             }
 
-            ModuleParams moduleParams = moduleScanner.parse(clz);
+            ModuleInfo moduleInfo = new ClientModuleScanner(clz).parse();
 
-            if (moduleParams.size() > 0) {
-                if (modules.putIfAbsent(module.address(), moduleParams) != null) {
+            if (moduleInfo.size() > 0) {
+                if (modules.putIfAbsent(module.address(), moduleInfo) != null) {
                     throw new CoreException("Module名重复:" + module.address());
                 }
             }
@@ -89,59 +85,61 @@ public class StandaloneClient {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T connect(String host, int port, Class<T> clz) {
+    public <T> T connect(String host, int port, Base.Auth auth, Class<T> clz) {
         Module module = clz.getAnnotation(Module.class);
         if (module == null) {
             throw new CoreException("不支持的类型:" + clz.getName());
         }
 
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        ModuleParams moduleParams = modules.get(module.address());
-        if (moduleParams == null) {
+        ModuleInfo moduleInfo = modules.get(module.address());
+        if (moduleInfo == null) {
             throw new CoreException("不存在的模块:" + module.address());
         }
-        return (T) Proxy.newProxyInstance(cl, new Class<?>[]{clz}, new ApiInvocationHandler(host, port, moduleParams));
+        return (T) Proxy.newProxyInstance(cl, new Class<?>[]{clz}, new ApiInvocationHandler(host, port, auth, moduleInfo));
     }
 
     private class ApiInvocationHandler implements InvocationHandler {
         private final String host;
         private final int port;
-        private final ModuleParams moduleParams;
+        private final Base.Auth auth;
+        private final ModuleInfo moduleInfo;
 
-        public ApiInvocationHandler(String host, int port, ModuleParams moduleParams) {
+        public ApiInvocationHandler(String host, int port, Base.Auth auth, ModuleInfo moduleInfo) {
             this.host = host;
             this.port = port;
-            this.moduleParams = moduleParams;
+            this.auth = auth;
+            this.moduleInfo = moduleInfo;
         }
 
         @Override
-        public Callback<Object> invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            return invoke0(proxy, method, args);
-        }
-
-        private Callback<Object> invoke0(Object proxy, Method method, Object[] args) throws Throwable {
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             Api api = method.getAnnotation(Api.class);
             if (api == null) {
                 throw new CoreException("不支持的方法:" + method.getName());
             }
 
-            if (api.type() != ConstDefine.AUTH_TYPE_ADMIN) {
-                throw new CoreException("非admin调用api");
-            }
-
-            RpcHandler rpcHandler = moduleParams.getHandler(api.value());
+            RpcHandler rpcHandler = moduleInfo.getHandler(api.value());
             if (rpcHandler == null) {
                 throw new CoreException("找不到方法:" + method.getName());
             }
 
-            boolean isVoidType = rpcHandler.isVoidType();
+            final boolean isVoid = rpcHandler.methodDetail().returnDetail.isVoid;
+            final boolean isAsync = rpcHandler.methodDetail().returnDetail.isAsync;
 
-            JsonObject argsJo = rpcHandler.convert(args);
+            CoreXImpl.ensureBlockSafe();
 
-            RpcRequest rpcRequest = RpcRequest.newAdminRpcRequest(1, moduleParams.module().address(), api.value(), moduleParams.module().version(), argsJo);
-            Payload payload = Payload.newPayload(isVoidType ? 0 : 1, rpcRequest);
+            Base.Body body = rpcHandler.convert(args);
 
-            Callback<Object> callback = new CallbackImpl<>();
+            Base.Method m = CoreXUtil.newMethod(moduleInfo.module().address(), api.value(), moduleInfo.module().version());
+            Base.Request request = CoreXUtil.newRequest(1, auth, m, body);
+
+            Base.Payload payload = Base.Payload.newBuilder()
+                    .setId(isVoid ? 0 : 1)
+                    .setRequest(request)
+                    .build();
+
+            Future<Object> future = new FutureImpl<>();
 
             io.netty.bootstrap.Bootstrap b = new io.netty.bootstrap.Bootstrap();
             b.group(worker)
@@ -156,40 +154,55 @@ public class StandaloneClient {
                             p.addLast("initialHandler", initialHandler);
                             initialHandler.setServerAuthHandler(ping -> {
                                 p.channel().writeAndFlush(payload);
-                                if (isVoidType) {
-                                    callback.complete(null);
+                                if (isVoid) {
+                                    future.tryComplete();
                                 }
                             });
-                            initialHandler.setPayloadHandler(pl -> {
-                                if (pl.hasRpcResponse()) {
-                                    RpcResponse rpcResponse = pl.getRpcResponse();
-                                    if (CoreXUtil.isSuccessResponse(rpcResponse)) {
-                                        JsonObject jo = rpcResponse.getBody();
-                                        callback.complete(jo);
-                                    } else {
-                                        callback.fail(ExceptionDefine.newException(rpcResponse.getCode(), rpcResponse.getMessage()));
-                                    }
-                                }
+                            if (!isVoid) {
+                                initialHandler.setPayloadHandler(pl -> {
+                                    if (pl.hasResponse()) {
+                                        Base.Response response = pl.getResponse();
+                                        if (CoreXUtil.isSuccessResponse(response)) {
 
-                            });
+                                            if (response.getBody().getFieldsCount() < 1) {
+                                                future.tryFail(ExceptionDefine.SYSTEM_ERR.build());
+                                                return;
+                                            }
+                                            Object o = ServerRpcHandler.unwrapObj(rpcHandler.methodDetail().returnDetail, response.getBody().getFields(0));
+
+                                            future.tryComplete(o);
+                                        } else {
+                                            future.tryFail(BizException.newException(response.getCode(), response.getMsg()));
+                                        }
+                                    } else {
+                                        future.tryFail(ExceptionDefine.SYSTEM_ERR.build());
+                                    }
+
+                                });
+                            }
                         }
                     });
 
-            Channel channel = null;
-            ChannelFuture future = b.connect(host, port).sync();
-            if (future.isSuccess()) {
-                channel = future.channel();
-                channel.closeFuture().addListener(v -> callback.tryFail(ExceptionDefine.CONN_FAIL.build()));
-            } else {
-                callback.fail(future.cause());
-            }
+            b.connect(host, port).addListener(fut -> {
+                if (fut.isSuccess()) {
+                    Channel channel = ((ChannelFuture) fut).channel();
+                    future.addHandler(h -> {
+                        channel.close();
+                    });
+                    channel.closeFuture().addListener(v -> future.tryFail(ExceptionDefine.CONN_FAIL.build()));
+                } else {
+                    future.fail(fut.cause());
+                }
+            });
 
             try {
-                return callback.sync();
-            } finally {
-                if (channel != null) {
-                    channel.close();
+                if (!isAsync) {
+                    return future.sync().result();
                 }
+
+                return future;
+            } catch (Throwable t) {
+                throw t;
             }
         }
     }

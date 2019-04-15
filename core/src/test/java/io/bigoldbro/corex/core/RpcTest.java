@@ -1,8 +1,11 @@
 package io.bigoldbro.corex.core;
 
+import io.bigoldbro.corex.Future;
 import io.bigoldbro.corex.define.ConstDefine;
-import io.bigoldbro.corex.impl.ServerInfo;
-import io.bigoldbro.corex.impl.StandaloneClient;
+import io.bigoldbro.corex.module.AsyncModule;
+import io.bigoldbro.corex.proto.Base;
+import io.bigoldbro.corex.rpc.StandaloneClient;
+import io.bigoldbro.corex.model.ServerInfo;
 import io.bigoldbro.corex.module.HarborClientModule;
 import org.junit.Test;
 
@@ -26,7 +29,32 @@ public class RpcTest {
 
         ServerInfo s = serverInfos.get(0);
 
-        System.out.println(standaloneClient.connect(s.getHost(), s.getPort(), HarborClientModule.class).info().sync().result());
+        Base.Auth auth1 = Base.Auth.newBuilder()
+                .setType(ConstDefine.AUTH_TYPE_ADMIN)
+                .build();
+
+        Base.Auth auth2 = Base.Auth.newBuilder()
+                .setType(ConstDefine.AUTH_TYPE_NON)
+                .build();
+        System.out.println(standaloneClient.connect(s.getHost(), s.getPort(), auth1, HarborClientModule.class).info());
+
+        Future<String> future = standaloneClient.connect(s.getHost(), s.getPort(), auth2, AsyncModule.class).async(5000);
+
+        future.addHandler(ar -> {
+            if (ar.succeeded()) {
+                System.out.println(ar.result());
+            } else {
+                System.out.println(ar.cause());
+            }
+        });
+
+        try {
+            System.out.println(standaloneClient.connect(s.getHost(), s.getPort(), auth2, AsyncModule.class).sync(234));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        future.sync(2000);
     }
 
 }

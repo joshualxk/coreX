@@ -1,6 +1,6 @@
 package io.bigoldbro.corex.rpc;
 
-import io.bigoldbro.corex.Callback;
+import io.bigoldbro.corex.Future;
 import io.bigoldbro.corex.proto.Base;
 
 /**
@@ -10,10 +10,10 @@ public interface RpcHandler {
 
     String name();
 
-    boolean isVoidType();
+    MethodDetail methodDetail();
 
-    Callback<Base.Body> handle(Base.Auth auth, Base.Body params) throws Exception;
+    Future<Base.Body> handle(Base.Auth auth, Base.Body params);
 
     // 转换参数
-    Base.Body convert(Object[] args) throws Exception;
+    Base.Body convert(Object[] args);
 }

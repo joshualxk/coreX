@@ -18,10 +18,6 @@ public interface Service extends ContextAware {
 
     void stop(Future<Void> completeFuture);
 
-    void afterStart();
-
     void handleMsg(Msg msg);
-
-    Map<String, Object> info();
 
 }

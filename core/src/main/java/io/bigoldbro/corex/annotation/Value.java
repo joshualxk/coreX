@@ -6,13 +6,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Created by Joshua on 2018/3/8.
+ * Created by Joshua on 2019/04/16.
  */
-@Target({ElementType.PARAMETER})
+@Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Param {
+public @interface Value {
 
     String value();
 
-    boolean optional() default false;
 }

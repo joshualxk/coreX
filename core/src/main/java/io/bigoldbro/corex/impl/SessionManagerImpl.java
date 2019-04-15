@@ -6,7 +6,7 @@ import io.bigoldbro.corex.Session;
 import io.bigoldbro.corex.SessionManager;
 import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.exception.BizEx;
-import io.bigoldbro.corex.model.Broadcast;
+import io.bigoldbro.corex.proto.Base;
 import io.bigoldbro.corex.utils.CoreXUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -151,10 +151,12 @@ public class SessionManagerImpl implements SessionManager {
         }
 
         @Override
-        protected int broadcast2Users(Broadcast broadcast) {
+        protected int broadcast2Users(Base.Broadcast broadcast) {
             Set<Connection> notifyConns = new HashSet<>();
 
-            for (String channel : broadcast.getChannels()) {
+            int sz = broadcast.getChannelsCount();
+            for (int i = 0; i < sz; ++i) {
+                String channel = broadcast.getChannels(i);
                 Set<Connection> set = channelMaps.get(channel);
                 if (set == null) {
                     continue;
@@ -162,7 +164,9 @@ public class SessionManagerImpl implements SessionManager {
                 notifyConns.addAll(set);
             }
 
-            for (String userId : broadcast.getUserIds()) {
+            sz = broadcast.getUserIdsCount();
+            for (int i = 0; i < sz; ++i) {
+                String userId = broadcast.getUserIds(i);
                 Session session = onlineUsers.get(userId);
                 if (session == null) {
                     continue;

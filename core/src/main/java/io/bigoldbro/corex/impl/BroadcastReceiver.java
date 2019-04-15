@@ -4,10 +4,10 @@ import io.bigoldbro.corex.Context;
 import io.bigoldbro.corex.ContextAware;
 import io.bigoldbro.corex.Handler;
 import io.bigoldbro.corex.exception.CoreException;
-import io.bigoldbro.corex.model.Broadcast;
-import io.bigoldbro.corex.rpc.ModuleParams;
-import io.bigoldbro.corex.rpc.ServerModuleScanner;
 import io.bigoldbro.corex.module.BroadcastModule;
+import io.bigoldbro.corex.proto.Base;
+import io.bigoldbro.corex.rpc.ModuleInfo;
+import io.bigoldbro.corex.rpc.ServerModuleScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +20,7 @@ public abstract class BroadcastReceiver implements ContextAware, BroadcastModule
 
     private final boolean internal;
     private final boolean external;
-    private final ModuleParams moduleParams;
+    private final ModuleInfo moduleInfo;
 
     private Context context;
 
@@ -28,7 +28,7 @@ public abstract class BroadcastReceiver implements ContextAware, BroadcastModule
         this.internal = internal;
         this.external = external;
         try {
-            this.moduleParams = new ServerModuleScanner(this).parse(BroadcastModule.class);
+            this.moduleInfo = new ServerModuleScanner(this, BroadcastModule.class).parse();
         } catch (Exception e) {
             throw new CoreException("初始化广播模块失败");
         }
@@ -44,8 +44,8 @@ public abstract class BroadcastReceiver implements ContextAware, BroadcastModule
         this.context = context;
 
         int need = 0;
-        Handler<Broadcast> h1 = null;
-        Handler<Broadcast> h2 = null;
+        Handler<Base.Broadcast> h1 = null;
+        Handler<Base.Broadcast> h2 = null;
         if (internal) {
             h1 = this::internalBroadcast;
             need++;
@@ -60,13 +60,13 @@ public abstract class BroadcastReceiver implements ContextAware, BroadcastModule
         }
     }
 
-    protected int broadcast2Users(Broadcast broadcast) {
+    protected int broadcast2Users(Base.Broadcast broadcast) {
         return 0;
     }
 
-    private void internalBroadcast(Broadcast broadcast) {
+    private void internalBroadcast(Base.Broadcast broadcast) {
         try {
-            moduleParams.handleInternalBroadcast(broadcast);
+            moduleInfo.handleInternalBroadcast(broadcast);
         } catch (Exception e) {
             logger.warn("处理广播错误.", e);
         }

@@ -3,18 +3,15 @@ package io.bigoldbro.corex.impl;
 import io.bigoldbro.corex.Future;
 import io.bigoldbro.corex.*;
 import io.bigoldbro.corex.annotation.BlockControl;
+import io.bigoldbro.corex.annotation.Value;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.define.ServiceNameDefine;
 import io.bigoldbro.corex.exception.CoreException;
-import io.bigoldbro.corex.json.JsonArrayImpl;
-import io.bigoldbro.corex.json.JsonObject;
-import io.bigoldbro.corex.json.JsonObjectImpl;
-import io.bigoldbro.corex.model.Broadcast;
-import io.bigoldbro.corex.model.Payload;
-import io.bigoldbro.corex.model.RpcRequest;
 import io.bigoldbro.corex.module.BroadcastModule;
+import io.bigoldbro.corex.proto.Base;
 import io.bigoldbro.corex.rpc.RpcClient;
+import io.bigoldbro.corex.utils.CoreXUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -24,10 +21,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -61,8 +55,8 @@ public class CoreXImpl implements CoreX {
 
     private final Map<String, Service> serviceMap = new ConcurrentHashMap<>();
     private final DefaultMsgHandler msgHandler;
-    private final List<Handler<Broadcast>> internalBroadcastHandlers = new Vector<>();
-    private final List<Handler<Broadcast>> externalBroadcastHandlers = new Vector<>();
+    private final List<Handler<Base.Broadcast>> internalBroadcastHandlers = new Vector<>();
+    private final List<Handler<Base.Broadcast>> externalBroadcastHandlers = new Vector<>();
     private final ConcurrentMap<Long, InternalTimerHandler> timeouts = new ConcurrentHashMap<>();
     private final RpcClient rpcClient;
     private final AtomicLong timeoutCounter = new AtomicLong(0);
@@ -71,9 +65,12 @@ public class CoreXImpl implements CoreX {
     private final EventLoopGroup eventLoopGroup;
     private final ExecutorService workerPool;
     private final CoreXConfig coreXConfig;
-    private final int serverId;
-    private final int role;
     private final long startTime;
+
+    @Value("corex.id")
+    private int serverId;
+    @Value("corex.role")
+    private int role;
 
     public CoreXImpl(CoreXConfig coreXConfig) {
 
@@ -85,22 +82,22 @@ public class CoreXImpl implements CoreX {
         }
 
         this.coreXConfig = Objects.requireNonNull(coreXConfig, "coreXConfig");
-        this.serverId = coreXConfig.getId();
-        this.role = coreXConfig.getRole();
+        this.coreXConfig.init(this);
+
         if (this.role == ConstDefine.ROLE_LOCAL) {
             throw new CoreException("role配置错误");
         }
-        this.startTime = System.currentTimeMillis();
+        this.startTime = CoreXUtil.sysTime();
 
         msgHandler = new DefaultMsgHandler(DEFAULT_MAX_PENDING_MSG_NUM, DEFAULT_REQUEST_TIME_OUT);
 
         BlockedThreadChecker checker = new BlockedThreadChecker(this, DEFAULT_BLOCKED_THREAD_CHECK_INTERVAL, DEFAULT_WARNING_EXCEPTION_TIME);
         acceptorEventLoopGroup = new NioEventLoopGroup(DEFAULT_ACCEPTOR_POOL_SIZE,
-                new CoreXThreadFactory("io.bigoldbro.corex-acceptor-", checker, false, DEFAULT_MAX_EVENT_LOOP_EXECUTE_TIME));
+                new CoreXThreadFactory("corex-acceptor-", checker, false, DEFAULT_MAX_EVENT_LOOP_EXECUTE_TIME));
         eventLoopGroup = new NioEventLoopGroup(DEFAULT_EVENT_LOOP_POOL_SIZE,
-                new CoreXThreadFactory("io.bigoldbro.corex-eventLoop-", checker, false, DEFAULT_MAX_EVENT_LOOP_EXECUTE_TIME));
+                new CoreXThreadFactory("corex-eventLoop-", checker, false, DEFAULT_MAX_EVENT_LOOP_EXECUTE_TIME));
         workerPool = Executors.newFixedThreadPool(DEFAULT_WORKER_POOL_SIZE,
-                new CoreXThreadFactory("io.bigoldbro.corex-worker-", checker, true, DEFAULT_MAX_WORKER_EXECUTE_TIME));
+                new CoreXThreadFactory("corex-worker-", checker, true, DEFAULT_MAX_WORKER_EXECUTE_TIME));
     }
 
     @Override
@@ -146,6 +143,36 @@ public class CoreXImpl implements CoreX {
         return null;
     }
 
+    public static Context ensureContext() {
+        Context context = getContext();
+        if (context == null) {
+            throw new CoreException("context为空");
+        }
+        return context;
+    }
+
+    public static Context ensureContext(Context ctx) {
+        Context context = getContext();
+        if (context != ctx) {
+            throw new CoreException("context错误");
+        }
+        return context;
+    }
+
+    public static void ensureNoContext() {
+        if (getContext() != null) {
+            throw new CoreException("context不为空");
+        }
+    }
+
+    // 是否能执行阻塞任务
+    public static void ensureBlockSafe() {
+        Context ctx = getContext();
+        if (ctx != null && !ctx.isWorker()) {
+            throw new CoreException("io线程不能阻塞");
+        }
+    }
+
     private Context createContext(String name, BlockControl bc, Service service) {
         switch (bc) {
             case NON_BLOCK:
@@ -159,8 +186,8 @@ public class CoreXImpl implements CoreX {
     }
 
     @Override
-    public void startService(Service service, Handler<AsyncResult<Void>> resultHandler) {
-        ensureNoContext();
+    public void startService(Class<? extends Service> serviceClz, Handler<AsyncResult<String>> resultHandler) throws Exception {
+        Service service = serviceClz.newInstance();
         String name = service.name();
         BlockControl bc = service.bc();
 
@@ -175,23 +202,18 @@ public class CoreXImpl implements CoreX {
 
         context.runOnContext(v -> {
             Future<Void> future = Future.future();
-            future.setHandler(ar -> {
+            future.addHandler(ar -> {
                 if (ar.succeeded()) {
                     if (serviceMap.putIfAbsent(name, service) != null) {
                         resultHandler.handle(Future.failedFuture(new CoreException("服务 " + name + " 已启动!")));
                         return;
                     }
-                    try {
-                        service.afterStart();
-                    } catch (Exception e) {
-                        resultHandler.handle(Future.failedFuture(e));
-                        return;
-                    }
                 }
-                resultHandler.handle(ar);
+                resultHandler.handle(new SucceededFuture<>(name));
             });
 
             try {
+                coreXConfig.init(service);
                 service.init(context);
                 service.start(future);
             } catch (Throwable t) {
@@ -211,7 +233,7 @@ public class CoreXImpl implements CoreX {
         Service service = serviceMap.get(name);
         service.context().runOnContext(v -> {
             Future<Void> future = Future.future();
-            future.setHandler(ar -> {
+            future.addHandler(ar -> {
                 if (ar.succeeded()) {
                     serviceMap.remove(name);
                 }
@@ -226,42 +248,34 @@ public class CoreXImpl implements CoreX {
         });
     }
 
-    private Context ensureContext() {
-        Context context = getContext();
-        if (context == null) {
-            throw new CoreException("context为空");
-        }
-        return context;
-    }
-
-    private Context ensureNoContext() {
-        Context context = getContext();
-        if (context != null) {
-            throw new CoreException("context不为空");
-        }
-        return context;
-    }
-
     private Msg wrapMsg(Context context, boolean needReply, Object raw) {
         long id = needReply ? msgCounter.getAndIncrement() : 0;
-        Payload body;
-        if (raw instanceof RpcRequest) {
-            RpcRequest rpcRequest = (RpcRequest) raw;
-            body = Payload.newPayload(id, rpcRequest).addRoute(context.name());
-        } else if (raw instanceof Broadcast) {
-            Broadcast broadcast = (Broadcast) raw;
-            body = Payload.newPayload(id, broadcast).addRoute(context.name());
-        } else if (raw instanceof Payload) {
-            body = (Payload) raw;
+        Base.Payload payload;
+        if (raw instanceof Base.Request) {
+            Base.Request request = (Base.Request) raw;
+            payload = Base.Payload.newBuilder()
+                    .setId(id)
+                    .setRequest(request)
+                    .addRoutes(context.name())
+                    .build();
+        } else if (raw instanceof Base.Broadcast) {
+            Base.Broadcast broadcast = (Base.Broadcast) raw;
+            payload = Base.Payload.newBuilder()
+                    .setId(id)
+                    .setBroadcast(broadcast)
+                    .addRoutes(context.name())
+                    .build();
+        } else if (raw instanceof Base.Payload) {
+            payload = (Base.Payload) raw;
         } else {
             throw new CoreException("不支持的消息类型:" + (raw == null ? null : raw.getClass().getName()));
         }
 
-        return new InternalMsg(context, id, body);
+        return new InternalMsg(context, id, payload);
     }
 
     @Override
-    public void sendMessage(String address, Object msg, Handler<AsyncResult<Payload>> replyHandler) {
+    public void sendMessage(String address, Object msg, Handler<AsyncResult<Base.Payload>> replyHandler) {
         Context context = ensureContext();
         Service service = getService(address);
 
@@ -289,7 +303,7 @@ public class CoreXImpl implements CoreX {
     }
 
     @Override
-    public void broadcastMessage(Broadcast broadcast) {
+    public void broadcastMessage(Base.Broadcast broadcast) {
         sendMessage(ServiceNameDefine.BROADCAST, broadcast, null);
     }
 
@@ -372,7 +386,7 @@ public class CoreXImpl implements CoreX {
     }
 
     @Override
-    public int subscribeBroadcast(Handler<Broadcast> internal, Handler<Broadcast> external) {
+    public int subscribeBroadcast(Handler<Base.Broadcast> internal, Handler<Base.Broadcast> external) {
         Context context = ensureContext();
 
         int added = 0;
@@ -386,9 +400,9 @@ public class CoreXImpl implements CoreX {
     }
 
     @Override
-    public void onBroadcast(Broadcast broadcast) {
-        List<Handler<Broadcast>> handlers = broadcast.isInternal() ? internalBroadcastHandlers : externalBroadcastHandlers;
-        for (Handler<Broadcast> h : handlers) {
+    public void onBroadcast(Base.Broadcast broadcast) {
+        List<Handler<Base.Broadcast>> handlers = broadcast.getInternal() ? internalBroadcastHandlers : externalBroadcastHandlers;
+        for (Handler<Base.Broadcast> h : handlers) {
             h.handle(broadcast);
         }
     }
@@ -423,7 +437,7 @@ public class CoreXImpl implements CoreX {
     }
 
     @Override
-    public void onMsgSent(long id, Handler<AsyncResult<Payload>> handler) {
+    public void onMsgSent(long id, Handler<AsyncResult<Base.Payload>> handler) {
         Context context = ensureContext();
         msgHandler.onMsgSent(id, ar -> {
             context.runOnContext(v -> handler.handle(ar));
@@ -431,7 +445,7 @@ public class CoreXImpl implements CoreX {
     }
 
     @Override
-    public void onMsgReply(long id, AsyncResult<Payload> resp) {
+    public void onMsgReply(long id, AsyncResult<Base.Payload> resp) {
         msgHandler.onMsgReply(id, resp);
     }
 
@@ -440,21 +454,22 @@ public class CoreXImpl implements CoreX {
         msgHandler.removeExpireMsg();
     }
 
-    public Callback<JsonObject> info() {
-        JsonObject jo = new JsonObjectImpl();
-        jo.put("serverId", serverId);
-        jo.put("role", role);
-        jo.put("startTime", startTime);
+    public Map<String, String> info() {
+        Map<String, String> map = new HashMap<>();
+        map.put("serverId", String.valueOf(serverId));
+        map.put("role", String.valueOf(role));
+        map.put("startTime", String.valueOf(startTime));
 
-        JsonArrayImpl ja = new JsonArrayImpl();
-        for (Map.Entry<String, Service> entry : serviceMap.entrySet()) {
-            ja.add(entry.getKey());
+        Set<Map.Entry<String, Service>> entries = serviceMap.entrySet();
+        List<String> services = new ArrayList<>(entries.size());
+        for (Map.Entry<String, Service> entry : entries) {
+            services.add(entry.getKey());
         }
-        jo.put("services", ja);
-        jo.put("timeoutsNum", timeouts.size());
-        jo.put("pendingMsgNum", msgHandler.pendingMsgNum());
+        map.put("services", services.toString());
+        map.put("timeoutsNum", String.valueOf(timeouts.size()));
+        map.put("pendingMsgNum", String.valueOf(msgHandler.pendingMsgNum()));
 
-        return new SucceededCallback<>(jo);
+        return map;
     }
 
     private class InternalTimerHandler implements Handler<Void> {

@@ -11,7 +11,7 @@ import java.util.Objects;
  */
 public abstract class AbstractConnection implements Connection {
 
-    private static Logger logger = LoggerFactory.getLogger(AbstractConnection.class);
+    protected Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final String id;
     private long createTime;
@@ -84,7 +84,7 @@ public abstract class AbstractConnection implements Connection {
         if (openHandler != null) {
             try {
                 openHandler.handle(this);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 logger.warn("error in onOpen:", e);
             }
         }
@@ -96,7 +96,7 @@ public abstract class AbstractConnection implements Connection {
         if (errorHandler != null) {
             try {
                 errorHandler.handle(null);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 logger.warn("error in onError:", e);
             }
         }
@@ -108,7 +108,7 @@ public abstract class AbstractConnection implements Connection {
         if (recoverHandler != null) {
             try {
                 recoverHandler.handle(null);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 logger.warn("error in onRecover:", e);
             }
         }
@@ -120,7 +120,7 @@ public abstract class AbstractConnection implements Connection {
         if (msgHandler != null) {
             try {
                 msgHandler.handle(msg);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 logger.warn("error in onMsg:", e);
             }
         }
@@ -132,7 +132,7 @@ public abstract class AbstractConnection implements Connection {
         if (closeHandler != null) {
             try {
                 closeHandler.handle(null);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 logger.warn("error in onClose:", e);
             }
 

@@ -7,7 +7,6 @@ import io.bigoldbro.corex.exception.BizExceptionBuilder;
  */
 public final class ExceptionDefine {
 
-
     // 1 ~ 999 为不可忽略错误
     public static final BizExceptionBuilder SYSTEM_BUSY = new BizExceptionBuilder(1, "系统繁忙");
     public static final BizExceptionBuilder SYSTEM_ERR = new BizExceptionBuilder(2, "系统错误");

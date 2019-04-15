@@ -3,7 +3,6 @@ package io.bigoldbro.corex.module;
 import io.bigoldbro.corex.annotation.Api;
 import io.bigoldbro.corex.annotation.BlockControl;
 import io.bigoldbro.corex.annotation.Module;
-import io.bigoldbro.corex.annotation.Param;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ServiceNameDefine;
 
@@ -16,11 +15,11 @@ import java.util.Map;
 public interface CacheModule {
 
     @Api(value = "i", type = ConstDefine.AUTH_TYPE_ADMIN)
-    Map<String, Object> info();
+    Map<String, String> info();
 
     @Api(value = "uc", type = ConstDefine.AUTH_TYPE_ADMIN)
     void updateCache();
 
     @Api(value = "gc", type = ConstDefine.AUTH_TYPE_INTERNAL)
-    void getCache(@Param("1") String name);
+    void getCache(String name);
 }

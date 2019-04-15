@@ -1,18 +1,17 @@
 package io.bigoldbro.corex.game;
 
-import io.bigoldbro.corex.model.Auth;
-import io.bigoldbro.corex.model.Broadcast;
+import io.bigoldbro.corex.proto.Base;
 
 /**
  * Created by Joshua on 2018/3/27.
  */
 public interface Xpusher {
 
-    void before(Auth auth);
+    void before(Base.Auth auth);
 
     String userId();
 
-    void addBroadcast(Broadcast broadcast);
+    void addBroadcast(Base.Broadcast broadcast);
 
     void after(boolean success);
 }

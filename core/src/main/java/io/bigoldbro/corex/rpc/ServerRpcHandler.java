@@ -1,20 +1,27 @@
 package io.bigoldbro.corex.rpc;
 
-import io.bigoldbro.corex.Callback;
+import com.google.protobuf.ByteString;
+import io.bigoldbro.corex.Future;
+import io.bigoldbro.corex.NetData;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ExceptionDefine;
+import io.bigoldbro.corex.exception.BizException;
+import io.bigoldbro.corex.exception.CodecException;
 import io.bigoldbro.corex.exception.CoreException;
-import io.bigoldbro.corex.json.Json;
-import io.bigoldbro.corex.json.JsonArray;
-import io.bigoldbro.corex.json.JsonObject;
-import io.bigoldbro.corex.json.JsonObjectImpl;
-import io.bigoldbro.corex.model.Auth;
-import io.bigoldbro.corex.rpc.MethodDetail.ParamDetail;
+import io.bigoldbro.corex.impl.FutureImpl;
+import io.bigoldbro.corex.impl.SucceededFuture;
+import io.bigoldbro.corex.proto.Base;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.Unpooled;
 
+import java.io.DataInput;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Joshua on 2018/3/8.
@@ -31,7 +38,7 @@ public class ServerRpcHandler implements RpcHandler {
         this.requireType = requireType;
     }
 
-    public Callback<Object> handle(Auth auth, JsonObject params) throws Exception {
+    public Future<Base.Body> handle(Base.Auth auth, Base.Body params) {
 
         // 授权类型不一致
         final int clientType = auth.getType();
@@ -56,140 +63,232 @@ public class ServerRpcHandler implements RpcHandler {
             }
         }
 
-        Object ret = invoke(params, methodDetail);
-
-        if (ret == null) {
-            if (!methodDetail.returnDetail.isVoid) {
-                throw new CoreException("response is null");
-            }
-            return null;
-        } else {
-            return (Callback<Object>) ret;
-        }
-
+        return invoke(params, methodDetail);
     }
 
     @Override
-    public JsonObjectImpl convert(Object[] args) throws Exception {
+    public Base.Body convert(Object[] args) {
         throw new UnsupportedOperationException("convert");
     }
 
-    private Object invoke(JsonObject params, MethodDetail methodDetail) throws Exception {
+    private Future<Base.Body> invoke(Base.Body params, MethodDetail methodDetail) {
         Object[] objects;
         if (methodDetail.params.isEmpty()) {
             objects = null;
         } else {
             objects = new Object[methodDetail.params.size()];
-            int i = 0;
 
-            for (ParamDetail pd : methodDetail.params) {
-                objects[i++] = getValue(params, pd);
+            if (params.getFieldsCount() != methodDetail.params.size()) {
+                throw new CodecException("参数数量不一致");
+            }
+
+            List<ByteString> fieldsList = params.getFieldsList();
+
+            int i = 0;
+            for (ByteString byteString : fieldsList) {
+                ParamDetail paramDetail = methodDetail.params.get(i);
+
+                objects[i++] = unwrapObj(paramDetail, byteString);
             }
 
         }
 
         try {
-            return methodDetail.method.invoke(invoker, objects);
+            Object ret = methodDetail.method.invoke(invoker, objects);
+
+            if (ret == null) {
+                if (!methodDetail.returnDetail.isVoid) {
+                    throw new CoreException("response is null");
+                }
+                return null;
+            } else {
+                if (methodDetail.returnDetail.isAsync) {
+                    Future<Object> future = (Future<Object>) ret;
+
+                    Future<Base.Body> future1 = new FutureImpl<>();
+                    future.addHandler(ar -> {
+                        if (ar.succeeded()) {
+                            ByteString wrapObj = ClientRpcHandler.wrapObj(methodDetail.returnDetail, ar.result());
+                            Base.Body body = Base.Body.newBuilder()
+                                    .addFields(wrapObj)
+                                    .build();
+                            future1.complete(body);
+                        } else {
+                            future1.fail(ar.cause());
+                        }
+                    });
+
+                    return future1;
+                } else {
+                    ByteString wrapObj = ClientRpcHandler.wrapObj(methodDetail.returnDetail, ret);
+                    Base.Body body = Base.Body.newBuilder()
+                            .addFields(wrapObj)
+                            .build();
+                    return new SucceededFuture<>(body);
+                }
+
+            }
+
         } catch (InvocationTargetException e) {
             Throwable cause = e.getCause();
-            if (cause instanceof Exception) {
-                throw (Exception) cause;
+            if (cause instanceof BizException) {
+                throw (BizException) cause;
+            } else if (cause instanceof CoreException) {
+                throw (CoreException) cause;
             } else {
-                e.printStackTrace();
-                throw ExceptionDefine.SYSTEM_ERR.build();
+                throw new CoreException(cause);
             }
+        } catch (IllegalAccessException e) {
+            throw new CoreException(e);
         }
     }
 
-    private static List getListValue(JsonObject params, ParamDetail pd) {
-        JsonArray ja = params.getJsonArray(pd.name);
-
-        if (ja == null) {
-            return Collections.EMPTY_LIST;
-        }
-
-        List list = ja.getList();
-        List ret = new ArrayList(list.size());
-
-        switch (pd.parameterizedType) {
-            case BOOLEAN:
-                for (Object b : list) {
-                    ret.add(Json.toBoolean(b));
-                }
+    static Object unwrapObj(ParamDetail paramDetail, ByteString byteString) {
+        Object val;
+        switch (paramDetail.type) {
+            case UNSUPPORTED:
+                throw new CoreException("不支持的类型");
+            case LIST:
+                val = parseList(paramDetail, byteString);
                 break;
-            case INT:
-                for (Object b : list) {
-                    ret.add(Json.toInteger(b));
-                }
+            case MAP:
+                val = parseMap(paramDetail, byteString);
                 break;
-            case LONG:
-                for (Object b : list) {
-                    ret.add(Json.toLong(b));
-                }
-                break;
-            case DOUBLE:
-                for (Object b : list) {
-                    ret.add(Json.toDouble(b));
-                }
-                break;
-            case STRING:
-                for (Object b : list) {
-                    ret.add(Json.toString(b));
-                }
-                break;
-            case JOABLE:
-                for (Object b : list) {
-                    ret.add(Json.toJoable(b, pd.msgClz));
-                }
+            case ARRAY:
+                val = parseArray(paramDetail, byteString);
                 break;
             default:
-                throw new CoreException("List参数类型不合法:" + pd.parameterizedType);
+                val = parseValue(paramDetail, byteString);
+                break;
         }
-
-        return ret;
+        return val;
     }
 
-    private static Object getValue(JsonObject params, ParamDetail pd) {
-        if (!params.containsKey(pd.name)) {
-            if (!pd.optional) {
-                throw ExceptionDefine.PARAM_ERR.build();
-            }
-        }
+    private static List parseList(ParamDetail pd, ByteString byteString) {
+        ByteBuf byteBuf = Unpooled.wrappedBuffer(byteString.toByteArray());
 
-        try {
-            switch (pd.type) {
-                case LIST:
-                    return getListValue(params, pd);
-                case ARRAY:
-                    break;
-                case BOOLEAN:
-                    return params.getBoolean(pd.name, false);
-                case INT:
-                    return params.getInteger(pd.name, 0);
-                case LONG:
-                    return params.getLong(pd.name, 0L);
-                case DOUBLE:
-                    return params.getDouble(pd.name, 0D);
-                case STRING:
-                    return params.getString(pd.name, "");
-                default:
-                    // do nothing
-                    break;
+        try (ByteBufInputStream is = new ByteBufInputStream(byteBuf)) {
+            // list size
+            int len = is.readShort();
+            ClientRpcHandler.checkSize(len);
+
+            List<Object> list = new ArrayList<>(len);
+
+            for (int i = 0; i < len; ++i) {
+                list.add(readValue(is, pd.genericType, pd.extClz));
             }
+
+            return list;
+
+        } catch (CodecException e) {
+            throw e;
         } catch (Exception e) {
-            throw ExceptionDefine.PARAM_ERR.build();
+            throw new CodecException(e);
+        } finally {
+            byteBuf.release();
+        }
+    }
+
+    private static Map parseMap(ParamDetail pd, ByteString byteString) {
+        ByteBuf byteBuf = Unpooled.wrappedBuffer(byteString.toByteArray());
+
+        try (ByteBufInputStream is = new ByteBufInputStream(byteBuf)) {
+            // list size
+            int len = is.readShort();
+            ClientRpcHandler.checkSize(len);
+
+            Map<String, Object> map = new HashMap<>(len);
+
+            for (int i = 0; i < len; ++i) {
+                String k = is.readUTF();
+                map.put(k, readValue(is, pd.genericType, pd.extClz));
+            }
+
+            return map;
+
+        } catch (CodecException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CodecException(e);
+        } finally {
+            byteBuf.release();
+        }
+    }
+
+    private static Object parseArray(ParamDetail pd, ByteString byteString) {
+        ByteBuf byteBuf = Unpooled.wrappedBuffer(byteString.toByteArray());
+
+        try (ByteBufInputStream is = new ByteBufInputStream(byteBuf)) {
+            // array size
+            int len = is.readShort();
+            ClientRpcHandler.checkSize(len);
+
+            Object val = Array.newInstance(pd.extClz, len);
+
+            for (int i = 0; i < len; ++i) {
+                Array.set(val, i, readValue(is, pd.genericType, pd.extClz));
+            }
+
+            return val;
+
+        } catch (CodecException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CodecException(e);
+        } finally {
+            byteBuf.release();
+        }
+    }
+
+    private static Object parseValue(ParamDetail pd, ByteString byteString) {
+        ByteBuf byteBuf = Unpooled.wrappedBuffer(byteString.toByteArray());
+
+        try (ByteBufInputStream is = new ByteBufInputStream(byteBuf)) {
+            return readValue(is, pd.type, pd.extClz);
+        } catch (CodecException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CoreException("参数类型不合法:" + pd.type);
+        } finally {
+            byteBuf.release();
         }
 
-        throw new CoreException("参数类型不合法:" + pd.type);
+    }
+
+    private static Object readValue(DataInput dataInput, ParamType paramType, Class<?> extClz) throws Exception {
+        switch (paramType) {
+            case BOOLEAN:
+                return dataInput.readBoolean();
+            case BYTE:
+                return dataInput.readByte();
+            case SHORT:
+                return dataInput.readShort();
+            case INT:
+                return dataInput.readInt();
+            case LONG:
+                return dataInput.readLong();
+            case FLOAT:
+                return dataInput.readFloat();
+            case DOUBLE:
+                return dataInput.readDouble();
+            case STRING:
+                return dataInput.readUTF();
+            case NET_DATA:
+                NetData netData = ((Class<? extends NetData>) extClz).newInstance();
+                netData.read(dataInput);
+                return netData;
+            default:
+                throw new CoreException("未知类型");
+        }
     }
 
     @Override
     public String name() {
-        return methodDetail.method.getDeclaringClass().getName() + "." + methodDetail.method.getName();
+        return methodDetail.name();
     }
 
     @Override
-    public boolean isVoidType() {
-        return methodDetail.returnDetail.isVoid;
+    public MethodDetail methodDetail() {
+        return methodDetail;
     }
 }

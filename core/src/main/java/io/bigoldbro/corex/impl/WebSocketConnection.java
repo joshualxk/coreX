@@ -4,9 +4,7 @@ import io.bigoldbro.corex.AbstractConnection;
 import io.bigoldbro.corex.Codec;
 import io.bigoldbro.corex.Session;
 import io.bigoldbro.corex.exception.CoreException;
-import io.bigoldbro.corex.model.ClientPayload;
-import io.bigoldbro.corex.model.Push;
-import io.bigoldbro.corex.model.RpcResponse;
+import io.bigoldbro.corex.proto.Base;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
@@ -34,13 +32,17 @@ public class WebSocketConnection extends AbstractConnection {
 
     @Override
     public void write(Object msg) {
-        ClientPayload clientPayload;
-        if (msg instanceof RpcResponse) {
-            RpcResponse response = (RpcResponse) msg;
-            clientPayload = ClientPayload.newClientPayload(response);
-        } else if (msg instanceof Push) {
-            Push push = (Push) msg;
-            clientPayload = ClientPayload.newClientPayload(push);
+        Base.ClientPayload clientPayload;
+        if (msg instanceof Base.Response) {
+            Base.Response response = (Base.Response) msg;
+            clientPayload = Base.ClientPayload.newBuilder()
+                    .setResponse(response)
+                    .build();
+        } else if (msg instanceof Base.Push) {
+            Base.Push push = (Base.Push) msg;
+            clientPayload = Base.ClientPayload.newBuilder()
+                    .setPush(push)
+                    .build();
         } else {
             throw new CoreException("未知类型:" + msg.getClass().getName());
         }
@@ -88,8 +90,8 @@ public class WebSocketConnection extends AbstractConnection {
     public void onMsg(Object msg) {
         if (msg instanceof ByteBuf) {
             try (ByteBufInputStream is = new ByteBufInputStream((ByteBuf) msg)) {
-                ClientPayload clientPayload = codec.readClientPayload(is);
-                if (!clientPayload.hasRpcRequest()) {
+                Base.ClientPayload clientPayload = codec.readClientPayload(is);
+                if (!clientPayload.hasRequest()) {
                     close();
                     return;
                 }

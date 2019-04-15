@@ -47,7 +47,11 @@ public interface Future<T> extends AsyncResult<T>, Handler<AsyncResult<T>> {
 
     boolean isComplete();
 
-    Future<T> setHandler(Handler<AsyncResult<T>> handler);
+    Future<T> addHandler(Handler<AsyncResult<T>> handler);
 
-    Future<T> sync();
+    Future<T> removeHandler(Handler<AsyncResult<T>> handler);
+
+    Future<T> sync() throws Exception;
+
+    Future<T> sync(long timeout) throws Exception;
 }

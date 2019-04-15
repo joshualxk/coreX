@@ -10,23 +10,20 @@ import java.lang.reflect.Method;
  */
 class ClientModuleScanner extends ModuleScanner {
 
-    private static Object o = new Object();
-
-    @Override
-    protected Object invoker(Class<?> clz) {
-        return o;
+    public ClientModuleScanner(Class<?> clz) {
+        super(clz);
     }
 
     @Override
-    protected RpcHandler newApiHandler(Api api, Method m, Object invoker) {
-        MethodDetail methodDetail = ParamParser.parseMethodDetail(m);
+    protected RpcHandler newApiHandler(Api api, Method m) {
+        MethodDetail methodDetail = ModuleParser.parseMethodDetail(m);
         checkValidType(api, methodDetail);
         return new ClientRpcHandler(methodDetail);
     }
 
     @Override
-    protected RpcHandler newBroadcastHandler(Notice notice, Method m, Object invoker) {
-        MethodDetail methodDetail = ParamParser.parseMethodDetail(m);
+    protected RpcHandler newBroadcastHandler(Notice notice, Method m) {
+        MethodDetail methodDetail = ModuleParser.parseMethodDetail(m);
         return new ClientRpcHandler(methodDetail);
     }
 

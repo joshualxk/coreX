@@ -1,10 +1,5 @@
 package io.bigoldbro.corex.service;
 
-import io.bigoldbro.corex.Callback;
-import io.bigoldbro.corex.impl.SucceededCallback;
-import io.bigoldbro.corex.json.JsonObject;
-import io.bigoldbro.corex.json.JsonObjectImpl;
-import io.bigoldbro.corex.model.Broadcast;
 import io.bigoldbro.corex.module.BenchmarkModule;
 
 /**
@@ -13,13 +8,8 @@ import io.bigoldbro.corex.module.BenchmarkModule;
 public class BenchmarkService extends SimpleModuleService implements BenchmarkModule {
 
     @Override
-    public Callback<Integer> connect(String msg) {
-        JsonObject b = new JsonObjectImpl();
-        b.put("msg", msg);
-        Broadcast broadcast = Broadcast.newGroupBroadcast("benchmark-channel", null, "haha", b);
-        coreX().broadcastMessage(broadcast);
-
-        return new SucceededCallback<>(1);
+    public int connect(String msg) {
+        return 0;
     }
 
 }

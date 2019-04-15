@@ -20,14 +20,16 @@ import java.util.Objects;
  */
 public abstract class ModuleScanner {
 
-    protected Logger logger = LoggerFactory.getLogger(this.getClass());
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public static ModuleScanner clientModuleScanner() {
-        return new ClientModuleScanner();
+    protected final Class<?> clz;
+
+    public ModuleScanner(Class<?> clz) {
+        this.clz = clz;
     }
 
-    public ModuleParams parse(Class<?> clz) {
-//        logger.info(">>>> start parse:{}.", clz.getName());
+    public ModuleInfo parse() {
+        logger.debug(">>>> start parse:{}.", clz.getName());
 
         Module module = Objects.requireNonNull(clz.getAnnotation(Module.class));
 
@@ -42,24 +44,22 @@ public abstract class ModuleScanner {
             throw new CoreException("api 数量为零");
         }
 
-        Object invoker = Objects.requireNonNull(invoker(clz));
-
         Map<String, RpcHandler> apiHandlerMap = new HashMap<>();
         for (Method method : clz.getDeclaredMethods()) {
-            parseMethod(apiHandlerMap, invoker, method);
+            parseMethod(apiHandlerMap, method);
         }
 
-//        logger.info(">>>> end parse:{}.", clz.getName());
+        logger.debug(">>>> end parse:{}.", clz.getName());
 
-        return new ModuleParams(module, apiHandlerMap);
+        return new ModuleInfo(module, apiHandlerMap);
     }
 
-    private void parseMethod(Map<String, RpcHandler> handlerMap, Object invoker, Method method) {
+    private void parseMethod(Map<String, RpcHandler> handlerMap, Method method) {
         Api api = method.getAnnotation(Api.class);
         if (api != null) {
             validateApi(api);
 
-            RpcHandler handler = newApiHandler(api, method, invoker);
+            RpcHandler handler = newApiHandler(api, method);
             if (handlerMap.putIfAbsent(api.value(), handler) != null) {
                 throw new CoreException("api 名字不能重复:" + handler.name());
             }
@@ -67,7 +67,7 @@ public abstract class ModuleScanner {
 
         Notice notice = method.getAnnotation(Notice.class);
         if (notice != null) {
-            RpcHandler handler = newBroadcastHandler(notice, method, invoker);
+            RpcHandler handler = newBroadcastHandler(notice, method);
             if (handlerMap.putIfAbsent(notice.topic(), handler) != null) {
                 throw new CoreException("notice 名字不能重复:" + handler.name());
             }
@@ -105,10 +105,8 @@ public abstract class ModuleScanner {
         }
     }
 
-    protected abstract Object invoker(Class<?> clz);
+    protected abstract RpcHandler newApiHandler(Api api, Method m);
 
-    protected abstract RpcHandler newApiHandler(Api api, Method m, Object invoker);
-
-    protected abstract RpcHandler newBroadcastHandler(Notice notice, Method m, Object invoker);
+    protected abstract RpcHandler newBroadcastHandler(Notice notice, Method m);
 
 }

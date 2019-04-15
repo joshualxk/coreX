@@ -4,10 +4,10 @@ import io.bigoldbro.corex.AsyncResult;
 import io.bigoldbro.corex.Connection;
 import io.bigoldbro.corex.Context;
 import io.bigoldbro.corex.Handler;
-import io.bigoldbro.corex.json.JsonObjectImpl;
 import io.bigoldbro.corex.exception.CoreException;
 import io.bigoldbro.corex.impl.handler.InitialHandler;
-import io.bigoldbro.corex.model.Payload;
+import io.bigoldbro.corex.model.ServerInfo;
+import io.bigoldbro.corex.proto.Base;
 import io.bigoldbro.corex.utils.CoreXUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -90,7 +90,7 @@ public class RecoverableConnectionManager {
         return false;
     }
 
-    public void broadcast(Payload payload, int target, Connection excepted) {
+    public void broadcast(Base.Payload payload, int target, Connection excepted) {
         for (Map.Entry<Integer, RecoverableConnection> entry : allConnections.entrySet()) {
             if (entry.getValue() == excepted) {
                 continue;
@@ -115,7 +115,7 @@ public class RecoverableConnectionManager {
                 InitialHandler initialHandler = new InitialHandler(context.coreX().serverId(), context.coreX().role(), context.coreX().startTime());
                 p.addLast("initialHandler", initialHandler);
                 initialHandler.setServerAuthHandler(auth -> context.executeFromIO(v -> {
-                    final long startTime = auth.startTime;
+                    final long startTime = auth.getStartTime();
 
                     RecoverableConnection conn = connection;
                     if (conn.getStartTime() == 0) {
@@ -168,28 +168,35 @@ public class RecoverableConnectionManager {
                 InitialHandler initialHandler = new InitialHandler(context.coreX().serverId(), context.coreX().role(), context.coreX().startTime());
                 p.addLast("initialHandler", initialHandler);
                 initialHandler.setServerAuthHandler(auth -> context.executeFromIO(v -> {
-                    final int serverId = auth.id;
-                    final int role = auth.role;
-                    final long startTime = auth.startTime;
+                    final int serverId = auth.getServerId();
+                    final int role = auth.getRole();
+                    final long startTime = auth.getStartTime();
                     final Channel channel = p.channel();
 
                     boolean requireNew = false;
                     if (allConnections.containsKey(serverId)) {
                         RecoverableConnection conn = allConnections.get(serverId);
                         if (conn.isOpen()) {
+                            logger.debug("----------> condition: {}", 1);
                             // 当前连接正常，关闭channel
-                            p.close();
+                            initialHandler.setPayloadHandler(msg -> {});
+                            channel.close();
+                            return;
                         } else {
                             // 对方已经重启
                             if (conn.getStartTime() != startTime) {
+                                logger.debug("----------> condition: {}", 2);
                                 close(conn);
                                 requireNew = true;
                             } else {
+                                logger.debug("----------> condition: {}", 3);
                                 conn.updateChannel(channel);
+                                initialHandler.setPayloadHandler(msg -> context.executeFromIO(v2 -> conn.onMsg(msg)));
                                 conn.onRecover();
                             }
                         }
                     } else {
+                        logger.debug("----------> condition: {}", 4);
                         requireNew = true;
                     }
 
@@ -209,10 +216,10 @@ public class RecoverableConnectionManager {
         }, resultHandler);
     }
 
-    public JsonObjectImpl info() {
-        JsonObjectImpl ret = new JsonObjectImpl();
+    public Map<String, String> info() {
+        Map<String, String> ret = new HashMap<>(allConnections.size());
         for (Map.Entry<Integer, RecoverableConnection> entry : allConnections.entrySet()) {
-            ret.put("" + entry.getKey(), entry.getValue().isOpen());
+            ret.put("" + entry.getKey(), String.valueOf(entry.getValue().isOpen()));
         }
         return ret;
     }

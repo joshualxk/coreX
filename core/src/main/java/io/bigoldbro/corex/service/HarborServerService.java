@@ -1,17 +1,15 @@
 package io.bigoldbro.corex.service;
 
 import io.bigoldbro.corex.*;
+import io.bigoldbro.corex.annotation.Value;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.exception.BizEx;
 import io.bigoldbro.corex.exception.BizException;
 import io.bigoldbro.corex.impl.RecoverableConnectionManager;
-import io.bigoldbro.corex.model.Broadcast;
-import io.bigoldbro.corex.model.Payload;
-import io.bigoldbro.corex.model.RpcRequest;
-import io.bigoldbro.corex.model.RpcResponse;
-import io.bigoldbro.corex.utils.CoreXUtil;
 import io.bigoldbro.corex.module.HarborServerModule;
+import io.bigoldbro.corex.proto.Base;
+import io.bigoldbro.corex.utils.CoreXUtil;
 
 /**
  * Created by Joshua on 2018/2/27.
@@ -20,19 +18,18 @@ public class HarborServerService extends SimpleModuleService implements HarborSe
 
     private RecoverableConnectionManager recoverableConnectionManager;
 
+    @Value("corex.harbor.port")
     private int port;
 
     @Override
     public void start(Future<Void> completeFuture) {
-        port = coreX().config().getHarborPort();
-
         recoverableConnectionManager = new RecoverableConnectionManager(context, false);
         recoverableConnectionManager.openHandler(this::handleConn);
         recoverableConnectionManager.bind(port, completeFuture);
     }
 
     @Override
-    protected void handleBroadcast(Msg msg, Payload payload, Broadcast broadcast) {
+    protected void handleBroadcast(Msg msg, Base.Payload payload, Base.Broadcast broadcast) {
         handleBroadcast(payload, broadcast, null);
     }
 
@@ -42,11 +39,11 @@ public class HarborServerService extends SimpleModuleService implements HarborSe
         conn.msgHandler(msg -> {
             logger.debug("on conn msg.");
 
-            if (msg instanceof Payload) {
-                Payload payload = (Payload) msg;
+            if (msg instanceof Base.Payload) {
+                Base.Payload payload = (Base.Payload) msg;
 
-                if (payload.hasRpcRequest()) {
-                    RpcRequest rpcRequest = payload.getRpcRequest();
+                if (payload.hasRequest()) {
+                    Base.Request rpcRequest = payload.getRequest();
 
                     String address = rpcRequest.getMethod().getModule();
                     if (CoreXUtil.needReply(payload.getId())) {
@@ -56,7 +53,7 @@ public class HarborServerService extends SimpleModuleService implements HarborSe
                     }
 
                 } else if (payload.hasBroadcast()) {
-                    Broadcast broadcast = payload.getBroadcast();
+                    Base.Broadcast broadcast = payload.getBroadcast();
                     handleBroadcast(payload, broadcast, conn);
                 }
             }
@@ -78,9 +75,9 @@ public class HarborServerService extends SimpleModuleService implements HarborSe
         });
     }
 
-    private Handler<AsyncResult<Payload>> resultHandler(long id, int requestId, Connection conn) {
+    private Handler<AsyncResult<Base.Payload>> resultHandler(long id, int requestId, Connection conn) {
         return ar -> {
-            Payload payload;
+            Base.Payload payload;
 
             if (ar.succeeded()) {
                 payload = ar.result();
@@ -93,9 +90,17 @@ public class HarborServerService extends SimpleModuleService implements HarborSe
                     th.printStackTrace();
                     bizEx = ExceptionDefine.SYSTEM_ERR;
                 }
-                RpcResponse rpcResponse = RpcResponse.newBizExRpcResponse(requestId, bizEx);
+                Base.Response rpcResponse = Base.Response.newBuilder()
+                        .setId(requestId)
+                        .setCode(bizEx.getCode())
+                        .setMsg(bizEx.getMessage())
+                        .setTimestamp(CoreXUtil.sysTime())
+                        .build();
 
-                payload = Payload.newPayload(id, rpcResponse);
+                payload = Base.Payload.newBuilder()
+                        .setId(id)
+                        .setResponse(rpcResponse)
+                        .build();
             }
 
             conn.write(payload);
@@ -104,7 +109,7 @@ public class HarborServerService extends SimpleModuleService implements HarborSe
 
     }
 
-    private void handleBroadcast(Payload payload, Broadcast broadcast, Connection excepted) {
+    private void handleBroadcast(Base.Payload payload, Base.Broadcast broadcast, Connection excepted) {
         coreX().onBroadcast(broadcast);
         if (broadcast.getRole() == ConstDefine.ROLE_LOCAL) {
             return;

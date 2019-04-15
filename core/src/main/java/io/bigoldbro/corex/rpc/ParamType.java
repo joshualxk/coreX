@@ -7,15 +7,16 @@ public enum ParamType {
     UNSUPPORTED,
 
     BOOLEAN,
+    BYTE,
     SHORT,
     INT,
     LONG,
     FLOAT,
     DOUBLE,
     STRING,
-    PROTO,
+    NET_DATA,
 
-    RAW_ARRAY, // 原始类型 e.g. boolean[] short[]
     ARRAY,     // 非原始类型 e.g Boolean[] Short[]
-    LIST,
+    LIST,      // 元素只能是非容器类型
+    MAP,       // k:string, v:非容器类型
 }

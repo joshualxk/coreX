@@ -1,13 +1,10 @@
 package io.bigoldbro.corex.login.service;
 
-import io.bigoldbro.corex.Callback;
-import io.bigoldbro.corex.impl.SucceededCallback;
-import io.bigoldbro.corex.json.JsonObject;
-import io.bigoldbro.corex.json.JsonObjectImpl;
-import io.bigoldbro.corex.service.SimpleModuleService;
 import io.bigoldbro.corex.module.LoginModule;
+import io.bigoldbro.corex.service.SimpleModuleService;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Joshua on 2018/3/15.
@@ -15,10 +12,10 @@ import java.util.List;
 public class LoginService extends SimpleModuleService implements LoginModule {
 
     @Override
-    public Callback<JsonObject> authorize(String token) {
-        JsonObject jsonObject = new JsonObjectImpl();
-        jsonObject.put("userId", "token" + token);
-        return new SucceededCallback<>(jsonObject);
+    public Map<String, String> authorize(String token) {
+        Map<String, String> map = new HashMap<>();
+        map.put("userId", "token" + token);
+        return map;
     }
 
     @Override

@@ -14,5 +14,5 @@ import java.util.Map;
 public interface HarborClientModule {
 
     @Api(value = "i", type = ConstDefine.AUTH_TYPE_ADMIN)
-    Map<String, Object> info();
+    Map<String, String> info();
 }

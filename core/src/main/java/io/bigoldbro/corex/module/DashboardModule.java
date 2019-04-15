@@ -1,9 +1,8 @@
 package io.bigoldbro.corex.module;
 
-import io.bigoldbro.corex.Callback;
+import io.bigoldbro.corex.Future;
 import io.bigoldbro.corex.annotation.Api;
 import io.bigoldbro.corex.annotation.Module;
-import io.bigoldbro.corex.annotation.Param;
 import io.bigoldbro.corex.define.ServiceNameDefine;
 
 import java.util.List;
@@ -18,11 +17,11 @@ import static io.bigoldbro.corex.define.ConstDefine.AUTH_TYPE_ADMIN;
 public interface DashboardModule {
 
     @Api(value = "i", type = AUTH_TYPE_ADMIN)
-    Map<String, Object> info();
+    Map<String, String> info();
 
     @Api(value = "kick", type = AUTH_TYPE_ADMIN)
-    Callback<Void> kick(@Param("1") List<String> userIds, @Param("2") int code, @Param("3") String msg);
+    Future<Map<String, String>> kick(List<String> userIds, int code, String msg);
 
     @Api(value = "push", type = AUTH_TYPE_ADMIN)
-    Callback<Void> push(@Param("1") List<String> channels, @Param("2") List<String> userIds, @Param("3") String topic, @Param("4") String msg);
+    void push(List<String> channels, List<String> userIds, String topic, String msg);
 }

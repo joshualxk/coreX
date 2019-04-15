@@ -593,38 +593,33 @@ public final class Base {
     int getId();
 
     /**
-     * <code>int32 type = 2;</code>
-     */
-    int getType();
-
-    /**
-     * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
      */
     boolean hasMethod();
     /**
-     * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
      */
     io.bigoldbro.corex.proto.Base.Method getMethod();
     /**
-     * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
      */
     io.bigoldbro.corex.proto.Base.MethodOrBuilder getMethodOrBuilder();
 
     /**
-     * <code>int64 timestamp = 4;</code>
+     * <code>int64 timestamp = 3;</code>
      */
     long getTimestamp();
 
     /**
-     * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
+     * <code>.io.bigoldbro.corex.proto.Body body = 4;</code>
      */
     boolean hasBody();
     /**
-     * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
+     * <code>.io.bigoldbro.corex.proto.Body body = 4;</code>
      */
     io.bigoldbro.corex.proto.Base.Body getBody();
     /**
-     * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
+     * <code>.io.bigoldbro.corex.proto.Body body = 4;</code>
      */
     io.bigoldbro.corex.proto.Base.BodyOrBuilder getBodyOrBuilder();
   }
@@ -672,12 +667,7 @@ public final class Base {
               id_ = input.readInt32();
               break;
             }
-            case 16: {
-
-              type_ = input.readInt32();
-              break;
-            }
-            case 26: {
+            case 18: {
               io.bigoldbro.corex.proto.Base.Method.Builder subBuilder = null;
               if (method_ != null) {
                 subBuilder = method_.toBuilder();
@@ -690,12 +680,12 @@ public final class Base {
 
               break;
             }
-            case 32: {
+            case 24: {
 
               timestamp_ = input.readInt64();
               break;
             }
-            case 42: {
+            case 34: {
               io.bigoldbro.corex.proto.Base.Body.Builder subBuilder = null;
               if (body_ != null) {
                 subBuilder = body_.toBuilder();
@@ -749,61 +739,52 @@ public final class Base {
       return id_;
     }
 
-    public static final int TYPE_FIELD_NUMBER = 2;
-    private int type_;
-    /**
-     * <code>int32 type = 2;</code>
-     */
-    public int getType() {
-      return type_;
-    }
-
-    public static final int METHOD_FIELD_NUMBER = 3;
+    public static final int METHOD_FIELD_NUMBER = 2;
     private io.bigoldbro.corex.proto.Base.Method method_;
     /**
-     * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
      */
     public boolean hasMethod() {
       return method_ != null;
     }
     /**
-     * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
      */
     public io.bigoldbro.corex.proto.Base.Method getMethod() {
       return method_ == null ? io.bigoldbro.corex.proto.Base.Method.getDefaultInstance() : method_;
     }
     /**
-     * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
      */
     public io.bigoldbro.corex.proto.Base.MethodOrBuilder getMethodOrBuilder() {
       return getMethod();
     }
 
-    public static final int TIMESTAMP_FIELD_NUMBER = 4;
+    public static final int TIMESTAMP_FIELD_NUMBER = 3;
     private long timestamp_;
     /**
-     * <code>int64 timestamp = 4;</code>
+     * <code>int64 timestamp = 3;</code>
      */
     public long getTimestamp() {
       return timestamp_;
     }
 
-    public static final int BODY_FIELD_NUMBER = 5;
+    public static final int BODY_FIELD_NUMBER = 4;
     private io.bigoldbro.corex.proto.Base.Body body_;
     /**
-     * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
+     * <code>.io.bigoldbro.corex.proto.Body body = 4;</code>
      */
     public boolean hasBody() {
       return body_ != null;
     }
     /**
-     * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
+     * <code>.io.bigoldbro.corex.proto.Body body = 4;</code>
      */
     public io.bigoldbro.corex.proto.Base.Body getBody() {
       return body_ == null ? io.bigoldbro.corex.proto.Base.Body.getDefaultInstance() : body_;
     }
     /**
-     * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
+     * <code>.io.bigoldbro.corex.proto.Body body = 4;</code>
      */
     public io.bigoldbro.corex.proto.Base.BodyOrBuilder getBodyOrBuilder() {
       return getBody();
@@ -826,17 +807,14 @@ public final class Base {
       if (id_ != 0) {
         output.writeInt32(1, id_);
       }
-      if (type_ != 0) {
-        output.writeInt32(2, type_);
-      }
       if (method_ != null) {
-        output.writeMessage(3, getMethod());
+        output.writeMessage(2, getMethod());
       }
       if (timestamp_ != 0L) {
-        output.writeInt64(4, timestamp_);
+        output.writeInt64(3, timestamp_);
       }
       if (body_ != null) {
-        output.writeMessage(5, getBody());
+        output.writeMessage(4, getBody());
       }
       unknownFields.writeTo(output);
     }
@@ -851,21 +829,17 @@ public final class Base {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(1, id_);
       }
-      if (type_ != 0) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, type_);
-      }
       if (method_ != null) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(3, getMethod());
+          .computeMessageSize(2, getMethod());
       }
       if (timestamp_ != 0L) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt64Size(4, timestamp_);
+          .computeInt64Size(3, timestamp_);
       }
       if (body_ != null) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(5, getBody());
+          .computeMessageSize(4, getBody());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -884,8 +858,6 @@ public final class Base {
 
       if (getId()
           != other.getId()) return false;
-      if (getType()
-          != other.getType()) return false;
       if (hasMethod() != other.hasMethod()) return false;
       if (hasMethod()) {
         if (!getMethod()
@@ -911,8 +883,6 @@ public final class Base {
       hash = (19 * hash) + getDescriptor().hashCode();
       hash = (37 * hash) + ID_FIELD_NUMBER;
       hash = (53 * hash) + getId();
-      hash = (37 * hash) + TYPE_FIELD_NUMBER;
-      hash = (53 * hash) + getType();
       if (hasMethod()) {
         hash = (37 * hash) + METHOD_FIELD_NUMBER;
         hash = (53 * hash) + getMethod().hashCode();
@@ -1059,8 +1029,6 @@ public final class Base {
         super.clear();
         id_ = 0;
 
-        type_ = 0;
-
         if (methodBuilder_ == null) {
           method_ = null;
         } else {
@@ -1102,7 +1070,6 @@ public final class Base {
       public io.bigoldbro.corex.proto.Base.ClientRequest buildPartial() {
         io.bigoldbro.corex.proto.Base.ClientRequest result = new io.bigoldbro.corex.proto.Base.ClientRequest(this);
         result.id_ = id_;
-        result.type_ = type_;
         if (methodBuilder_ == null) {
           result.method_ = method_;
         } else {
@@ -1164,9 +1131,6 @@ public final class Base {
         if (other == io.bigoldbro.corex.proto.Base.ClientRequest.getDefaultInstance()) return this;
         if (other.getId() != 0) {
           setId(other.getId());
-        }
-        if (other.getType() != 0) {
-          setType(other.getType());
         }
         if (other.hasMethod()) {
           mergeMethod(other.getMethod());
@@ -1232,43 +1196,17 @@ public final class Base {
         return this;
       }
 
-      private int type_ ;
-      /**
-       * <code>int32 type = 2;</code>
-       */
-      public int getType() {
-        return type_;
-      }
-      /**
-       * <code>int32 type = 2;</code>
-       */
-      public Builder setType(int value) {
-        
-        type_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>int32 type = 2;</code>
-       */
-      public Builder clearType() {
-        
-        type_ = 0;
-        onChanged();
-        return this;
-      }
-
       private io.bigoldbro.corex.proto.Base.Method method_;
       private com.google.protobuf.SingleFieldBuilderV3<
           io.bigoldbro.corex.proto.Base.Method, io.bigoldbro.corex.proto.Base.Method.Builder, io.bigoldbro.corex.proto.Base.MethodOrBuilder> methodBuilder_;
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public boolean hasMethod() {
         return methodBuilder_ != null || method_ != null;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public io.bigoldbro.corex.proto.Base.Method getMethod() {
         if (methodBuilder_ == null) {
@@ -1278,7 +1216,7 @@ public final class Base {
         }
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public Builder setMethod(io.bigoldbro.corex.proto.Base.Method value) {
         if (methodBuilder_ == null) {
@@ -1294,7 +1232,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public Builder setMethod(
           io.bigoldbro.corex.proto.Base.Method.Builder builderForValue) {
@@ -1308,7 +1246,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public Builder mergeMethod(io.bigoldbro.corex.proto.Base.Method value) {
         if (methodBuilder_ == null) {
@@ -1326,7 +1264,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public Builder clearMethod() {
         if (methodBuilder_ == null) {
@@ -1340,7 +1278,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public io.bigoldbro.corex.proto.Base.Method.Builder getMethodBuilder() {
         
@@ -1348,7 +1286,7 @@ public final class Base {
         return getMethodFieldBuilder().getBuilder();
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public io.bigoldbro.corex.proto.Base.MethodOrBuilder getMethodOrBuilder() {
         if (methodBuilder_ != null) {
@@ -1359,7 +1297,7 @@ public final class Base {
         }
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           io.bigoldbro.corex.proto.Base.Method, io.bigoldbro.corex.proto.Base.Method.Builder, io.bigoldbro.corex.proto.Base.MethodOrBuilder> 
@@ -1377,13 +1315,13 @@ public final class Base {
 
       private long timestamp_ ;
       /**
-       * <code>int64 timestamp = 4;</code>
+       * <code>int64 timestamp = 3;</code>
        */
       public long getTimestamp() {
         return timestamp_;
       }
       /**
-       * <code>int64 timestamp = 4;</code>
+       * <code>int64 timestamp = 3;</code>
        */
       public Builder setTimestamp(long value) {
         
@@ -1392,7 +1330,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>int64 timestamp = 4;</code>
+       * <code>int64 timestamp = 3;</code>
        */
       public Builder clearTimestamp() {
         
@@ -1405,13 +1343,13 @@ public final class Base {
       private com.google.protobuf.SingleFieldBuilderV3<
           io.bigoldbro.corex.proto.Base.Body, io.bigoldbro.corex.proto.Base.Body.Builder, io.bigoldbro.corex.proto.Base.BodyOrBuilder> bodyBuilder_;
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 4;</code>
        */
       public boolean hasBody() {
         return bodyBuilder_ != null || body_ != null;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 4;</code>
        */
       public io.bigoldbro.corex.proto.Base.Body getBody() {
         if (bodyBuilder_ == null) {
@@ -1421,7 +1359,7 @@ public final class Base {
         }
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 4;</code>
        */
       public Builder setBody(io.bigoldbro.corex.proto.Base.Body value) {
         if (bodyBuilder_ == null) {
@@ -1437,7 +1375,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 4;</code>
        */
       public Builder setBody(
           io.bigoldbro.corex.proto.Base.Body.Builder builderForValue) {
@@ -1451,7 +1389,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 4;</code>
        */
       public Builder mergeBody(io.bigoldbro.corex.proto.Base.Body value) {
         if (bodyBuilder_ == null) {
@@ -1469,7 +1407,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 4;</code>
        */
       public Builder clearBody() {
         if (bodyBuilder_ == null) {
@@ -1483,7 +1421,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 4;</code>
        */
       public io.bigoldbro.corex.proto.Base.Body.Builder getBodyBuilder() {
         
@@ -1491,7 +1429,7 @@ public final class Base {
         return getBodyFieldBuilder().getBuilder();
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 4;</code>
        */
       public io.bigoldbro.corex.proto.Base.BodyOrBuilder getBodyOrBuilder() {
         if (bodyBuilder_ != null) {
@@ -1502,7 +1440,7 @@ public final class Base {
         }
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           io.bigoldbro.corex.proto.Base.Body, io.bigoldbro.corex.proto.Base.Body.Builder, io.bigoldbro.corex.proto.Base.BodyOrBuilder> 
@@ -5889,51 +5827,46 @@ public final class Base {
     int getId();
 
     /**
-     * <code>int32 type = 2;</code>
-     */
-    int getType();
-
-    /**
-     * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
      */
     boolean hasMethod();
     /**
-     * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
      */
     io.bigoldbro.corex.proto.Base.Method getMethod();
     /**
-     * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
      */
     io.bigoldbro.corex.proto.Base.MethodOrBuilder getMethodOrBuilder();
 
     /**
-     * <code>.io.bigoldbro.corex.proto.Auth auth = 4;</code>
+     * <code>.io.bigoldbro.corex.proto.Auth auth = 3;</code>
      */
     boolean hasAuth();
     /**
-     * <code>.io.bigoldbro.corex.proto.Auth auth = 4;</code>
+     * <code>.io.bigoldbro.corex.proto.Auth auth = 3;</code>
      */
     io.bigoldbro.corex.proto.Base.Auth getAuth();
     /**
-     * <code>.io.bigoldbro.corex.proto.Auth auth = 4;</code>
+     * <code>.io.bigoldbro.corex.proto.Auth auth = 3;</code>
      */
     io.bigoldbro.corex.proto.Base.AuthOrBuilder getAuthOrBuilder();
 
     /**
-     * <code>int64 timestamp = 5;</code>
+     * <code>int64 timestamp = 4;</code>
      */
     long getTimestamp();
 
     /**
-     * <code>.io.bigoldbro.corex.proto.Body body = 6;</code>
+     * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
      */
     boolean hasBody();
     /**
-     * <code>.io.bigoldbro.corex.proto.Body body = 6;</code>
+     * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
      */
     io.bigoldbro.corex.proto.Base.Body getBody();
     /**
-     * <code>.io.bigoldbro.corex.proto.Body body = 6;</code>
+     * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
      */
     io.bigoldbro.corex.proto.Base.BodyOrBuilder getBodyOrBuilder();
   }
@@ -5981,12 +5914,7 @@ public final class Base {
               id_ = input.readInt32();
               break;
             }
-            case 16: {
-
-              type_ = input.readInt32();
-              break;
-            }
-            case 26: {
+            case 18: {
               io.bigoldbro.corex.proto.Base.Method.Builder subBuilder = null;
               if (method_ != null) {
                 subBuilder = method_.toBuilder();
@@ -5999,7 +5927,7 @@ public final class Base {
 
               break;
             }
-            case 34: {
+            case 26: {
               io.bigoldbro.corex.proto.Base.Auth.Builder subBuilder = null;
               if (auth_ != null) {
                 subBuilder = auth_.toBuilder();
@@ -6012,12 +5940,12 @@ public final class Base {
 
               break;
             }
-            case 40: {
+            case 32: {
 
               timestamp_ = input.readInt64();
               break;
             }
-            case 50: {
+            case 42: {
               io.bigoldbro.corex.proto.Base.Body.Builder subBuilder = null;
               if (body_ != null) {
                 subBuilder = body_.toBuilder();
@@ -6071,82 +5999,73 @@ public final class Base {
       return id_;
     }
 
-    public static final int TYPE_FIELD_NUMBER = 2;
-    private int type_;
-    /**
-     * <code>int32 type = 2;</code>
-     */
-    public int getType() {
-      return type_;
-    }
-
-    public static final int METHOD_FIELD_NUMBER = 3;
+    public static final int METHOD_FIELD_NUMBER = 2;
     private io.bigoldbro.corex.proto.Base.Method method_;
     /**
-     * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
      */
     public boolean hasMethod() {
       return method_ != null;
     }
     /**
-     * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
      */
     public io.bigoldbro.corex.proto.Base.Method getMethod() {
       return method_ == null ? io.bigoldbro.corex.proto.Base.Method.getDefaultInstance() : method_;
     }
     /**
-     * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
      */
     public io.bigoldbro.corex.proto.Base.MethodOrBuilder getMethodOrBuilder() {
       return getMethod();
     }
 
-    public static final int AUTH_FIELD_NUMBER = 4;
+    public static final int AUTH_FIELD_NUMBER = 3;
     private io.bigoldbro.corex.proto.Base.Auth auth_;
     /**
-     * <code>.io.bigoldbro.corex.proto.Auth auth = 4;</code>
+     * <code>.io.bigoldbro.corex.proto.Auth auth = 3;</code>
      */
     public boolean hasAuth() {
       return auth_ != null;
     }
     /**
-     * <code>.io.bigoldbro.corex.proto.Auth auth = 4;</code>
+     * <code>.io.bigoldbro.corex.proto.Auth auth = 3;</code>
      */
     public io.bigoldbro.corex.proto.Base.Auth getAuth() {
       return auth_ == null ? io.bigoldbro.corex.proto.Base.Auth.getDefaultInstance() : auth_;
     }
     /**
-     * <code>.io.bigoldbro.corex.proto.Auth auth = 4;</code>
+     * <code>.io.bigoldbro.corex.proto.Auth auth = 3;</code>
      */
     public io.bigoldbro.corex.proto.Base.AuthOrBuilder getAuthOrBuilder() {
       return getAuth();
     }
 
-    public static final int TIMESTAMP_FIELD_NUMBER = 5;
+    public static final int TIMESTAMP_FIELD_NUMBER = 4;
     private long timestamp_;
     /**
-     * <code>int64 timestamp = 5;</code>
+     * <code>int64 timestamp = 4;</code>
      */
     public long getTimestamp() {
       return timestamp_;
     }
 
-    public static final int BODY_FIELD_NUMBER = 6;
+    public static final int BODY_FIELD_NUMBER = 5;
     private io.bigoldbro.corex.proto.Base.Body body_;
     /**
-     * <code>.io.bigoldbro.corex.proto.Body body = 6;</code>
+     * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
      */
     public boolean hasBody() {
       return body_ != null;
     }
     /**
-     * <code>.io.bigoldbro.corex.proto.Body body = 6;</code>
+     * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
      */
     public io.bigoldbro.corex.proto.Base.Body getBody() {
       return body_ == null ? io.bigoldbro.corex.proto.Base.Body.getDefaultInstance() : body_;
     }
     /**
-     * <code>.io.bigoldbro.corex.proto.Body body = 6;</code>
+     * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
      */
     public io.bigoldbro.corex.proto.Base.BodyOrBuilder getBodyOrBuilder() {
       return getBody();
@@ -6169,20 +6088,17 @@ public final class Base {
       if (id_ != 0) {
         output.writeInt32(1, id_);
       }
-      if (type_ != 0) {
-        output.writeInt32(2, type_);
-      }
       if (method_ != null) {
-        output.writeMessage(3, getMethod());
+        output.writeMessage(2, getMethod());
       }
       if (auth_ != null) {
-        output.writeMessage(4, getAuth());
+        output.writeMessage(3, getAuth());
       }
       if (timestamp_ != 0L) {
-        output.writeInt64(5, timestamp_);
+        output.writeInt64(4, timestamp_);
       }
       if (body_ != null) {
-        output.writeMessage(6, getBody());
+        output.writeMessage(5, getBody());
       }
       unknownFields.writeTo(output);
     }
@@ -6197,25 +6113,21 @@ public final class Base {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(1, id_);
       }
-      if (type_ != 0) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, type_);
-      }
       if (method_ != null) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(3, getMethod());
+          .computeMessageSize(2, getMethod());
       }
       if (auth_ != null) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(4, getAuth());
+          .computeMessageSize(3, getAuth());
       }
       if (timestamp_ != 0L) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt64Size(5, timestamp_);
+          .computeInt64Size(4, timestamp_);
       }
       if (body_ != null) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(6, getBody());
+          .computeMessageSize(5, getBody());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -6234,8 +6146,6 @@ public final class Base {
 
       if (getId()
           != other.getId()) return false;
-      if (getType()
-          != other.getType()) return false;
       if (hasMethod() != other.hasMethod()) return false;
       if (hasMethod()) {
         if (!getMethod()
@@ -6266,8 +6176,6 @@ public final class Base {
       hash = (19 * hash) + getDescriptor().hashCode();
       hash = (37 * hash) + ID_FIELD_NUMBER;
       hash = (53 * hash) + getId();
-      hash = (37 * hash) + TYPE_FIELD_NUMBER;
-      hash = (53 * hash) + getType();
       if (hasMethod()) {
         hash = (37 * hash) + METHOD_FIELD_NUMBER;
         hash = (53 * hash) + getMethod().hashCode();
@@ -6418,8 +6326,6 @@ public final class Base {
         super.clear();
         id_ = 0;
 
-        type_ = 0;
-
         if (methodBuilder_ == null) {
           method_ = null;
         } else {
@@ -6467,7 +6373,6 @@ public final class Base {
       public io.bigoldbro.corex.proto.Base.Request buildPartial() {
         io.bigoldbro.corex.proto.Base.Request result = new io.bigoldbro.corex.proto.Base.Request(this);
         result.id_ = id_;
-        result.type_ = type_;
         if (methodBuilder_ == null) {
           result.method_ = method_;
         } else {
@@ -6534,9 +6439,6 @@ public final class Base {
         if (other == io.bigoldbro.corex.proto.Base.Request.getDefaultInstance()) return this;
         if (other.getId() != 0) {
           setId(other.getId());
-        }
-        if (other.getType() != 0) {
-          setType(other.getType());
         }
         if (other.hasMethod()) {
           mergeMethod(other.getMethod());
@@ -6605,43 +6507,17 @@ public final class Base {
         return this;
       }
 
-      private int type_ ;
-      /**
-       * <code>int32 type = 2;</code>
-       */
-      public int getType() {
-        return type_;
-      }
-      /**
-       * <code>int32 type = 2;</code>
-       */
-      public Builder setType(int value) {
-        
-        type_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>int32 type = 2;</code>
-       */
-      public Builder clearType() {
-        
-        type_ = 0;
-        onChanged();
-        return this;
-      }
-
       private io.bigoldbro.corex.proto.Base.Method method_;
       private com.google.protobuf.SingleFieldBuilderV3<
           io.bigoldbro.corex.proto.Base.Method, io.bigoldbro.corex.proto.Base.Method.Builder, io.bigoldbro.corex.proto.Base.MethodOrBuilder> methodBuilder_;
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public boolean hasMethod() {
         return methodBuilder_ != null || method_ != null;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public io.bigoldbro.corex.proto.Base.Method getMethod() {
         if (methodBuilder_ == null) {
@@ -6651,7 +6527,7 @@ public final class Base {
         }
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public Builder setMethod(io.bigoldbro.corex.proto.Base.Method value) {
         if (methodBuilder_ == null) {
@@ -6667,7 +6543,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public Builder setMethod(
           io.bigoldbro.corex.proto.Base.Method.Builder builderForValue) {
@@ -6681,7 +6557,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public Builder mergeMethod(io.bigoldbro.corex.proto.Base.Method value) {
         if (methodBuilder_ == null) {
@@ -6699,7 +6575,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public Builder clearMethod() {
         if (methodBuilder_ == null) {
@@ -6713,7 +6589,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public io.bigoldbro.corex.proto.Base.Method.Builder getMethodBuilder() {
         
@@ -6721,7 +6597,7 @@ public final class Base {
         return getMethodFieldBuilder().getBuilder();
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       public io.bigoldbro.corex.proto.Base.MethodOrBuilder getMethodOrBuilder() {
         if (methodBuilder_ != null) {
@@ -6732,7 +6608,7 @@ public final class Base {
         }
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Method method = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Method method = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           io.bigoldbro.corex.proto.Base.Method, io.bigoldbro.corex.proto.Base.Method.Builder, io.bigoldbro.corex.proto.Base.MethodOrBuilder> 
@@ -6752,13 +6628,13 @@ public final class Base {
       private com.google.protobuf.SingleFieldBuilderV3<
           io.bigoldbro.corex.proto.Base.Auth, io.bigoldbro.corex.proto.Base.Auth.Builder, io.bigoldbro.corex.proto.Base.AuthOrBuilder> authBuilder_;
       /**
-       * <code>.io.bigoldbro.corex.proto.Auth auth = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Auth auth = 3;</code>
        */
       public boolean hasAuth() {
         return authBuilder_ != null || auth_ != null;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Auth auth = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Auth auth = 3;</code>
        */
       public io.bigoldbro.corex.proto.Base.Auth getAuth() {
         if (authBuilder_ == null) {
@@ -6768,7 +6644,7 @@ public final class Base {
         }
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Auth auth = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Auth auth = 3;</code>
        */
       public Builder setAuth(io.bigoldbro.corex.proto.Base.Auth value) {
         if (authBuilder_ == null) {
@@ -6784,7 +6660,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Auth auth = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Auth auth = 3;</code>
        */
       public Builder setAuth(
           io.bigoldbro.corex.proto.Base.Auth.Builder builderForValue) {
@@ -6798,7 +6674,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Auth auth = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Auth auth = 3;</code>
        */
       public Builder mergeAuth(io.bigoldbro.corex.proto.Base.Auth value) {
         if (authBuilder_ == null) {
@@ -6816,7 +6692,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Auth auth = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Auth auth = 3;</code>
        */
       public Builder clearAuth() {
         if (authBuilder_ == null) {
@@ -6830,7 +6706,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Auth auth = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Auth auth = 3;</code>
        */
       public io.bigoldbro.corex.proto.Base.Auth.Builder getAuthBuilder() {
         
@@ -6838,7 +6714,7 @@ public final class Base {
         return getAuthFieldBuilder().getBuilder();
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Auth auth = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Auth auth = 3;</code>
        */
       public io.bigoldbro.corex.proto.Base.AuthOrBuilder getAuthOrBuilder() {
         if (authBuilder_ != null) {
@@ -6849,7 +6725,7 @@ public final class Base {
         }
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Auth auth = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Auth auth = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           io.bigoldbro.corex.proto.Base.Auth, io.bigoldbro.corex.proto.Base.Auth.Builder, io.bigoldbro.corex.proto.Base.AuthOrBuilder> 
@@ -6867,13 +6743,13 @@ public final class Base {
 
       private long timestamp_ ;
       /**
-       * <code>int64 timestamp = 5;</code>
+       * <code>int64 timestamp = 4;</code>
        */
       public long getTimestamp() {
         return timestamp_;
       }
       /**
-       * <code>int64 timestamp = 5;</code>
+       * <code>int64 timestamp = 4;</code>
        */
       public Builder setTimestamp(long value) {
         
@@ -6882,7 +6758,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>int64 timestamp = 5;</code>
+       * <code>int64 timestamp = 4;</code>
        */
       public Builder clearTimestamp() {
         
@@ -6895,13 +6771,13 @@ public final class Base {
       private com.google.protobuf.SingleFieldBuilderV3<
           io.bigoldbro.corex.proto.Base.Body, io.bigoldbro.corex.proto.Base.Body.Builder, io.bigoldbro.corex.proto.Base.BodyOrBuilder> bodyBuilder_;
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 6;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
        */
       public boolean hasBody() {
         return bodyBuilder_ != null || body_ != null;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 6;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
        */
       public io.bigoldbro.corex.proto.Base.Body getBody() {
         if (bodyBuilder_ == null) {
@@ -6911,7 +6787,7 @@ public final class Base {
         }
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 6;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
        */
       public Builder setBody(io.bigoldbro.corex.proto.Base.Body value) {
         if (bodyBuilder_ == null) {
@@ -6927,7 +6803,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 6;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
        */
       public Builder setBody(
           io.bigoldbro.corex.proto.Base.Body.Builder builderForValue) {
@@ -6941,7 +6817,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 6;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
        */
       public Builder mergeBody(io.bigoldbro.corex.proto.Base.Body value) {
         if (bodyBuilder_ == null) {
@@ -6959,7 +6835,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 6;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
        */
       public Builder clearBody() {
         if (bodyBuilder_ == null) {
@@ -6973,7 +6849,7 @@ public final class Base {
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 6;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
        */
       public io.bigoldbro.corex.proto.Base.Body.Builder getBodyBuilder() {
         
@@ -6981,7 +6857,7 @@ public final class Base {
         return getBodyFieldBuilder().getBuilder();
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 6;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
        */
       public io.bigoldbro.corex.proto.Base.BodyOrBuilder getBodyOrBuilder() {
         if (bodyBuilder_ != null) {
@@ -6992,7 +6868,7 @@ public final class Base {
         }
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Body body = 6;</code>
+       * <code>.io.bigoldbro.corex.proto.Body body = 5;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           io.bigoldbro.corex.proto.Base.Body, io.bigoldbro.corex.proto.Base.Body.Builder, io.bigoldbro.corex.proto.Base.BodyOrBuilder> 
@@ -8865,30 +8741,30 @@ public final class Base {
         getRoutesBytes(int index);
 
     /**
-     * <code>.io.bigoldbro.corex.proto.Request rpcRequest = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Request request = 3;</code>
      */
-    boolean hasRpcRequest();
+    boolean hasRequest();
     /**
-     * <code>.io.bigoldbro.corex.proto.Request rpcRequest = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Request request = 3;</code>
      */
-    io.bigoldbro.corex.proto.Base.Request getRpcRequest();
+    io.bigoldbro.corex.proto.Base.Request getRequest();
     /**
-     * <code>.io.bigoldbro.corex.proto.Request rpcRequest = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Request request = 3;</code>
      */
-    io.bigoldbro.corex.proto.Base.RequestOrBuilder getRpcRequestOrBuilder();
+    io.bigoldbro.corex.proto.Base.RequestOrBuilder getRequestOrBuilder();
 
     /**
-     * <code>.io.bigoldbro.corex.proto.Response rpcResponse = 4;</code>
+     * <code>.io.bigoldbro.corex.proto.Response response = 4;</code>
      */
-    boolean hasRpcResponse();
+    boolean hasResponse();
     /**
-     * <code>.io.bigoldbro.corex.proto.Response rpcResponse = 4;</code>
+     * <code>.io.bigoldbro.corex.proto.Response response = 4;</code>
      */
-    io.bigoldbro.corex.proto.Base.Response getRpcResponse();
+    io.bigoldbro.corex.proto.Base.Response getResponse();
     /**
-     * <code>.io.bigoldbro.corex.proto.Response rpcResponse = 4;</code>
+     * <code>.io.bigoldbro.corex.proto.Response response = 4;</code>
      */
-    io.bigoldbro.corex.proto.Base.ResponseOrBuilder getRpcResponseOrBuilder();
+    io.bigoldbro.corex.proto.Base.ResponseOrBuilder getResponseOrBuilder();
 
     /**
      * <code>.io.bigoldbro.corex.proto.Broadcast broadcast = 5;</code>
@@ -9068,8 +8944,8 @@ public final class Base {
     private java.lang.Object body_;
     public enum BodyCase
         implements com.google.protobuf.Internal.EnumLite {
-      RPCREQUEST(3),
-      RPCRESPONSE(4),
+      REQUEST(3),
+      RESPONSE(4),
       BROADCAST(5),
       PING(6),
       BODY_NOT_SET(0);
@@ -9087,8 +8963,8 @@ public final class Base {
 
       public static BodyCase forNumber(int value) {
         switch (value) {
-          case 3: return RPCREQUEST;
-          case 4: return RPCRESPONSE;
+          case 3: return REQUEST;
+          case 4: return RESPONSE;
           case 5: return BROADCAST;
           case 6: return PING;
           case 0: return BODY_NOT_SET;
@@ -9144,52 +9020,52 @@ public final class Base {
       return routes_.getByteString(index);
     }
 
-    public static final int RPCREQUEST_FIELD_NUMBER = 3;
+    public static final int REQUEST_FIELD_NUMBER = 3;
     /**
-     * <code>.io.bigoldbro.corex.proto.Request rpcRequest = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Request request = 3;</code>
      */
-    public boolean hasRpcRequest() {
+    public boolean hasRequest() {
       return bodyCase_ == 3;
     }
     /**
-     * <code>.io.bigoldbro.corex.proto.Request rpcRequest = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Request request = 3;</code>
      */
-    public io.bigoldbro.corex.proto.Base.Request getRpcRequest() {
+    public io.bigoldbro.corex.proto.Base.Request getRequest() {
       if (bodyCase_ == 3) {
          return (io.bigoldbro.corex.proto.Base.Request) body_;
       }
       return io.bigoldbro.corex.proto.Base.Request.getDefaultInstance();
     }
     /**
-     * <code>.io.bigoldbro.corex.proto.Request rpcRequest = 3;</code>
+     * <code>.io.bigoldbro.corex.proto.Request request = 3;</code>
      */
-    public io.bigoldbro.corex.proto.Base.RequestOrBuilder getRpcRequestOrBuilder() {
+    public io.bigoldbro.corex.proto.Base.RequestOrBuilder getRequestOrBuilder() {
       if (bodyCase_ == 3) {
          return (io.bigoldbro.corex.proto.Base.Request) body_;
       }
       return io.bigoldbro.corex.proto.Base.Request.getDefaultInstance();
     }
 
-    public static final int RPCRESPONSE_FIELD_NUMBER = 4;
+    public static final int RESPONSE_FIELD_NUMBER = 4;
     /**
-     * <code>.io.bigoldbro.corex.proto.Response rpcResponse = 4;</code>
+     * <code>.io.bigoldbro.corex.proto.Response response = 4;</code>
      */
-    public boolean hasRpcResponse() {
+    public boolean hasResponse() {
       return bodyCase_ == 4;
     }
     /**
-     * <code>.io.bigoldbro.corex.proto.Response rpcResponse = 4;</code>
+     * <code>.io.bigoldbro.corex.proto.Response response = 4;</code>
      */
-    public io.bigoldbro.corex.proto.Base.Response getRpcResponse() {
+    public io.bigoldbro.corex.proto.Base.Response getResponse() {
       if (bodyCase_ == 4) {
          return (io.bigoldbro.corex.proto.Base.Response) body_;
       }
       return io.bigoldbro.corex.proto.Base.Response.getDefaultInstance();
     }
     /**
-     * <code>.io.bigoldbro.corex.proto.Response rpcResponse = 4;</code>
+     * <code>.io.bigoldbro.corex.proto.Response response = 4;</code>
      */
-    public io.bigoldbro.corex.proto.Base.ResponseOrBuilder getRpcResponseOrBuilder() {
+    public io.bigoldbro.corex.proto.Base.ResponseOrBuilder getResponseOrBuilder() {
       if (bodyCase_ == 4) {
          return (io.bigoldbro.corex.proto.Base.Response) body_;
       }
@@ -9339,12 +9215,12 @@ public final class Base {
       if (!getBodyCase().equals(other.getBodyCase())) return false;
       switch (bodyCase_) {
         case 3:
-          if (!getRpcRequest()
-              .equals(other.getRpcRequest())) return false;
+          if (!getRequest()
+              .equals(other.getRequest())) return false;
           break;
         case 4:
-          if (!getRpcResponse()
-              .equals(other.getRpcResponse())) return false;
+          if (!getResponse()
+              .equals(other.getResponse())) return false;
           break;
         case 5:
           if (!getBroadcast()
@@ -9377,12 +9253,12 @@ public final class Base {
       }
       switch (bodyCase_) {
         case 3:
-          hash = (37 * hash) + RPCREQUEST_FIELD_NUMBER;
-          hash = (53 * hash) + getRpcRequest().hashCode();
+          hash = (37 * hash) + REQUEST_FIELD_NUMBER;
+          hash = (53 * hash) + getRequest().hashCode();
           break;
         case 4:
-          hash = (37 * hash) + RPCRESPONSE_FIELD_NUMBER;
-          hash = (53 * hash) + getRpcResponse().hashCode();
+          hash = (37 * hash) + RESPONSE_FIELD_NUMBER;
+          hash = (53 * hash) + getResponse().hashCode();
           break;
         case 5:
           hash = (37 * hash) + BROADCAST_FIELD_NUMBER;
@@ -9569,17 +9445,17 @@ public final class Base {
         }
         result.routes_ = routes_;
         if (bodyCase_ == 3) {
-          if (rpcRequestBuilder_ == null) {
+          if (requestBuilder_ == null) {
             result.body_ = body_;
           } else {
-            result.body_ = rpcRequestBuilder_.build();
+            result.body_ = requestBuilder_.build();
           }
         }
         if (bodyCase_ == 4) {
-          if (rpcResponseBuilder_ == null) {
+          if (responseBuilder_ == null) {
             result.body_ = body_;
           } else {
-            result.body_ = rpcResponseBuilder_.build();
+            result.body_ = responseBuilder_.build();
           }
         }
         if (bodyCase_ == 5) {
@@ -9660,12 +9536,12 @@ public final class Base {
           onChanged();
         }
         switch (other.getBodyCase()) {
-          case RPCREQUEST: {
-            mergeRpcRequest(other.getRpcRequest());
+          case REQUEST: {
+            mergeRequest(other.getRequest());
             break;
           }
-          case RPCRESPONSE: {
-            mergeRpcResponse(other.getRpcResponse());
+          case RESPONSE: {
+            mergeResponse(other.getResponse());
             break;
           }
           case BROADCAST: {
@@ -9846,64 +9722,64 @@ public final class Base {
       }
 
       private com.google.protobuf.SingleFieldBuilderV3<
-          io.bigoldbro.corex.proto.Base.Request, io.bigoldbro.corex.proto.Base.Request.Builder, io.bigoldbro.corex.proto.Base.RequestOrBuilder> rpcRequestBuilder_;
+          io.bigoldbro.corex.proto.Base.Request, io.bigoldbro.corex.proto.Base.Request.Builder, io.bigoldbro.corex.proto.Base.RequestOrBuilder> requestBuilder_;
       /**
-       * <code>.io.bigoldbro.corex.proto.Request rpcRequest = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Request request = 3;</code>
        */
-      public boolean hasRpcRequest() {
+      public boolean hasRequest() {
         return bodyCase_ == 3;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Request rpcRequest = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Request request = 3;</code>
        */
-      public io.bigoldbro.corex.proto.Base.Request getRpcRequest() {
-        if (rpcRequestBuilder_ == null) {
+      public io.bigoldbro.corex.proto.Base.Request getRequest() {
+        if (requestBuilder_ == null) {
           if (bodyCase_ == 3) {
             return (io.bigoldbro.corex.proto.Base.Request) body_;
           }
           return io.bigoldbro.corex.proto.Base.Request.getDefaultInstance();
         } else {
           if (bodyCase_ == 3) {
-            return rpcRequestBuilder_.getMessage();
+            return requestBuilder_.getMessage();
           }
           return io.bigoldbro.corex.proto.Base.Request.getDefaultInstance();
         }
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Request rpcRequest = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Request request = 3;</code>
        */
-      public Builder setRpcRequest(io.bigoldbro.corex.proto.Base.Request value) {
-        if (rpcRequestBuilder_ == null) {
+      public Builder setRequest(io.bigoldbro.corex.proto.Base.Request value) {
+        if (requestBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
           body_ = value;
           onChanged();
         } else {
-          rpcRequestBuilder_.setMessage(value);
+          requestBuilder_.setMessage(value);
         }
         bodyCase_ = 3;
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Request rpcRequest = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Request request = 3;</code>
        */
-      public Builder setRpcRequest(
+      public Builder setRequest(
           io.bigoldbro.corex.proto.Base.Request.Builder builderForValue) {
-        if (rpcRequestBuilder_ == null) {
+        if (requestBuilder_ == null) {
           body_ = builderForValue.build();
           onChanged();
         } else {
-          rpcRequestBuilder_.setMessage(builderForValue.build());
+          requestBuilder_.setMessage(builderForValue.build());
         }
         bodyCase_ = 3;
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Request rpcRequest = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Request request = 3;</code>
        */
-      public Builder mergeRpcRequest(io.bigoldbro.corex.proto.Base.Request value) {
-        if (rpcRequestBuilder_ == null) {
+      public Builder mergeRequest(io.bigoldbro.corex.proto.Base.Request value) {
+        if (requestBuilder_ == null) {
           if (bodyCase_ == 3 &&
               body_ != io.bigoldbro.corex.proto.Base.Request.getDefaultInstance()) {
             body_ = io.bigoldbro.corex.proto.Base.Request.newBuilder((io.bigoldbro.corex.proto.Base.Request) body_)
@@ -9914,18 +9790,18 @@ public final class Base {
           onChanged();
         } else {
           if (bodyCase_ == 3) {
-            rpcRequestBuilder_.mergeFrom(value);
+            requestBuilder_.mergeFrom(value);
           }
-          rpcRequestBuilder_.setMessage(value);
+          requestBuilder_.setMessage(value);
         }
         bodyCase_ = 3;
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Request rpcRequest = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Request request = 3;</code>
        */
-      public Builder clearRpcRequest() {
-        if (rpcRequestBuilder_ == null) {
+      public Builder clearRequest() {
+        if (requestBuilder_ == null) {
           if (bodyCase_ == 3) {
             bodyCase_ = 0;
             body_ = null;
@@ -9936,22 +9812,22 @@ public final class Base {
             bodyCase_ = 0;
             body_ = null;
           }
-          rpcRequestBuilder_.clear();
+          requestBuilder_.clear();
         }
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Request rpcRequest = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Request request = 3;</code>
        */
-      public io.bigoldbro.corex.proto.Base.Request.Builder getRpcRequestBuilder() {
-        return getRpcRequestFieldBuilder().getBuilder();
+      public io.bigoldbro.corex.proto.Base.Request.Builder getRequestBuilder() {
+        return getRequestFieldBuilder().getBuilder();
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Request rpcRequest = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Request request = 3;</code>
        */
-      public io.bigoldbro.corex.proto.Base.RequestOrBuilder getRpcRequestOrBuilder() {
-        if ((bodyCase_ == 3) && (rpcRequestBuilder_ != null)) {
-          return rpcRequestBuilder_.getMessageOrBuilder();
+      public io.bigoldbro.corex.proto.Base.RequestOrBuilder getRequestOrBuilder() {
+        if ((bodyCase_ == 3) && (requestBuilder_ != null)) {
+          return requestBuilder_.getMessageOrBuilder();
         } else {
           if (bodyCase_ == 3) {
             return (io.bigoldbro.corex.proto.Base.Request) body_;
@@ -9960,16 +9836,16 @@ public final class Base {
         }
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Request rpcRequest = 3;</code>
+       * <code>.io.bigoldbro.corex.proto.Request request = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           io.bigoldbro.corex.proto.Base.Request, io.bigoldbro.corex.proto.Base.Request.Builder, io.bigoldbro.corex.proto.Base.RequestOrBuilder> 
-          getRpcRequestFieldBuilder() {
-        if (rpcRequestBuilder_ == null) {
+          getRequestFieldBuilder() {
+        if (requestBuilder_ == null) {
           if (!(bodyCase_ == 3)) {
             body_ = io.bigoldbro.corex.proto.Base.Request.getDefaultInstance();
           }
-          rpcRequestBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+          requestBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
               io.bigoldbro.corex.proto.Base.Request, io.bigoldbro.corex.proto.Base.Request.Builder, io.bigoldbro.corex.proto.Base.RequestOrBuilder>(
                   (io.bigoldbro.corex.proto.Base.Request) body_,
                   getParentForChildren(),
@@ -9978,68 +9854,68 @@ public final class Base {
         }
         bodyCase_ = 3;
         onChanged();;
-        return rpcRequestBuilder_;
+        return requestBuilder_;
       }
 
       private com.google.protobuf.SingleFieldBuilderV3<
-          io.bigoldbro.corex.proto.Base.Response, io.bigoldbro.corex.proto.Base.Response.Builder, io.bigoldbro.corex.proto.Base.ResponseOrBuilder> rpcResponseBuilder_;
+          io.bigoldbro.corex.proto.Base.Response, io.bigoldbro.corex.proto.Base.Response.Builder, io.bigoldbro.corex.proto.Base.ResponseOrBuilder> responseBuilder_;
       /**
-       * <code>.io.bigoldbro.corex.proto.Response rpcResponse = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Response response = 4;</code>
        */
-      public boolean hasRpcResponse() {
+      public boolean hasResponse() {
         return bodyCase_ == 4;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Response rpcResponse = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Response response = 4;</code>
        */
-      public io.bigoldbro.corex.proto.Base.Response getRpcResponse() {
-        if (rpcResponseBuilder_ == null) {
+      public io.bigoldbro.corex.proto.Base.Response getResponse() {
+        if (responseBuilder_ == null) {
           if (bodyCase_ == 4) {
             return (io.bigoldbro.corex.proto.Base.Response) body_;
           }
           return io.bigoldbro.corex.proto.Base.Response.getDefaultInstance();
         } else {
           if (bodyCase_ == 4) {
-            return rpcResponseBuilder_.getMessage();
+            return responseBuilder_.getMessage();
           }
           return io.bigoldbro.corex.proto.Base.Response.getDefaultInstance();
         }
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Response rpcResponse = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Response response = 4;</code>
        */
-      public Builder setRpcResponse(io.bigoldbro.corex.proto.Base.Response value) {
-        if (rpcResponseBuilder_ == null) {
+      public Builder setResponse(io.bigoldbro.corex.proto.Base.Response value) {
+        if (responseBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
           body_ = value;
           onChanged();
         } else {
-          rpcResponseBuilder_.setMessage(value);
+          responseBuilder_.setMessage(value);
         }
         bodyCase_ = 4;
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Response rpcResponse = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Response response = 4;</code>
        */
-      public Builder setRpcResponse(
+      public Builder setResponse(
           io.bigoldbro.corex.proto.Base.Response.Builder builderForValue) {
-        if (rpcResponseBuilder_ == null) {
+        if (responseBuilder_ == null) {
           body_ = builderForValue.build();
           onChanged();
         } else {
-          rpcResponseBuilder_.setMessage(builderForValue.build());
+          responseBuilder_.setMessage(builderForValue.build());
         }
         bodyCase_ = 4;
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Response rpcResponse = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Response response = 4;</code>
        */
-      public Builder mergeRpcResponse(io.bigoldbro.corex.proto.Base.Response value) {
-        if (rpcResponseBuilder_ == null) {
+      public Builder mergeResponse(io.bigoldbro.corex.proto.Base.Response value) {
+        if (responseBuilder_ == null) {
           if (bodyCase_ == 4 &&
               body_ != io.bigoldbro.corex.proto.Base.Response.getDefaultInstance()) {
             body_ = io.bigoldbro.corex.proto.Base.Response.newBuilder((io.bigoldbro.corex.proto.Base.Response) body_)
@@ -10050,18 +9926,18 @@ public final class Base {
           onChanged();
         } else {
           if (bodyCase_ == 4) {
-            rpcResponseBuilder_.mergeFrom(value);
+            responseBuilder_.mergeFrom(value);
           }
-          rpcResponseBuilder_.setMessage(value);
+          responseBuilder_.setMessage(value);
         }
         bodyCase_ = 4;
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Response rpcResponse = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Response response = 4;</code>
        */
-      public Builder clearRpcResponse() {
-        if (rpcResponseBuilder_ == null) {
+      public Builder clearResponse() {
+        if (responseBuilder_ == null) {
           if (bodyCase_ == 4) {
             bodyCase_ = 0;
             body_ = null;
@@ -10072,22 +9948,22 @@ public final class Base {
             bodyCase_ = 0;
             body_ = null;
           }
-          rpcResponseBuilder_.clear();
+          responseBuilder_.clear();
         }
         return this;
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Response rpcResponse = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Response response = 4;</code>
        */
-      public io.bigoldbro.corex.proto.Base.Response.Builder getRpcResponseBuilder() {
-        return getRpcResponseFieldBuilder().getBuilder();
+      public io.bigoldbro.corex.proto.Base.Response.Builder getResponseBuilder() {
+        return getResponseFieldBuilder().getBuilder();
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Response rpcResponse = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Response response = 4;</code>
        */
-      public io.bigoldbro.corex.proto.Base.ResponseOrBuilder getRpcResponseOrBuilder() {
-        if ((bodyCase_ == 4) && (rpcResponseBuilder_ != null)) {
-          return rpcResponseBuilder_.getMessageOrBuilder();
+      public io.bigoldbro.corex.proto.Base.ResponseOrBuilder getResponseOrBuilder() {
+        if ((bodyCase_ == 4) && (responseBuilder_ != null)) {
+          return responseBuilder_.getMessageOrBuilder();
         } else {
           if (bodyCase_ == 4) {
             return (io.bigoldbro.corex.proto.Base.Response) body_;
@@ -10096,16 +9972,16 @@ public final class Base {
         }
       }
       /**
-       * <code>.io.bigoldbro.corex.proto.Response rpcResponse = 4;</code>
+       * <code>.io.bigoldbro.corex.proto.Response response = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           io.bigoldbro.corex.proto.Base.Response, io.bigoldbro.corex.proto.Base.Response.Builder, io.bigoldbro.corex.proto.Base.ResponseOrBuilder> 
-          getRpcResponseFieldBuilder() {
-        if (rpcResponseBuilder_ == null) {
+          getResponseFieldBuilder() {
+        if (responseBuilder_ == null) {
           if (!(bodyCase_ == 4)) {
             body_ = io.bigoldbro.corex.proto.Base.Response.getDefaultInstance();
           }
-          rpcResponseBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+          responseBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
               io.bigoldbro.corex.proto.Base.Response, io.bigoldbro.corex.proto.Base.Response.Builder, io.bigoldbro.corex.proto.Base.ResponseOrBuilder>(
                   (io.bigoldbro.corex.proto.Base.Response) body_,
                   getParentForChildren(),
@@ -10114,7 +9990,7 @@ public final class Base {
         }
         bodyCase_ = 4;
         onChanged();;
-        return rpcResponseBuilder_;
+        return responseBuilder_;
       }
 
       private com.google.protobuf.SingleFieldBuilderV3<
@@ -10506,41 +10382,40 @@ public final class Base {
   static {
     java.lang.String[] descriptorData = {
       "\n\nbase.proto\022\030io.bigoldbro.corex.proto\"\026" +
-      "\n\004Body\022\016\n\006fields\030\001 \003(\014\"\234\001\n\rClientRequest" +
-      "\022\n\n\002id\030\001 \001(\005\022\014\n\004type\030\002 \001(\005\0220\n\006method\030\003 \001" +
-      "(\0132 .io.bigoldbro.corex.proto.Method\022\021\n\t" +
-      "timestamp\030\004 \001(\003\022,\n\004body\030\005 \001(\0132\036.io.bigol" +
-      "dbro.corex.proto.Body\"6\n\006Method\022\016\n\006modul" +
-      "e\030\001 \001(\t\022\013\n\003api\030\002 \001(\t\022\017\n\007version\030\003 \001(\t\"r\n" +
-      "\010Response\022\n\n\002id\030\001 \001(\005\022\014\n\004code\030\002 \001(\005\022\013\n\003m" +
-      "sg\030\003 \001(\t\022\021\n\ttimestamp\030\004 \001(\003\022,\n\004body\030\005 \001(" +
-      "\0132\036.io.bigoldbro.corex.proto.Body\"V\n\004Pus" +
-      "h\022\r\n\005topic\030\001 \001(\t\022\021\n\ttimestamp\030\002 \001(\003\022,\n\004b" +
-      "ody\030\003 \001(\0132\036.io.bigoldbro.corex.proto.Bod" +
-      "y\"\273\001\n\rClientPayload\022:\n\007request\030\001 \001(\0132\'.i" +
-      "o.bigoldbro.corex.proto.ClientRequestH\000\022" +
-      "6\n\010response\030\002 \001(\0132\".io.bigoldbro.corex.p" +
-      "roto.ResponseH\000\022.\n\004push\030\003 \001(\0132\036.io.bigol" +
-      "dbro.corex.proto.PushH\000B\006\n\004body\"#\n\004Auth\022" +
-      "\014\n\004type\030\001 \001(\005\022\r\n\005token\030\002 \001(\t\"\304\001\n\007Request" +
-      "\022\n\n\002id\030\001 \001(\005\022\014\n\004type\030\002 \001(\005\0220\n\006method\030\003 \001" +
-      "(\0132 .io.bigoldbro.corex.proto.Method\022,\n\004" +
-      "auth\030\004 \001(\0132\036.io.bigoldbro.corex.proto.Au" +
-      "th\022\021\n\ttimestamp\030\005 \001(\003\022,\n\004body\030\006 \001(\0132\036.io" +
-      ".bigoldbro.corex.proto.Body\"|\n\tBroadcast" +
-      "\022\020\n\010internal\030\001 \001(\010\022\014\n\004role\030\002 \001(\005\022\020\n\010chan" +
-      "nels\030\003 \003(\t\022\017\n\007userIds\030\004 \003(\t\022,\n\004push\030\005 \001(" +
-      "\0132\036.io.bigoldbro.corex.proto.Push\"L\n\004Pin" +
-      "g\022\020\n\010serverId\030\001 \001(\005\022\014\n\004role\030\002 \001(\005\022\021\n\tsta" +
-      "rtTime\030\003 \001(\003\022\021\n\ttimestamp\030\004 \001(\003\"\213\002\n\007Payl" +
-      "oad\022\n\n\002id\030\001 \001(\003\022\016\n\006routes\030\002 \003(\t\0227\n\nrpcRe" +
-      "quest\030\003 \001(\0132!.io.bigoldbro.corex.proto.R" +
-      "equestH\000\0229\n\013rpcResponse\030\004 \001(\0132\".io.bigol" +
-      "dbro.corex.proto.ResponseH\000\0228\n\tbroadcast" +
-      "\030\005 \001(\0132#.io.bigoldbro.corex.proto.Broadc" +
-      "astH\000\022.\n\004ping\030\006 \001(\0132\036.io.bigoldbro.corex" +
-      ".proto.PingH\000B\006\n\004bodyB\"\n\030io.bigoldbro.co" +
-      "rex.protoB\004BaseP\000b\006proto3"
+      "\n\004Body\022\016\n\006fields\030\001 \003(\014\"\216\001\n\rClientRequest" +
+      "\022\n\n\002id\030\001 \001(\005\0220\n\006method\030\002 \001(\0132 .io.bigold" +
+      "bro.corex.proto.Method\022\021\n\ttimestamp\030\003 \001(" +
+      "\003\022,\n\004body\030\004 \001(\0132\036.io.bigoldbro.corex.pro" +
+      "to.Body\"6\n\006Method\022\016\n\006module\030\001 \001(\t\022\013\n\003api" +
+      "\030\002 \001(\t\022\017\n\007version\030\003 \001(\t\"r\n\010Response\022\n\n\002i" +
+      "d\030\001 \001(\005\022\014\n\004code\030\002 \001(\005\022\013\n\003msg\030\003 \001(\t\022\021\n\tti" +
+      "mestamp\030\004 \001(\003\022,\n\004body\030\005 \001(\0132\036.io.bigoldb" +
+      "ro.corex.proto.Body\"V\n\004Push\022\r\n\005topic\030\001 \001" +
+      "(\t\022\021\n\ttimestamp\030\002 \001(\003\022,\n\004body\030\003 \001(\0132\036.io" +
+      ".bigoldbro.corex.proto.Body\"\273\001\n\rClientPa" +
+      "yload\022:\n\007request\030\001 \001(\0132\'.io.bigoldbro.co" +
+      "rex.proto.ClientRequestH\000\0226\n\010response\030\002 " +
+      "\001(\0132\".io.bigoldbro.corex.proto.ResponseH" +
+      "\000\022.\n\004push\030\003 \001(\0132\036.io.bigoldbro.corex.pro" +
+      "to.PushH\000B\006\n\004body\"#\n\004Auth\022\014\n\004type\030\001 \001(\005\022" +
+      "\r\n\005token\030\002 \001(\t\"\266\001\n\007Request\022\n\n\002id\030\001 \001(\005\0220" +
+      "\n\006method\030\002 \001(\0132 .io.bigoldbro.corex.prot" +
+      "o.Method\022,\n\004auth\030\003 \001(\0132\036.io.bigoldbro.co" +
+      "rex.proto.Auth\022\021\n\ttimestamp\030\004 \001(\003\022,\n\004bod" +
+      "y\030\005 \001(\0132\036.io.bigoldbro.corex.proto.Body\"" +
+      "|\n\tBroadcast\022\020\n\010internal\030\001 \001(\010\022\014\n\004role\030\002" +
+      " \001(\005\022\020\n\010channels\030\003 \003(\t\022\017\n\007userIds\030\004 \003(\t\022" +
+      ",\n\004push\030\005 \001(\0132\036.io.bigoldbro.corex.proto" +
+      ".Push\"L\n\004Ping\022\020\n\010serverId\030\001 \001(\005\022\014\n\004role\030" +
+      "\002 \001(\005\022\021\n\tstartTime\030\003 \001(\003\022\021\n\ttimestamp\030\004 " +
+      "\001(\003\"\205\002\n\007Payload\022\n\n\002id\030\001 \001(\003\022\016\n\006routes\030\002 " +
+      "\003(\t\0224\n\007request\030\003 \001(\0132!.io.bigoldbro.core" +
+      "x.proto.RequestH\000\0226\n\010response\030\004 \001(\0132\".io" +
+      ".bigoldbro.corex.proto.ResponseH\000\0228\n\tbro" +
+      "adcast\030\005 \001(\0132#.io.bigoldbro.corex.proto." +
+      "BroadcastH\000\022.\n\004ping\030\006 \001(\0132\036.io.bigoldbro" +
+      ".corex.proto.PingH\000B\006\n\004bodyB\"\n\030io.bigold" +
+      "bro.corex.protoB\004BaseP\000b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -10565,7 +10440,7 @@ public final class Base {
     internal_static_io_bigoldbro_corex_proto_ClientRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_io_bigoldbro_corex_proto_ClientRequest_descriptor,
-        new java.lang.String[] { "Id", "Type", "Method", "Timestamp", "Body", });
+        new java.lang.String[] { "Id", "Method", "Timestamp", "Body", });
     internal_static_io_bigoldbro_corex_proto_Method_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_io_bigoldbro_corex_proto_Method_fieldAccessorTable = new
@@ -10601,7 +10476,7 @@ public final class Base {
     internal_static_io_bigoldbro_corex_proto_Request_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_io_bigoldbro_corex_proto_Request_descriptor,
-        new java.lang.String[] { "Id", "Type", "Method", "Auth", "Timestamp", "Body", });
+        new java.lang.String[] { "Id", "Method", "Auth", "Timestamp", "Body", });
     internal_static_io_bigoldbro_corex_proto_Broadcast_descriptor =
       getDescriptor().getMessageTypes().get(8);
     internal_static_io_bigoldbro_corex_proto_Broadcast_fieldAccessorTable = new
@@ -10619,7 +10494,7 @@ public final class Base {
     internal_static_io_bigoldbro_corex_proto_Payload_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_io_bigoldbro_corex_proto_Payload_descriptor,
-        new java.lang.String[] { "Id", "Routes", "RpcRequest", "RpcResponse", "Broadcast", "Ping", "Body", });
+        new java.lang.String[] { "Id", "Routes", "Request", "Response", "Broadcast", "Ping", "Body", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

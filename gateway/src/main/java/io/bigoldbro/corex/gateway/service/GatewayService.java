@@ -1,6 +1,8 @@
 package io.bigoldbro.corex.gateway.service;
 
 import io.bigoldbro.corex.*;
+import io.bigoldbro.corex.annotation.Value;
+import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.define.ServiceNameDefine;
 import io.bigoldbro.corex.exception.BizEx;
@@ -8,14 +10,8 @@ import io.bigoldbro.corex.exception.BizException;
 import io.bigoldbro.corex.gateway.handler.GatewayBridgeHandler;
 import io.bigoldbro.corex.gateway.handler.GatewayHttpHandler;
 import io.bigoldbro.corex.impl.SessionManagerImpl;
-import io.bigoldbro.corex.json.JsonObject;
-import io.bigoldbro.corex.json.JsonObjectImpl;
-import io.bigoldbro.corex.model.ClientPayload;
-import io.bigoldbro.corex.model.Payload;
-import io.bigoldbro.corex.model.RpcRequest;
-import io.bigoldbro.corex.model.RpcResponse;
 import io.bigoldbro.corex.module.GatewayModule;
-import io.bigoldbro.corex.module.LoginModule;
+import io.bigoldbro.corex.proto.Base;
 import io.bigoldbro.corex.service.SimpleModuleService;
 import io.bigoldbro.corex.utils.CoreXUtil;
 import io.netty.channel.ChannelInitializer;
@@ -25,6 +21,8 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.internal.StringUtil;
 
+import java.util.Map;
+
 /**
  * Created by Joshua on 2018/2/26.
  */
@@ -32,6 +30,7 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
 
     private final SessionManager sessionManager = new SessionManagerImpl();
 
+    @Value("corex.gateway.port")
     private int port;
 
     @Override
@@ -41,8 +40,6 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
 
     @Override
     public void start(Future<Void> completeFuture) {
-        port = coreX().config().getHttpPort();
-
         sessionManager.init(context);
 
         GatewayBridgeHandler gatewayBridgeHandler = new GatewayBridgeHandler(context(), this::handleConn);
@@ -72,17 +69,21 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
         conn.msgHandler(msg -> {
             logger.debug("on conn msg.");
 
-            if (msg instanceof ClientPayload) {
-                ClientPayload clientPayload = (ClientPayload) msg;
+            if (msg instanceof Base.ClientPayload) {
+                Base.ClientPayload clientPayload = (Base.ClientPayload) msg;
 
-                if (clientPayload.hasRpcRequest()) {
-                    RpcRequest request = clientPayload.getRpcRequest();
+                if (clientPayload.hasRequest()) {
+                    Base.ClientRequest clientRequest = clientPayload.getRequest();
 
-                    if (CoreXUtil.validateRpcRequest(request)) {
-                        moduleRouter(conn, request);
-                    } else {
-                        logger.debug("客户端验证类型不正确.");
-                    }
+
+                    Base.Request request = Base.Request.newBuilder()
+                            .setId(clientRequest.getId())
+                            .setMethod(clientRequest.getMethod())
+                            .setAuth(getAuth(conn))
+                            .setTimestamp(clientRequest.getTimestamp())
+                            .build();
+
+                    moduleRouter(conn, request);
                 }
             }
         });
@@ -93,7 +94,21 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
         });
     }
 
-    private void moduleRouter(Connection conn, RpcRequest request) {
+    private Base.Auth getAuth(Connection conn) {
+        String userId = sessionManager.userId(conn);
+        if (userId == null) {
+            return Base.Auth.newBuilder()
+                    .setType(ConstDefine.AUTH_TYPE_NON)
+                    .build();
+        }
+
+        return Base.Auth.newBuilder()
+                .setType(ConstDefine.AUTH_TYPE_CLIENT)
+                .setToken(userId)
+                .build();
+    }
+
+    private void moduleRouter(Connection conn, Base.Request request) {
         String module = request.getMethod().getModule();
         String api = request.getMethod().getApi();
         if (ServiceNameDefine.SPECIAL.equals(module)) {
@@ -101,29 +116,24 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
         } else if (!ServiceNameDefine.isValidName(module) || ServiceNameDefine.isInternalName(module) || StringUtil.isNullOrEmpty(api)) {
             // do nothing
         } else if ("connect".equals(api)) { // connect 接口不需要登录
-            sendRequestForward(request, conn, request.getId());
+            sendRequestForward(request, conn);
         } else {
             if (!sessionManager.hasLogin(conn)) {
                 sendResponse(conn, request.getId(), ExceptionDefine.NOT_LOGIN);
                 return;
             }
 
-            request = request.authorize(sessionManager.userId(conn));
-            sendRequestForward(request, conn, request.getId());
+            sendRequestForward(request, conn);
         }
     }
 
-    private void handleLocalRequest(Connection conn, RpcRequest request) {
+    private void handleLocalRequest(Connection conn, Base.Request request) {
         try {
             String api = request.getMethod().getApi();
             if ("login".equals(api)) {
                 handleLogin(conn, request);
             } else if ("logout".equals(api)) {
                 handleLogout(conn, request);
-            } else if ("register".equals(api)) {
-                handleRegister(conn, request);
-            } else if ("unregister".equals(api)) {
-                handleUnregister(conn, request);
             } else if ("test".equals(api)) {
                 handleTest(conn, request);
             } else {
@@ -139,98 +149,63 @@ public class GatewayService extends SimpleModuleService implements GatewayModule
         }
     }
 
-    private static Handler<AsyncResult<Payload>> resultHandler(Connection conn, int requestId) {
+    private static Handler<AsyncResult<Base.Payload>> resultHandler(Connection conn, int requestId) {
 
-        return new OnlySuccessHandler<Payload>(conn, requestId) {
+        return new OnlySuccessHandler<Base.Payload>(conn, requestId) {
             @Override
-            public void onSuccess(Payload o) {
-                if (o.hasRpcResponse()) {
-                    sendResponse(conn, o.getRpcResponse());
+            public void onSuccess(Base.Payload o) {
+                if (o.hasResponse()) {
+                    sendResponse(conn, o.getResponse());
                 }
             }
         };
     }
 
-    private static void sendResponse(Connection conn, RpcResponse rpcResponse) {
+    private static void sendResponse(Connection conn, Base.Response rpcResponse) {
         conn.write(rpcResponse);
     }
 
     private static void sendResponse(Connection conn, int requestId, BizEx bizEx) {
-        conn.write(RpcResponse.newBizExRpcResponse(requestId, bizEx));
+        conn.write(CoreXUtil.failedResponse(requestId, bizEx));
     }
 
-    private void handleLogin(Connection conn, RpcRequest request) {
+    private void handleLogin(Connection conn, Base.Request request) {
         if (sessionManager.hasLogin(conn)) {
             sendResponse(conn, request.getId(), ExceptionDefine.ALREADY_LOGIN);
             return;
         }
 
-        String token = request.getBody().getStringParam("to");
-
-        coreX().asyncAgent(LoginModule.class).authorize(token)
-                .setHandler(new OnlySuccessHandler<JsonObject>(conn, request.getId()) {
-                    @Override
-                    public void onSuccess(JsonObject jo) {
-                        String userId = jo.getString("userId");
-
-                        if (sessionManager.hasLogin(conn)) {
-                            sendResponse(conn, request.getId(), ExceptionDefine.ALREADY_LOGIN);
-                            return;
-                        }
-
-                        sessionManager.login(conn, userId);
-
-                        JsonObjectImpl param = new JsonObjectImpl();
-                        param.put("userId", userId);
-                        sendResponse(conn, RpcResponse.newSuccessRpcResponse(request.getId(), param));
-
-                        logger.info("[session] userId:{}, action:login.", userId);
-                    }
-                });
+        sendRequestForward(request, conn);
     }
 
-    private void handleLogout(Connection conn, RpcRequest request) {
+    private void handleLogout(Connection conn, Base.Request request) {
         if (!sessionManager.hasLogin(conn)) {
             sendResponse(conn, request.getId(), ExceptionDefine.NOT_LOGIN);
             return;
         }
 
         String userId = sessionManager.logout(conn);
+        // TODO notify login server
 
-        sendResponse(conn, RpcResponse.newSuccessRpcResponse(request.getId()));
+        sendResponse(conn, CoreXUtil.successResponse(request.getId()));
 
         logger.info("[session] userId:{}, action:logout.", userId);
     }
 
-    private void handleRegister(Connection conn, RpcRequest request) throws Exception {
-        JsonObject jo = request.getBody();
-        String channel = jo.getString("register");
-        if (StringUtil.isNullOrEmpty(channel) || channel.length() > 50) {
-            throw new IllegalArgumentException("channel长度不合法");
-        }
-
-        sessionManager.register(conn, channel);
-        sendResponse(conn, RpcResponse.newSuccessRpcResponse(request.getId()));
+    private void handleTest(Connection conn, Base.Request request) {
+        sendResponse(conn, CoreXUtil.successResponse(request.getId()));
     }
 
-    private void handleUnregister(Connection conn, RpcRequest request) {
-        sessionManager.unregister(conn);
-        sendResponse(conn, RpcResponse.newSuccessRpcResponse(request.getId()));
-    }
-
-    private void handleTest(Connection conn, RpcRequest request) {
-        sendResponse(conn, RpcResponse.newSuccessRpcResponse(request.getId()));
-    }
-
-    private void sendRequestForward(RpcRequest request, Connection conn, int requestId) {
-        Handler<AsyncResult<Payload>> handler = resultHandler(conn, requestId);
+    private void sendRequestForward(Base.Request request, Connection conn) {
+        int requestId = request.getId();
+        Handler<AsyncResult<Base.Payload>> handler = resultHandler(conn, requestId);
         coreX().sendMessage(request.getMethod().getModule(), request, handler);
     }
 
     @Override
-    public Callback<JsonObject> info() {
-        Callback<JsonObject> ret = super.info();
-        ret.result().put("port", port);
+    public Map<String, String> info() {
+        Map<String, String> ret = super.info();
+        ret.put("port", String.valueOf(port));
         return ret;
     }
 

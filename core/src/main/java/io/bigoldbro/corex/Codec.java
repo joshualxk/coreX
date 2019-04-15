@@ -1,6 +1,6 @@
 package io.bigoldbro.corex;
 
-import io.bigoldbro.corex.impl.JsonCodec;
+import io.bigoldbro.corex.impl.DefaultCodec;
 import io.bigoldbro.corex.proto.Base;
 
 import java.io.InputStream;
@@ -20,6 +20,6 @@ public interface Codec {
     void writeClientPayload(OutputStream os, Base.ClientPayload payload) throws Exception;
 
     static Codec defaultCodec() {
-        return new JsonCodec();
+        return new DefaultCodec();
     }
 }

@@ -1,6 +1,6 @@
 package io.bigoldbro.corex.game;
 
-import io.bigoldbro.corex.json.JsonObject;
+import io.bigoldbro.corex.proto.Base;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ public interface GameInstance {
     // 给某个玩家推送详细的游戏信息
     void pushDetailedInfo(Player player);
 
-    JsonObject play(Player player, JsonObject op);
+    Base.Body play(Player player, Base.Body op);
 
     int phase();
 

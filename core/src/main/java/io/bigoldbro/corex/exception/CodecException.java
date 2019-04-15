@@ -12,6 +12,10 @@ public class CodecException extends RuntimeException {
         super(message);
     }
 
+    public CodecException(Throwable cause) {
+        super(cause);
+    }
+
     public CodecException(String message, Throwable cause) {
         super(message, cause);
     }

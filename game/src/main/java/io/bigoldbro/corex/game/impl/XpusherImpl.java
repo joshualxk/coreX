@@ -3,9 +3,8 @@ package io.bigoldbro.corex.game.impl;
 import io.bigoldbro.corex.Context;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ExceptionDefine;
-import io.bigoldbro.corex.model.Auth;
-import io.bigoldbro.corex.model.Broadcast;
 import io.bigoldbro.corex.game.Xpusher;
+import io.bigoldbro.corex.proto.Base;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -24,7 +23,7 @@ public class XpusherImpl implements Xpusher {
     }
 
     @Override
-    public void before(Auth auth) {
+    public void before(Base.Auth auth) {
         threadLocal.set(new AuthAndBroadcast(auth));
     }
 
@@ -38,7 +37,7 @@ public class XpusherImpl implements Xpusher {
     }
 
     @Override
-    public void addBroadcast(Broadcast broadcast) {
+    public void addBroadcast(Base.Broadcast broadcast) {
         if (broadcast == null) {
             return;
         }
@@ -53,7 +52,7 @@ public class XpusherImpl implements Xpusher {
         if (success) {
             AuthAndBroadcast aab = threadLocal.get();
             if (aab != null) {
-                for (Broadcast broadcast : aab.broadcasts) {
+                for (Base.Broadcast broadcast : aab.broadcasts) {
                     context.coreX().broadcastMessage(broadcast);
                 }
             }
@@ -62,10 +61,10 @@ public class XpusherImpl implements Xpusher {
     }
 
     static class AuthAndBroadcast {
-        final Auth auth;
-        final List<Broadcast> broadcasts = new LinkedList<>();
+        final Base.Auth auth;
+        final List<Base.Broadcast> broadcasts = new LinkedList<>();
 
-        AuthAndBroadcast(Auth auth) {
+        AuthAndBroadcast(Base.Auth auth) {
             this.auth = auth;
         }
     }

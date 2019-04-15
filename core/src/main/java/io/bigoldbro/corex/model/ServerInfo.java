@@ -1,14 +1,15 @@
-package io.bigoldbro.corex.impl;
+package io.bigoldbro.corex.model;
 
-import io.bigoldbro.corex.json.Joable;
-import io.bigoldbro.corex.json.JsonObject;
+import io.bigoldbro.corex.NetData;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.util.Objects;
 
 /**
  * Created by Joshua on 2018/3/20.
  */
-public class ServerInfo implements Joable {
+public class ServerInfo implements NetData {
 
     public static final int NON_SERVER_ID = 0;
 
@@ -86,17 +87,19 @@ public class ServerInfo implements Joable {
                 '}';
     }
 
-    public void readFrom(JsonObject jo) {
-        setServerId(jo.getInteger("id"));
-        setRole(jo.getInteger("r"));
-        setHost(jo.getString("h"));
-        setPort(jo.getInteger("p"));
+    @Override
+    public void read(DataInput dataInput) throws Exception {
+        serverId = dataInput.readInt();
+        role = dataInput.readInt();
+        host = dataInput.readUTF();
+        port = dataInput.readInt();
     }
 
-    public void writeTo(JsonObject jo) {
-        jo.put("id", serverId)
-                .put("r", role)
-                .put("h", host)
-                .put("p", port);
+    @Override
+    public void write(DataOutput dataOutput) throws Exception {
+        dataOutput.writeInt(serverId);
+        dataOutput.writeInt(role);
+        dataOutput.writeUTF(host);
+        dataOutput.writeInt(port);
     }
 }

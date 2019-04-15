@@ -1,5 +1,13 @@
 package io.bigoldbro.corex.gateway;
 
+import io.bigoldbro.corex.CoreX;
+import io.bigoldbro.corex.Future;
+import io.bigoldbro.corex.gateway.service.GatewayService;
+import io.bigoldbro.corex.impl.CoreXConfig;
+import io.bigoldbro.corex.impl.CoreXImpl;
+import io.bigoldbro.corex.impl.FutureImpl;
+import io.bigoldbro.corex.service.*;
+
 /**
  * Created by Joshua on 2018/2/24.
  */
@@ -8,29 +16,38 @@ public class StartupGateway {
     public static void main(String[] args) {
 
         try {
-//            ApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:applicationContext-gateway1.xml");
-//
-//            CoreXConfig coreXConfig = applicationContext.getBean(CoreXConfig.class);
-//            CoreX coreX = new CoreXImpl(coreXConfig);
-//
-//            CoreXUtil.<Void>sync(h -> {
-//                coreX.startService(applicationContext.getBean(DashboardService.class), h);
-//            });
-//            CoreXUtil.<Void>sync(h -> {
-//                coreX.startService(applicationContext.getBean(LogService.class), h);
-//            });
-//            CoreXUtil.<Void>sync(h -> {
-//                coreX.startService(applicationContext.getBean(HarborServerService.class), h);
-//            });
-//            CoreXUtil.<Void>sync(h -> {
-//                coreX.startService(applicationContext.getBean(HarborClientService.class), h);
-//            });
-//            CoreXUtil.<Void>sync(h -> {
-//                coreX.startService(applicationContext.getBean(CacheService.class), h);
-//            });
-//            CoreXUtil.<Void>sync(h -> {
-//                coreX.startService(applicationContext.getBean(GatewayService.class), h);
-//            });
+            CoreX corex = new CoreXImpl(CoreXConfig.readConfig());
+
+            Future<String> future;
+
+            future = new FutureImpl<>();
+            corex.startService(DashboardService.class, future);
+            future.sync();
+
+            future = new FutureImpl<>();
+            corex.startService(LogService.class, future);
+            future.sync();
+
+            future = new FutureImpl<>();
+            corex.startService(HarborServerService.class, future);
+            future.sync();
+
+            future = new FutureImpl<>();
+            corex.startService(HarborClientService.class, future);
+            future.sync();
+
+            future = new FutureImpl<>();
+            corex.startService(CacheService.class, future);
+            future.sync();
+
+            future = new FutureImpl<>();
+            corex.startService(GatewayService.class, future);
+            future.sync();
+
+            future = new FutureImpl<>();
+            corex.startService(AsyncService.class, future);
+            future.sync();
+
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(-1);

@@ -1,11 +1,11 @@
 package io.bigoldbro.corex.game;
 
-import io.bigoldbro.corex.json.Joable;
+import io.bigoldbro.corex.NetData;
 
 /**
  * Created by Joshua on 2018/3/23.
  */
-public interface Player extends Joable {
+public interface Player extends NetData {
 
     String userId();
 

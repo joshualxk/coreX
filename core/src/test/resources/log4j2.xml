@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="WARN">
+
+    <appenders>
+
+        <console name="Console" target="SYSTEM_OUT">
+            <!--输出日志的格式-->
+            <PatternLayout pattern="%d [%t] %-5p [%c] - %m%n"/>
+        </console>
+
+    </appenders>
+
+    <loggers>
+        <logger name="io.bigoldbro.corex.impl" level="DEBUG">
+        </logger>
+        <root level="INFO">
+            <appender-ref ref="Console"/>
+        </root>
+    </loggers>
+
+</configuration>

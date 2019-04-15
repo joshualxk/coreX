@@ -1,5 +1,6 @@
 package io.bigoldbro.corex;
 
+import io.bigoldbro.corex.impl.CoreXConfig;
 import io.bigoldbro.corex.module.BroadcastModule;
 import io.bigoldbro.corex.proto.Base;
 import io.netty.channel.Channel;
@@ -27,7 +28,7 @@ public interface CoreX extends MsgHandler {
 
     ExecutorService executorService();
 
-    void startService(Service service, Handler<AsyncResult<Void>> resultHandler);
+    void startService(Class<? extends Service> serviceClz, Handler<AsyncResult<String>> resultHandler) throws Exception;
 
     void stopService(String name, Handler<AsyncResult<Void>> resultHandler);
 

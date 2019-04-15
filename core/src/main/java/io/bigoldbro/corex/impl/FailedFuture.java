@@ -8,7 +8,7 @@ import io.bigoldbro.corex.exception.NoStackTraceThrowable;
 /**
  * Created by Joshua on 2018/2/26.
  */
-public class FailedFuture<T> implements Future<T> {
+public class FailedFuture<T> extends AbstractFuture<T> {
 
     private final Throwable cause;
 
@@ -26,13 +26,23 @@ public class FailedFuture<T> implements Future<T> {
     }
 
     @Override
-    public Future<T> setHandler(Handler<AsyncResult<T>> handler) {
-        handler.handle(this);
+    public Future<T> addHandler(Handler<AsyncResult<T>> handler) {
+        doHandler(handler);
+        return this;
+    }
+
+    @Override
+    public Future<T> removeHandler(Handler<AsyncResult<T>> handler) {
         return this;
     }
 
     @Override
     public Future<T> sync() {
+        return this;
+    }
+
+    @Override
+    public Future<T> sync(long timeout) throws Exception {
         return this;
     }
 

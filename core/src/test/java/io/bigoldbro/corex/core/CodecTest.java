@@ -1,12 +1,14 @@
 package io.bigoldbro.corex.core;
 
-import io.bigoldbro.corex.json.JsonArrayImpl;
-import io.bigoldbro.corex.json.JsonObjectImpl;
-import io.bigoldbro.corex.model.Payload;
-import io.bigoldbro.corex.model.RpcResponse;
+import com.google.protobuf.ByteString;
+import io.bigoldbro.corex.proto.Base;
 import io.bigoldbro.corex.utils.CoreXUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.ByteBufOutputStream;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -14,6 +16,9 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -21,13 +26,9 @@ import java.util.concurrent.CountDownLatch;
  */
 public class CodecTest {
 
-    @Test
+    @Test(timeout = 5000)
     public void method1() throws InterruptedException {
-    }
-
-    @Test
-    public void method2() throws InterruptedException {
-        codecSpeedTest(20000);
+        codecSpeedTest(100000);
     }
 
     private void codecSpeedTest(int counter) throws InterruptedException {
@@ -35,6 +36,7 @@ public class CodecTest {
         CountDownLatch countDownLatch = new CountDownLatch(counter);
 
         {
+            Set<Integer> set = new HashSet<>(counter);
             EventLoopGroup boss = new NioEventLoopGroup(1);
             EventLoopGroup worker = new NioEventLoopGroup(1);
             ServerBootstrap b = new ServerBootstrap();
@@ -46,13 +48,15 @@ public class CodecTest {
                             ChannelPipeline p = socketChannel.pipeline();
                             CoreXUtil.initPipeline(p);
 
-                            p.addLast(new SimpleChannelInboundHandler<Payload>() {
+                            p.addLast(new SimpleChannelInboundHandler<Base.Payload>() {
                                 @Override
-                                protected void channelRead0(ChannelHandlerContext ctx, Payload msg) throws Exception {
+                                protected void channelRead0(ChannelHandlerContext ctx, Base.Payload msg) throws Exception {
 //                                    System.out.println(msg.getId());
 
-                                    int ix = msg.getRpcResponse().getBody().getInteger("ix");
-                                    countDownLatch.countDown();
+                                    int val = getVal(msg.getResponse().getBody());
+                                    if (set.add(val)) {
+                                        countDownLatch.countDown();
+                                    }
                                 }
                             });
                         }
@@ -77,7 +81,15 @@ public class CodecTest {
             Channel ch = b.connect("127.0.0.1", 2333).sync().channel();
 
             for (int i = 0; i < counter; ++i) {
-                Payload payload = Payload.newPayload(i, RpcResponse.newSuccessRpcResponse(i, newJo(i)));
+                Base.Payload payload = Base.Payload.newBuilder()
+                        .setId(i)
+                        .setResponse(
+                                Base.Response.newBuilder()
+                                        .setId(i)
+                                        .setBody(newBody(i))
+                                        .setTimestamp(CoreXUtil.sysTime())
+                                        .build()
+                        ).build();
                 ch.write(payload);
 
                 if (i % 23 == 0) {
@@ -91,26 +103,26 @@ public class CodecTest {
         countDownLatch.await();
     }
 
-    private JsonObjectImpl newJo(int ix) {
-        return new JsonObjectImpl()
-                .put("ix", ix)
-                .put("param1", ix)
-                .put("param2", "str_" + ix)
-                .put("arr", new JsonArrayImpl().add(1).add(2))
-                .put("f1", 0.1f + ix);
+    private Base.Body newBody(int ix) {
+        ByteBuf byteBuf = Unpooled.buffer();
+        try (ByteBufOutputStream os = new ByteBufOutputStream(byteBuf)) {
+            os.writeInt(ix);
+
+            try (ByteBufInputStream is = new ByteBufInputStream(byteBuf)) {
+                return Base.Body.newBuilder().addFields(ByteString.readFrom(is)).build();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    @Test
-    public void nullTest() {
-        String s = "";
-//        JsonObjectImpl jo1 = new JsonObjectImpl(s);
-//        System.out.println(jo1);
-
-        s = null;
-        JsonObjectImpl jo2 = new JsonObjectImpl(s);
-        System.out.println(jo2);
-
+    private int getVal(Base.Body body) {
+        ByteBuf byteBuf = Unpooled.wrappedBuffer(body.getFields(0).toByteArray());
+        try {
+            return byteBuf.readInt();
+        } finally {
+            byteBuf.release();
+        }
     }
-
 
 }

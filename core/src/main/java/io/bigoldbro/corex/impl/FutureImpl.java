@@ -3,16 +3,21 @@ package io.bigoldbro.corex.impl;
 import io.bigoldbro.corex.AsyncResult;
 import io.bigoldbro.corex.Future;
 import io.bigoldbro.corex.Handler;
+import io.bigoldbro.corex.exception.CoreException;
 import io.bigoldbro.corex.exception.NoStackTraceThrowable;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by Joshua on 2018/2/26.
  */
-public class FutureImpl<T> implements Future<T> {
+public class FutureImpl<T> extends AbstractFuture<T> {
 
     private boolean failed;
     private boolean succeeded;
-    private Handler<AsyncResult<T>> handler;
+    private List<Handler<AsyncResult<T>>> handlers;
     private T result;
     private Throwable throwable;
 
@@ -69,19 +74,15 @@ public class FutureImpl<T> implements Future<T> {
 
     @Override
     public boolean tryComplete(T result) {
-        Handler<AsyncResult<T>> h;
         synchronized (this) {
             if (succeeded || failed) {
                 return false;
             }
             this.result = result;
             succeeded = true;
-            h = handler;
             notifyAll();
         }
-        if (h != null) {
-            h.handle(this);
-        }
+        doAllHandlers();
         return true;
     }
 
@@ -90,21 +91,24 @@ public class FutureImpl<T> implements Future<T> {
         return tryComplete(null);
     }
 
-    @Override
-    public boolean tryFail(Throwable cause) {
-        Handler<AsyncResult<T>> h;
+    private boolean tryFail0(Throwable cause) {
         synchronized (this) {
             if (succeeded || failed) {
                 return false;
             }
             this.throwable = cause != null ? cause : new NoStackTraceThrowable(null);
             failed = true;
-            h = handler;
             notifyAll();
         }
-        if (h != null) {
-            h.handle(this);
+        return true;
+    }
+
+    @Override
+    public boolean tryFail(Throwable cause) {
+        if (!tryFail0(cause)) {
+            return false;
         }
+        doAllHandlers();
         return true;
     }
 
@@ -128,34 +132,69 @@ public class FutureImpl<T> implements Future<T> {
     }
 
     @Override
-    public Future<T> setHandler(Handler<AsyncResult<T>> handler) {
+    public Future<T> addHandler(Handler<AsyncResult<T>> handler) {
         boolean callHandler;
         synchronized (this) {
-            this.handler = handler;
+            if (handlers == null) {
+                handlers = new LinkedList<>();
+            }
+            handlers.add(handler);
             callHandler = isComplete();
         }
         if (callHandler) {
-            handler.handle(this);
+            doAllHandlers();
         }
         return this;
     }
 
     @Override
-    public Future<T> sync() {
+    public Future<T> removeHandler(Handler<AsyncResult<T>> handler) {
+        synchronized (this) {
+            if (handlers != null) {
+                handlers.remove(handler);
+            }
+        }
+        return this;
+    }
+
+    @Override
+    public Future<T> sync() throws Exception {
+        return sync(0);
+    }
+
+    @Override
+    public Future<T> sync(long timeout) throws Exception {
+        CoreXImpl.ensureBlockSafe();
+
+        boolean doHandlers;
         synchronized (this) {
             if (failed || succeeded) {
                 return this;
             } else {
                 try {
-                    wait();
-                    if (failed) {
-                        succeeded = false;
+                    if (timeout <= 0) {
+                        wait();
+                    } else {
+                        wait(timeout);
                     }
-                } catch (InterruptedException e) {
+                } catch (Throwable e) {
                     failed = true;
                     throwable = e;
                 }
+                doHandlers = tryFail(new TimeoutException());
             }
+        }
+
+        if (failed) {
+            if (throwable instanceof Exception) {
+                throw (Exception) throwable;
+            } else {
+                throw new CoreException(throwable);
+            }
+        }
+
+        if (doHandlers) {
+            doAllHandlers();
         }
 
         return this;
@@ -171,6 +210,22 @@ public class FutureImpl<T> implements Future<T> {
                 return "Future{cause=" + throwable.getMessage() + "}";
             }
             return "Future{unresolved}";
+        }
+    }
+
+    private void doAllHandlers() {
+        List<Handler<AsyncResult<T>>> hs;
+        synchronized (this) {
+            hs = handlers;
+            handlers = null;
+        }
+
+        if (hs == null) {
+            return;
+        }
+
+        for (Handler<AsyncResult<T>> h : hs) {
+            doHandler(h);
         }
     }
 }

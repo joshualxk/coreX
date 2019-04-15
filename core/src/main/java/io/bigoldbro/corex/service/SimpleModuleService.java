@@ -2,7 +2,7 @@ package io.bigoldbro.corex.service;
 
 import io.bigoldbro.corex.annotation.Module;
 import io.bigoldbro.corex.exception.CoreException;
-import io.bigoldbro.corex.rpc.ModuleParams;
+import io.bigoldbro.corex.rpc.ModuleInfo;
 import io.bigoldbro.corex.rpc.RpcHandler;
 import io.bigoldbro.corex.rpc.ServerModuleScanner;
 
@@ -11,21 +11,21 @@ import io.bigoldbro.corex.rpc.ServerModuleScanner;
  */
 public abstract class SimpleModuleService extends AbstractProcessorService {
 
-    private final ModuleParams moduleParams;
+    private final ModuleInfo moduleInfo;
 
     public SimpleModuleService() {
-        ModuleParams moduleParams = new ServerModuleScanner(this).parse(findModule(this.getClass()));
-        this.moduleParams = moduleParams;
+        ModuleInfo moduleInfo = new ServerModuleScanner(this, findModule(this.getClass())).parse();
+        this.moduleInfo = moduleInfo;
     }
 
     @Override
     protected RpcHandler getHandler(String name) {
-        return moduleParams.getHandler(name);
+        return moduleInfo.getHandler(name);
     }
 
     @Override
     protected Module getModule() {
-        return moduleParams.module();
+        return moduleInfo.module();
     }
 
 

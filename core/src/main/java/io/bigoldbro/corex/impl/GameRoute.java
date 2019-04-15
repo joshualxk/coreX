@@ -1,94 +1,66 @@
 package io.bigoldbro.corex.impl;
 
-import io.bigoldbro.corex.json.Joable;
-import io.bigoldbro.corex.json.JsonObject;
+import io.bigoldbro.corex.NetData;
+import io.netty.util.internal.StringUtil;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-
-import static io.bigoldbro.corex.impl.ServerInfo.NON_SERVER_ID;
 
 /**
  * Created by Joshua on 2018/4/8.
  */
-public class GameRoute implements Joable {
+public class GameRoute implements NetData {
 
     private int id;
     private String module;
     private String version;
-    private int serverId1;
-    private int serverId2;
-    private int serverId3;
+    private String serverIds;
     private boolean isActive;
+
+    private List<Integer> serverIdList;
 
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getModule() {
         return module;
     }
 
-    public void setModule(String module) {
-        this.module = module;
-    }
-
     public String getVersion() {
         return version;
     }
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public int getServerId1() {
-        return serverId1;
-    }
-
-    public void setServerId1(int serverId1) {
-        this.serverId1 = serverId1;
-    }
-
-    public int getServerId2() {
-        return serverId2;
-    }
-
-    public void setServerId2(int serverId2) {
-        this.serverId2 = serverId2;
-    }
-
-    public int getServerId3() {
-        return serverId3;
-    }
-
-    public void setServerId3(int serverId3) {
-        this.serverId3 = serverId3;
+    public String getServerIds() {
+        return serverIds;
     }
 
     public boolean isActive() {
         return isActive;
     }
 
-    public void setActive(boolean active) {
-        isActive = active;
+    private static List<Integer> parseServerList(String serverIds) {
+        if (!StringUtil.isNullOrEmpty(serverIds)) {
+            String[] split = serverIds.split(",");
+            List<Integer> ret = new ArrayList<>(split.length);
+            try {
+                for (String s : split) {
+                    ret.add(Integer.valueOf(s));
+                }
+            } catch (Exception e) {
+
+            }
+            return Collections.unmodifiableList(ret);
+        }
+        return Collections.emptyList();
     }
 
     public List<Integer> getCandidateIds() {
-        List<Integer> candidates = new ArrayList<>(3);
-        if (getServerId1() != NON_SERVER_ID) {
-            candidates.add(getServerId1());
-        }
-        if (getServerId2() != NON_SERVER_ID) {
-            candidates.add(getServerId2());
-        }
-        if (getServerId3() != NON_SERVER_ID) {
-            candidates.add(getServerId3());
-        }
-        return candidates;
+        List<Integer> list = serverIdList;
+        return list == null ? Collections.EMPTY_LIST : list;
     }
 
     @Override
@@ -97,29 +69,27 @@ public class GameRoute implements Joable {
                 "id=" + id +
                 ", module='" + module + '\'' +
                 ", version='" + version + '\'' +
-                ", serverId1=" + serverId1 +
-                ", serverId2=" + serverId2 +
-                ", serverId3=" + serverId3 +
+                ", serverIds='" + serverIds + '\'' +
                 ", isActive=" + isActive +
+                ", serverIdList=" + serverIdList +
                 '}';
     }
 
-    public void readFrom(JsonObject jo) {
-        setId(jo.getInteger("id"));
-        setModule(jo.getString("m"));
-        setVersion(jo.getString("v"));
-        setServerId1(jo.getInteger("sId1"));
-        setServerId2(jo.getInteger("sId2"));
-        setServerId3(jo.getInteger("sId3"));
+    @Override
+    public void read(DataInput dataInput) throws Exception {
+        id = dataInput.readInt();
+        module = dataInput.readUTF();
+        version = dataInput.readUTF();
+        serverIds = dataInput.readUTF();
+
+        serverIdList = parseServerList(serverIds);
     }
 
     @Override
-    public void writeTo(JsonObject jo) {
-        jo.put("id", id)
-                .put("m", module)
-                .put("v", version)
-                .put("sId1", serverId1)
-                .put("sId2", serverId2)
-                .put("sId3", serverId3);
+    public void write(DataOutput dataOutput) throws Exception {
+        dataOutput.writeInt(id);
+        dataOutput.writeUTF(module);
+        dataOutput.writeUTF(version);
+        dataOutput.writeUTF(serverIds);
     }
 }

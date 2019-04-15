@@ -6,7 +6,9 @@ import io.bigoldbro.corex.Handler;
 import io.bigoldbro.corex.MsgHandler;
 import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.exception.CoreException;
-import io.bigoldbro.corex.model.Payload;
+import io.bigoldbro.corex.proto.Base;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -14,9 +16,11 @@ import java.util.Map;
 
 public class DefaultMsgHandler implements MsgHandler {
 
+    protected Logger logger = LoggerFactory.getLogger(this.getClass());
+
     private final int maxPendingMsg;
     private final long expireTime;
-    private final Map<Long, TimeHandler<AsyncResult<Payload>>> handlerMap = new LinkedHashMap<>();
+    private final Map<Long, TimeHandler<AsyncResult<Base.Payload>>> handlerMap = new LinkedHashMap<>();
 
     public DefaultMsgHandler(int maxPendingMsg, long expireTime) {
         this.maxPendingMsg = maxPendingMsg;
@@ -24,7 +28,7 @@ public class DefaultMsgHandler implements MsgHandler {
     }
 
     @Override
-    public void onMsgSent(long id, Handler<AsyncResult<Payload>> handler) {
+    public void onMsgSent(long id, Handler<AsyncResult<Base.Payload>> handler) {
         synchronized (this) {
             if (handlerMap.size() >= maxPendingMsg) {
                 throw ExceptionDefine.SYSTEM_BUSY.build();
@@ -36,14 +40,18 @@ public class DefaultMsgHandler implements MsgHandler {
     }
 
     @Override
-    public void onMsgReply(long id, AsyncResult<Payload> resp) {
-        Handler<AsyncResult<Payload>> handler;
+    public void onMsgReply(long id, AsyncResult<Base.Payload> resp) {
+        Handler<AsyncResult<Base.Payload>> handler;
         synchronized (this) {
             handler = handlerMap.remove(id);
         }
 
         if (handler != null) {
-            handler.handle(resp);
+            try {
+                handler.handle(resp);
+            } catch (Throwable t) {
+                logger.debug("onMsgReply()", t);
+            }
         }
     }
 
@@ -55,9 +63,9 @@ public class DefaultMsgHandler implements MsgHandler {
     public void removeExpireMsg() {
         long now = System.currentTimeMillis();
         synchronized (this) {
-            Iterator<Map.Entry<Long, TimeHandler<AsyncResult<Payload>>>> it = handlerMap.entrySet().iterator();
+            Iterator<Map.Entry<Long, TimeHandler<AsyncResult<Base.Payload>>>> it = handlerMap.entrySet().iterator();
             for (; it.hasNext(); ) {
-                Map.Entry<Long, TimeHandler<AsyncResult<Payload>>> entry = it.next();
+                Map.Entry<Long, TimeHandler<AsyncResult<Base.Payload>>> entry = it.next();
 
                 if (entry.getValue().expireTime > now) {
                     break;

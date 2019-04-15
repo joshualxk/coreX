@@ -2,7 +2,6 @@ package io.bigoldbro.corex.all;
 
 import io.bigoldbro.corex.game.StartupGame;
 import io.bigoldbro.corex.gateway.StartupGateway;
-import io.bigoldbro.corex.gateway.StartupGateway2;
 import io.bigoldbro.corex.login.StartupLogin;
 
 public class StartupAll {
@@ -11,7 +10,6 @@ public class StartupAll {
         StartupLogin.main(args);
         StartupGame.main(args);
         StartupGateway.main(args);
-        StartupGateway2.main(args);
 
         System.out.println("success all");
     }

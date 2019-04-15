@@ -88,7 +88,7 @@ abstract class AbstractContext implements Context {
             }
 
             if (resultHandler != null) {
-                runOnContext(v2 -> res.setHandler(resultHandler));
+                runOnContext(v2 -> res.addHandler(resultHandler));
             }
         });
 

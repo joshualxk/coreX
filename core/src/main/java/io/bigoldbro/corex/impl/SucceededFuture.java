@@ -7,7 +7,7 @@ import io.bigoldbro.corex.Handler;
 /**
  * Created by Joshua on 2018/2/26.
  */
-public class SucceededFuture<T> implements Future<T> {
+public class SucceededFuture<T> extends AbstractFuture<T> {
 
     private final T result;
 
@@ -25,13 +25,23 @@ public class SucceededFuture<T> implements Future<T> {
     }
 
     @Override
-    public Future<T> setHandler(Handler<AsyncResult<T>> handler) {
-        handler.handle(this);
+    public Future<T> addHandler(Handler<AsyncResult<T>> handler) {
+        doHandler(handler);
+        return this;
+    }
+
+    @Override
+    public Future<T> removeHandler(Handler<AsyncResult<T>> handler) {
         return this;
     }
 
     @Override
     public Future<T> sync() {
+        return this;
+    }
+
+    @Override
+    public Future<T> sync(long timeout) throws Exception {
         return this;
     }
 

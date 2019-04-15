@@ -1,6 +1,6 @@
 package io.bigoldbro.corex;
 
-import io.bigoldbro.corex.model.Payload;
+import io.bigoldbro.corex.proto.Base;
 import io.bigoldbro.corex.utils.CoreXUtil;
 
 /**
@@ -11,9 +11,9 @@ public interface Msg {
     long id();
 
     // 解引用
-    Payload detach();
+    Base.Payload detach();
 
-    void reply(AsyncResult<Payload> resp);
+    void reply(AsyncResult<Base.Payload> resp);
 
     default boolean needReply() {
         return CoreXUtil.needReply(id());

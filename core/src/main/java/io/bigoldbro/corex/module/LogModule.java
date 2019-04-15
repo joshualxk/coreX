@@ -3,7 +3,6 @@ package io.bigoldbro.corex.module;
 import io.bigoldbro.corex.annotation.Api;
 import io.bigoldbro.corex.annotation.BlockControl;
 import io.bigoldbro.corex.annotation.Module;
-import io.bigoldbro.corex.annotation.Param;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ServiceNameDefine;
 
@@ -16,11 +15,11 @@ import java.util.Map;
 public interface LogModule {
 
     @Api(value = "i", type = ConstDefine.AUTH_TYPE_ADMIN)
-    Map<String, Object> info();
+    Map<String, String> info();
 
     @Api(value = "rul", type = ConstDefine.AUTH_TYPE_INTERNAL)
-    void recordUserLogin(@Param("1") String userId, @Param("2") String channelId);
+    void recordUserLogin(String userId, String channelId);
 
     @Api(value = "rul2", type = ConstDefine.AUTH_TYPE_INTERNAL)
-    void recordUserLogout(@Param("1") String userId, @Param("2") String channelId);
+    void recordUserLogout(String userId, String channelId);
 }

@@ -12,10 +12,9 @@ message Body {
 
 message ClientRequest {
     int32 id = 1;
-    int32 type = 2;
-    Method method = 3;
-    int64 timestamp = 4;
-    Body body = 5;
+    Method method = 2;
+    int64 timestamp = 3;
+    Body body = 4;
 }
 
 message Method {
@@ -54,11 +53,10 @@ message Auth {
 
 message Request {
     int32 id = 1;
-    int32 type = 2;
-    Method method = 3;
-    Auth auth = 4;
-    int64 timestamp = 5;
-    Body body = 6;
+    Method method = 2;
+    Auth auth = 3;
+    int64 timestamp = 4;
+    Body body = 5;
 }
 
 message Broadcast {
@@ -80,8 +78,8 @@ message Payload {
     int64 id = 1;
     repeated string routes = 2;
     oneof body {
-        Request rpcRequest = 3;
-        Response rpcResponse = 4;
+        Request request = 3;
+        Response response = 4;
         Broadcast broadcast = 5;
         Ping ping = 6;
     }

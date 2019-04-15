@@ -1,8 +1,7 @@
 package io.bigoldbro.corex.impl.handler;
 
 import io.bigoldbro.corex.Handler;
-import io.bigoldbro.corex.model.Payload;
-import io.bigoldbro.corex.model.ServerAuth;
+import io.bigoldbro.corex.proto.Base;
 import io.bigoldbro.corex.utils.CoreXUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -14,15 +13,15 @@ import java.util.Objects;
 /**
  * Created by Joshua on 2018/3/20.
  */
-public class InitialHandler extends SimpleChannelInboundHandler<Payload> {
+public class InitialHandler extends SimpleChannelInboundHandler<Base.Payload> {
 
     private static Logger LOG = LoggerFactory.getLogger(InitialHandler.class);
 
     private int serverId;
     private int role;
     private long startTime;
-    private Handler<ServerAuth> serverAuthHandler;
-    private Handler<Payload> payloadHandler;
+    private Handler<Base.Ping> serverAuthHandler;
+    private Handler<Base.Payload> payloadHandler;
 
     private boolean hasReadFirstMsg;
 
@@ -32,25 +31,25 @@ public class InitialHandler extends SimpleChannelInboundHandler<Payload> {
         this.startTime = startTime;
     }
 
-    public void setServerAuthHandler(Handler<ServerAuth> serverAuthHandler) {
+    public void setServerAuthHandler(Handler<Base.Ping> serverAuthHandler) {
         this.serverAuthHandler = Objects.requireNonNull(serverAuthHandler);
     }
 
-    public void setPayloadHandler(Handler<Payload> payloadHandler) {
+    public void setPayloadHandler(Handler<Base.Payload> payloadHandler) {
         this.payloadHandler = Objects.requireNonNull(payloadHandler);
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Payload msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, Base.Payload msg) throws Exception {
         if (!hasReadFirstMsg) {
             hasReadFirstMsg = true;
 
             try {
-                if (msg.hasServerAuth()) {
-                    Handler<ServerAuth> handler = serverAuthHandler;
+                if (msg.hasPing()) {
+                    Handler<Base.Ping> handler = serverAuthHandler;
                     if (handler != null) {
                         // 收到auth后才算连接成功
-                        handler.handle(msg.getServerAuth());
+                        handler.handle(msg.getPing());
                         return;
                     }
                 }
@@ -70,8 +69,15 @@ public class InitialHandler extends SimpleChannelInboundHandler<Payload> {
         ctx.writeAndFlush(buildFirstPayload());
     }
 
-    private Payload buildFirstPayload() {
-        ServerAuth sa = new ServerAuth(serverId, role, startTime, CoreXUtil.sysTime());
-        return Payload.newPayload(sa);
+    private Base.Payload buildFirstPayload() {
+        Base.Ping ping = Base.Ping.newBuilder()
+                .setServerId(serverId)
+                .setRole(role)
+                .setStartTime(startTime)
+                .setTimestamp(CoreXUtil.sysTime())
+                .build();
+
+        return Base.Payload.newBuilder()
+                .setPing(ping).build();
     }
 }

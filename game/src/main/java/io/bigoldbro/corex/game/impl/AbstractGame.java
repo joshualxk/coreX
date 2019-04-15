@@ -1,23 +1,24 @@
 package io.bigoldbro.corex.game.impl;
 
-import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.Context;
 import io.bigoldbro.corex.ContextAware;
+import io.bigoldbro.corex.Future;
 import io.bigoldbro.corex.annotation.Api;
 import io.bigoldbro.corex.annotation.Module;
 import io.bigoldbro.corex.annotation.Notice;
-import io.bigoldbro.corex.json.JsonObject;
 import io.bigoldbro.corex.define.ConstDefine;
-import io.bigoldbro.corex.define.ExceptionDefine;
-import io.bigoldbro.corex.model.Auth;
-import io.bigoldbro.corex.model.Broadcast;
-import io.bigoldbro.corex.rpc.ModuleParams;
-import io.bigoldbro.corex.rpc.RpcHandler;
-import io.bigoldbro.corex.rpc.ServerModuleScanner;
+import io.bigoldbro.corex.exception.BizException;
+import io.bigoldbro.corex.exception.CoreException;
 import io.bigoldbro.corex.game.Game;
 import io.bigoldbro.corex.game.GameInstance;
 import io.bigoldbro.corex.game.Player;
 import io.bigoldbro.corex.game.Xpusher;
+import io.bigoldbro.corex.proto.Base;
+import io.bigoldbro.corex.rpc.MethodDetail;
+import io.bigoldbro.corex.rpc.ModuleInfo;
+import io.bigoldbro.corex.rpc.RpcHandler;
+import io.bigoldbro.corex.rpc.ServerModuleScanner;
+import io.bigoldbro.corex.utils.CoreXUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +35,7 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final ModuleParams moduleParams;
+    private final ModuleInfo moduleInfo;
 
     private Context context;
     private Xpusher xpusher;
@@ -43,8 +44,8 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
     private Map<String, GameInstance> instances = new HashMap<>();
 
     public AbstractGame(Class<?> clz) {
-        ModuleParams moduleParams = new GameModuleScanner().parse(clz);
-        this.moduleParams = moduleParams;
+        ModuleInfo moduleInfo = new GameModuleScanner(clz).parse();
+        this.moduleInfo = moduleInfo;
     }
 
     @Override
@@ -86,11 +87,11 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
     public void setTimer(String type, long periodTime, Runnable task) {
         cancelTimeEvent(type);
         if (periodTime <= 0) {
-            context().runOnContext(v -> runWrappedTask(task, Auth.internalAuth()));
+            context().runOnContext(v -> runWrappedTask(task, CoreXUtil.internalAuth()));
         } else {
             long tid = coreX().setTimer(periodTime, t -> {
                 timeEvents.remove(type);
-                runWrappedTask(task, Auth.internalAuth());
+                runWrappedTask(task, CoreXUtil.internalAuth());
             });
             timeEvents.put(type, tid);
         }
@@ -100,7 +101,7 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
     public void setPeriodic(String type, long delay, Runnable task) {
         cancelTimeEvent(type);
         long tid = coreX().setPeriodic(delay, t -> {
-            runWrappedTask(task, Auth.internalAuth());
+            runWrappedTask(task, CoreXUtil.internalAuth());
         });
         timeEvents.put(type, tid);
     }
@@ -115,7 +116,7 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
     public final void handlePlayerOnline(String userId) {
         Player player = ensurePlayer(userId);
         try {
-            runWrappedTask(() -> player.setOnline(true), Auth.internalAuth());
+            runWrappedTask(() -> player.setOnline(true), CoreXUtil.internalAuth());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -124,18 +125,18 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
     public final void handlePlayerOffline(String userId) {
         Player player = ensurePlayer(userId);
         try {
-            runWrappedTask(() -> player.setOnline(false), Auth.internalAuth());
+            runWrappedTask(() -> player.setOnline(false), CoreXUtil.internalAuth());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public final RpcHandler getHandler(String name) {
-        return moduleParams.getHandler(name);
+        return moduleInfo.getHandler(name);
     }
 
     public final Module module() {
-        return moduleParams.module();
+        return moduleInfo.module();
     }
 
     public void addPlayer(Player player) {
@@ -159,19 +160,19 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
     // 当前游戏人数是否已满
     protected final void checkLimit() {
         if (playerLimit() > 0 && playerNum() >= playerLimit()) {
-            throw ExceptionDefine.GAME_PLAYER_LIMIT.build();
+//            throw ExceptionDefine.GAME_PLAYER_LIMIT.build();
         }
     }
 
     protected Player ensurePlayer(String userId) {
         Player player = players.get(userId);
         if (player == null) {
-            throw ExceptionDefine.NOT_IN_GAME.build();
+//            throw ExceptionDefine.NOT_IN_GAME.build();
         }
         return player;
     }
 
-    protected <V> V runWrappedTask(Callable<V> task, Auth auth) throws Exception {
+    protected <V> V runWrappedTask(Callable<V> task, Base.Auth auth) {
         Callable<V> callable = () -> {
             before(auth);
             boolean success = false;
@@ -183,10 +184,17 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
                 after(success);
             }
         };
-        return callable.call();
+
+        try {
+            return callable.call();
+        } catch (BizException | CoreException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CoreException(e);
+        }
     }
 
-    protected void runWrappedTask(Runnable task, Auth auth) {
+    protected void runWrappedTask(Runnable task, Base.Auth auth) {
         Runnable runnable = () -> {
             before(auth);
             boolean success = false;
@@ -201,11 +209,11 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
     }
 
     @Override
-    public void before(Auth auth) {
+    public void before(Base.Auth auth) {
         if (isClosing() && auth.getType() == ConstDefine.AUTH_TYPE_CLIENT) {
             String userId = auth.getToken();
             if (!isPlayerJoined(userId)) {
-                throw ExceptionDefine.GAME_CLOSING.build();
+                // TODO
             }
         }
         xpusher.before(auth);
@@ -221,7 +229,7 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
     }
 
     @Override
-    public void addBroadcast(Broadcast broadcast) {
+    public void addBroadcast(Base.Broadcast broadcast) {
         xpusher.addBroadcast(broadcast);
     }
 
@@ -232,18 +240,18 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
 
     private class GameModuleScanner extends ServerModuleScanner {
 
-        public GameModuleScanner() {
-            super(AbstractGame.this);
+        public GameModuleScanner(Class<?> clz) {
+            super(AbstractGame.this, clz);
         }
 
         @Override
-        protected RpcHandler newApiHandler(Api api, Method m, Object invoker) {
-            return new WrappedRpcHandler(super.newApiHandler(api, m, invoker));
+        protected RpcHandler newApiHandler(Api api, Method m) {
+            return new WrappedRpcHandler(super.newApiHandler(api, m));
         }
 
         @Override
-        protected RpcHandler newBroadcastHandler(Notice notice, Method m, Object invoker) {
-            return new WrappedRpcHandler(super.newBroadcastHandler(notice, m, invoker));
+        protected RpcHandler newBroadcastHandler(Notice notice, Method m) {
+            return new WrappedRpcHandler(super.newBroadcastHandler(notice, m));
         }
     }
 
@@ -261,17 +269,18 @@ public abstract class AbstractGame implements Game, ContextAware, Xpusher {
         }
 
         @Override
-        public boolean isVoidType() {
-            return rpcHandler.isVoidType();
+        public MethodDetail methodDetail() {
+            return rpcHandler.methodDetail();
         }
 
+
         @Override
-        public Callback<Object> handle(Auth auth, JsonObject params) throws Exception {
+        public Future<Base.Body> handle(Base.Auth auth, Base.Body params) {
             return runWrappedTask(() -> rpcHandler.handle(auth, params), auth);
         }
 
         @Override
-        public JsonObject convert(Object[] args) throws Exception {
+        public Base.Body convert(Object[] args) {
             return rpcHandler.convert(args);
         }
     }

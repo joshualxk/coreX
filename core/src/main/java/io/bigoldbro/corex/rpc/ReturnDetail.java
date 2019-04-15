@@ -3,14 +3,13 @@ package io.bigoldbro.corex.rpc;
 /**
  * Created by Joshua on 2019-04-10.
  */
-public class ReturnDetail {
-    public final boolean isVoid;
-    public final ParamType callbackType;
-    public final Class<?> joClz;
+public class ReturnDetail extends ParamDetail {
+    final boolean isVoid;
+    final boolean isAsync;
 
-    ReturnDetail(boolean isVoid, ParamType callbackType, Class<?> joClz) {
+    ReturnDetail(ParamType type, ParamType genericType, Class<?> extClz, boolean isVoid, boolean isAsync) {
+        super(type, genericType, extClz);
         this.isVoid = isVoid;
-        this.callbackType = callbackType;
-        this.joClz = joClz;
+        this.isAsync = isAsync;
     }
 }

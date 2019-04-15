@@ -1,26 +1,18 @@
 package io.bigoldbro.corex.service;
 
-import io.bigoldbro.corex.Callback;
 import io.bigoldbro.corex.Future;
 import io.bigoldbro.corex.Msg;
-import io.bigoldbro.corex.define.CacheDefine;
 import io.bigoldbro.corex.define.ConstDefine;
 import io.bigoldbro.corex.define.ExceptionDefine;
 import io.bigoldbro.corex.define.ServiceNameDefine;
 import io.bigoldbro.corex.exception.BizException;
 import io.bigoldbro.corex.impl.BroadcastReceiver;
-import io.bigoldbro.corex.impl.GameRoute;
 import io.bigoldbro.corex.impl.MsgPostman;
-import io.bigoldbro.corex.impl.ServerInfo;
-import io.bigoldbro.corex.json.JsonObject;
-import io.bigoldbro.corex.model.Broadcast;
-import io.bigoldbro.corex.model.Method;
-import io.bigoldbro.corex.model.Payload;
-import io.bigoldbro.corex.model.RpcRequest;
-import io.bigoldbro.corex.module.CacheModule;
+import io.bigoldbro.corex.model.ServerInfo;
 import io.bigoldbro.corex.module.HarborClientModule;
+import io.bigoldbro.corex.proto.Base;
 
-import java.util.List;
+import java.util.Map;
 
 import static io.bigoldbro.corex.utils.CoreXUtil.isRole;
 
@@ -58,7 +50,7 @@ public class HarborClientService extends SimpleModuleService implements HarborCl
     }
 
     @Override
-    protected void handleBroadcast(Msg msg, Payload payload, Broadcast broadcast) {
+    protected void handleBroadcast(Msg msg, Base.Payload payload, Base.Broadcast broadcast) {
         coreX().onBroadcast(payload.getBroadcast());
         if (broadcast.getRole() == ConstDefine.ROLE_LOCAL) {
             return;
@@ -71,8 +63,8 @@ public class HarborClientService extends SimpleModuleService implements HarborCl
     }
 
     @Override
-    protected void handleRequest(Msg msg, Payload payload, RpcRequest request) {
-        Method method = request.getMethod();
+    protected void handleRequest(Msg msg, Base.Payload payload, Base.Request request) {
+        Base.Method method = request.getMethod();
         String module = method.getModule();
         try {
             if (name().equals(module)) {
@@ -91,10 +83,10 @@ public class HarborClientService extends SimpleModuleService implements HarborCl
     }
 
     private void handleMsg(Object msg) {
-        if (msg instanceof Payload) {
-            Payload payload = (Payload) msg;
+        if (msg instanceof Base.Payload) {
+            Base.Payload payload = (Base.Payload) msg;
 
-            if (payload.hasRpcResponse()) {
+            if (payload.hasResponse()) {
                 coreX().onMsgReply(payload.getId(), Future.succeededFuture(payload));
             } else if (payload.hasBroadcast()) {
                 coreX().onBroadcast(payload.getBroadcast());
@@ -103,9 +95,9 @@ public class HarborClientService extends SimpleModuleService implements HarborCl
     }
 
     @Override
-    public Callback<JsonObject> info() {
-        Callback<JsonObject> ret = super.info();
-        ret.result().put("conns", msgPostman.info());
+    public Map<String, String> info() {
+        Map<String, String> ret = super.info();
+        ret.put("conns", msgPostman.info().toString());
         return ret;
     }
 

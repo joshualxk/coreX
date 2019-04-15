@@ -3,7 +3,6 @@ package io.bigoldbro.corex.module;
 import io.bigoldbro.corex.annotation.Api;
 import io.bigoldbro.corex.annotation.BlockControl;
 import io.bigoldbro.corex.annotation.Module;
-import io.bigoldbro.corex.annotation.Param;
 import io.bigoldbro.corex.define.ConstDefine;
 
 import java.util.Map;
@@ -15,9 +14,9 @@ import java.util.Map;
 public interface BlockTestModule {
 
     @Api(value = "i", type = ConstDefine.AUTH_TYPE_ADMIN)
-    Map<String, Object> info();
+    Map<String, String> info();
 
     @Api(value = "block", type = ConstDefine.AUTH_TYPE_NON)
-    Map<String, Object> block(@Param("1") int seconds);
+    Map<String, String> block(int seconds);
 
 }

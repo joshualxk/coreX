@@ -32,7 +32,7 @@ public class StartupGame {
 //                coreX.startService(new GameModuleService(new DemoGameImpl()), h);
 //            });
 //            CoreXUtil.<Void>sync(h -> {
-//                coreX.startService(new TestService(), h);
+//                coreX.startService(new AsyncService(), h);
 //            });
         } catch (Exception e) {
             e.printStackTrace();
